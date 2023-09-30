@@ -3,24 +3,26 @@ begin
 
 builtins: symmetric-encryption, asymmetric-encryption, diffie-hellman, signing
 
-functions: HandshakeRequest/0
-functions: SecureSessionRequest/0
-functions: SecureSessionResponse/0
-functions: DataKeyRequest/0
-functions: HandshakeRequestResponse/0
-functions: HandshakeActionSuccess/0
-functions: DecryptRequest/0
-functions: DecryptResponse/0
-functions: SignRequest/0
-functions: SignResponse/0
-functions: VerifyRequest/0
-functions: VerifyResponse/0
-functions: VerifyRequest2/0
-functions: VerifyResponse2/0
-functions: EncryptedSessionKey/0
-functions: ExecuteCommand/0
-functions: GetKMSId/0
-functions: Log/0
+// functions: HandshakeRequest/0
+// functions: SecureSessionRequest/0
+// functions: SecureSessionResponse/0
+// functions: DataKeyRequest/0
+// functions: HandshakeRequestResponse/0
+// functions: HandshakeActionSuccess/0
+// functions: DecryptRequest/0
+// functions: DecryptResponse/0
+// functions: SignRequest/0
+// functions: SignResponse/0
+// functions: VerifyRequest/0
+// functions: VerifyResponse/0
+// functions: VerifyRequest2/0
+// functions: VerifyResponse2/0
+// functions: EncryptedSessionKey/0
+// functions: HandshakeComplete/0
+// functions: HandshakeCompletePayload/0
+// functions: Message/0
+// functions: GetKMSId/0
+// functions: Log/0
 functions: hash/1, kdf1/1, kdf2/1
 
 
@@ -83,16 +85,16 @@ rule ChanOut_MGS:
 
 rule ChanIn_MGS:
         [ !Sec_MGS(A,B,<x,y>) ]
-      --[ ChanIn_MGS(A,B,<x,y>) /*, NotEqual(x, ExecuteCommand()), NotEqual(x, EncryptedSessionKey())*/ ]->
+      --[ ChanIn_MGS(A,B,<x,y>) /*, NotEqual(x, ExecuteCommand()), NotEqual(x, 'EncryptedSessionKey')*/ ]->
         [ In_MGS(A,B,<x,y>) ]
       //   [ !Sec_MGS(A,B,x) ]
       // --[ ChanIn_MGS(A,B,x) ]->
       //   [ In_MGS(A,B,x) ]
 
 // rule ChanIn_MGS_EncryptedSessKey:
-//         [ !Sec_MGS(A,B,<EncryptedSessionKey(), args>) ]
-//       --[ ChanIn_MGS(A,B,<EncryptedSessionKey(), args>), IN_ChanIn_MGS_EncryptedSessKey(args) ]->
-//         [ In_MGS(A,B,<EncryptedSessionKey(), args>), Out(<EncryptedSessionKey(), args>) ]
+//         [ !Sec_MGS(A,B,<'EncryptedSessionKey', args>) ]
+//       --[ ChanIn_MGS(A,B,<'EncryptedSessionKey', args>), IN_ChanIn_MGS_EncryptedSessKey(args) ]->
+//         [ In_MGS(A,B,<'EncryptedSessionKey', args>), Out(<'EncryptedSessionKey', args>) ]
 
 // rule ChanIn_MGS_CMD:
 //         [ !Sec_MGS(A,B,<ExecuteCommand(), encryptedCmd>) ]
@@ -114,7 +116,7 @@ rule ChanIn_MGS:
 rule ChanOut_MGS:
         [ Out_MGS(A,B,x) ]
       --[ ChanOut_MGS(A,B,x) ]->
-        [ Out(x) /*, Out(<Log(),x>)*/ ]
+        [ Out(x) /*, Out(<'Log',x>)*/ ]
 
 rule ChanIn_MGS:
         [ In(x), In(A), In(B) ]
@@ -158,7 +160,7 @@ rule Register_KmsSignKey:
 
 rule Reveal_KmsSignKey:
     [ !KmsSignKey(KeyOwnerId, LtkARN, SignKey) ]
-  --[ KmsSignKeyReveal(LtkARN), KmsSignKeyRevealOwner(KeyOwnerId), KmsSignKeyRevealKey(SignKey), Reveal(GetKMSId()) ]->
+  --[ KmsSignKeyReveal(LtkARN), KmsSignKeyRevealOwner(KeyOwnerId), KmsSignKeyRevealKey(SignKey), Reveal('GetKMSId') ]->
     [ Out(SignKey) ]
 
 // rule Register_datakey:
@@ -205,18 +207,18 @@ rule Agent_Init [color=#177AE8]:
 rule Agent_SendSignRequest [color=#177AE8]:
     [ Agent_Init(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk), Fr(~x) ]
   --[ AgentStarted() ]->
-    [ Agent_S1(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x), Out_KMS($AgentId, $KMSId, ~RunId, <SignRequest(), $AgentLtKeyId, <'g'^~x, $ReaderId>, $ClientId>)[+] ]
+    [ Agent_S1(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x), Out_KMS($AgentId, $KMSId, ~RunId, <'SignRequest', $AgentLtKeyId, <'g'^~x, $ReaderId>, $ClientId>)[+] ]
 
 rule Agent_RecvSignResponse [color=#177AE8]:
-    [ Agent_S1(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x), In_KMS($KMSId, $AgentId, ~RunId, <SignResponse(), SigX>)[+] ]
-  --[ Signed(SigX), AgentSignResponse($KMSId, $AgentId, ~RunId, <SignResponse(), SigX>), WasSigned($AgentId, SigX, $AgentLtKeyId, 'g'^~x, $ClientId) ]->
+    [ Agent_S1(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x), In_KMS($KMSId, $AgentId, ~RunId, <'SignResponse', SigX>)[+] ]
+  --[ Signed(SigX), AgentSignResponse($KMSId, $AgentId, ~RunId, <'SignResponse', SigX>), WasSigned($AgentId, SigX, $AgentLtKeyId, 'g'^~x, $ClientId) ]->
     [ Agent_S2(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX) ]
 
 // #ifdef TRUST_MGS
 rule Agent_SendSecureSessionRequest [color=#177AE8]:
     let
       X = 'g'^~x
-      msg = <SecureSessionRequest(), X, SigX, $AgentLtKeyId, $ReaderId>
+      msg = <'SecureSessionRequest', X, SigX, $AgentLtKeyId, $ReaderId>
     in
     [ Agent_S2(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX) ]
   --[ AgentSecureSessionRequest($AgentId, $ClientId, X, SigX, $AgentLtKeyId), SessionRequestSigX(~x, X, SigX, $AgentLtKeyId) ]->
@@ -225,7 +227,7 @@ rule Agent_SendSecureSessionRequest [color=#177AE8]:
 // rule Agent_SendSecureSessionRequest [color=#177AE8]:
 //     let
 //       X = 'g'^~x
-//       msg = <SecureSessionRequest(), X, SigX, $AgentLtKeyId>
+//       msg = <'SecureSessionRequest', X, SigX, $AgentLtKeyId>
 //     in
 //     [ Agent_S2(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX) ]
 //   --[ AgentSecureSessionRequest($AgentId, $ClientId, X, SigX, $AgentLtKeyId), SessionRequestSigX(~x, X, SigX, $AgentLtKeyId) ]->
@@ -237,7 +239,7 @@ rule Agent_SendSecureSessionRequest [color=#177AE8]:
 rule Agent_RecvSecureSessionResponse [color=#177AE8]:
     let
       Y = 'g' ^ z // think of this as a group element check, i.e., we have to check in the implementation that Y and the shared secret are not 0, 1, or p-1 (see https://www.redhat.com/en/blog/understanding-and-verifying-security-diffie-hellman-parameters)
-      msg = <SecureSessionResponse(), Y, SigY, ClientLtKeyId, hash(Y^~x)>
+      msg = <'SecureSessionResponse', Y, SigY, ClientLtKeyId, hash(Y^~x)>
     in
     [ Agent_S3(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX), In_MGS($ClientId, $AgentId, msg) ]
   --[ AgentSecureSessionResponse($ClientId, $AgentId, Y, SigY, ClientLtKeyId, hash(Y^~x)), SecSessResp(kdf1(Y^~x)) ]->
@@ -246,7 +248,7 @@ rule Agent_RecvSecureSessionResponse [color=#177AE8]:
 // rule Agent_RecvSecureSessionResponse [color=#177AE8]:
 //     let
 //       Y = 'g' ^ z // think of this as a group element check, i.e., we have to check in the implementation that Y and the shared secret are not 0, 1, or p-1 (see https://www.redhat.com/en/blog/understanding-and-verifying-security-diffie-hellman-parameters)
-//       msg = <SecureSessionResponse(), Y, SigY, ClientLtKeyId, hash(Y^~x)>
+//       msg = <'SecureSessionResponse', Y, SigY, ClientLtKeyId, hash(Y^~x)>
 //     in
 //     [ Agent_S3(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX), In(msg) ]
 //   --[ AgentSecureSessionResponse($ClientId, $AgentId, Y, SigY, ClientLtKeyId, hash(Y^~x)) ]->
@@ -256,34 +258,43 @@ rule Agent_RecvSecureSessionResponse [color=#177AE8]:
 rule Agent_SendVerifyRequest [color=#177AE8]:
     [ Agent_S4(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY) ]
   -->
-    [ Agent_S5(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY), Out_KMS($AgentId, $KMSId, ~RunId, <VerifyRequest(), ClientLtKeyId, Y, SigY, $AgentId>)[+] ]
+    [ Agent_S5(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY), Out_KMS($AgentId, $KMSId, ~RunId, <'VerifyRequest', ClientLtKeyId, Y, SigY, $AgentId>)[+] ]
 
 rule Agent_RecvVerifyResponse [color=#177AE8]:
-    [ Agent_S5(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY), In_KMS($KMSId, $AgentId, ~RunId, VerifyResponse())[+] ]
-  --[ Agent_Finish($AgentId), HonestKMS($AgentLtKeyId), HonestKMS(ClientLtKeyId), SecretX(~x), SecretInvX(inv(~x)), Sig_Verified(ClientLtKeyId, Y, SigY), Honest(GetKMSId()), VerifiedClientDHHK(Y), WasVerified($ClientId, SigY, ClientLtKeyId, Y, $AgentId) ]->
+    [ Agent_S5(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY), In_KMS($KMSId, $AgentId, ~RunId, 'VerifyResponse')[+] ]
+  --[ Agent_Finish($AgentId), HonestKMS($AgentLtKeyId), HonestKMS(ClientLtKeyId), SecretX(~x), SecretInvX(inv(~x)), Sig_Verified(ClientLtKeyId, Y, SigY), Honest('GetKMSId'), VerifiedClientDHHK(Y), WasVerified($ClientId, SigY, ClientLtKeyId, Y, $AgentId) ]->
     [ Agent_S6(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY) ]
 
 rule Agent_SendSessionKeySignRequest [color=#177AE8]:
     [ Agent_S6(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY) ]
   -->
-    [ Agent_S7(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY), Out_KMS($AgentId, $KMSId, ~RunId, <SignRequest(), $AgentLtKeyId, aenc(kdf1(Y^~x), logPk), $ClientId>)[+] ]
+    [ Agent_S7(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY), Out_KMS($AgentId, $KMSId, ~RunId, <'SignRequest', $AgentLtKeyId, aenc(kdf1(Y^~x), logPk), $ClientId>)[+] ]
 
 rule Agent_RecvSessionKeySignResponse [color=#177AE8]:
-    [ Agent_S7(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY), In_KMS($KMSId, $AgentId, ~RunId, <SignResponse(), SigSessionKey>)[+] ]
+    [ Agent_S7(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY), In_KMS($KMSId, $AgentId, ~RunId, <'SignResponse', SigSessionKey>)[+] ]
   --[ WasSigned($AgentId, SigSessionKey, $AgentLtKeyId, aenc(kdf1(Y^~x), logPk), $ClientId) ]->
     [ Agent_S8(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey) ]
 
 rule Agent_SendEncryptedSessionKey [color=#177AE8]:
     [ Agent_S8(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey) ]
-  --[ Agent_Finish2($AgentId), Secret(kdf1(Y^~x)), Commit('Agent', 'Client', <$AgentId, $ClientId, kdf1(Y^~x)>), HonestReader($ReaderId), HonestKmsOwner($AgentId), HonestKmsOwner($ClientId), EncryptedSessionKeyPayload(aenc(kdf1(Y^~x), logPk), SigSessionKey, $AgentLtKeyId, $ClientId), OUT_EncryptedSessKey(<aenc(kdf1(Y^~x), logPk), SigSessionKey, $AgentLtKeyId, $ClientId>), SessionKeySecureUnless(kdf1(Y^~x), $AgentLtKeyId, ClientLtKeyId, logPk) ]->
-    // [ Agent_S9(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), Out_MGS($AgentId, $ReaderId, <EncryptedSessionKey(), aenc(Y^~x, logPk), SigSessionKey, $AgentLtKeyId, $ClientId>) ]
-    [ Agent_S9(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), Out(<EncryptedSessionKey(), aenc(kdf1(Y^~x), logPk), SigSessionKey, $AgentLtKeyId, $ClientId>) ]
+  --[ Agent_Finish2($AgentId), EncryptedSessionKeyPayload(aenc(kdf1(Y^~x), logPk), SigSessionKey, $AgentLtKeyId, $ClientId), OUT_EncryptedSessKey(<aenc(<kdf1(Y^~x), kdf2(Y^~x)>, logPk), SigSessionKey, $AgentLtKeyId, $ClientId>), SessionKeySecureUnless(kdf1(Y^~x), $AgentLtKeyId, ClientLtKeyId, logPk) ]->
+    // [ Agent_S9(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), Out_MGS($AgentId, $ReaderId, <'EncryptedSessionKey', aenc(Y^~x, logPk), SigSessionKey, $AgentLtKeyId, $ClientId>) ]
+    [ Agent_S9(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), Out(<'EncryptedSessionKey', aenc(<kdf1(Y^~x), kdf2(Y^~x)>, logPk), SigSessionKey, $AgentLtKeyId, $ClientId>) ]
 
+rule Agent_SendHandshakeComplete [color=#177AE8]:
+    [ Agent_S9(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), In(msg) ]
+  --[ Agent_Finish3($AgentId), Secret(<kdf1(Y^~x), kdf2(Y^~x)>), Commit('Agent', 'Client', <$AgentId, $ClientId, kdf1(Y^~x), kdf2(Y^~x)>), Running('Agent', 'Client', <$AgentId, $ClientId, kdf1(Y^~x), kdf2(Y^~x)>), HonestReader($ReaderId), HonestKmsOwner($AgentId), HonestKmsOwner($ClientId), AgentSessKey(kdf1(Y^~x)), AgentHandshakeCompleted(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, ClientLtKeyId, Y) ]->
+    [ Agent_S10(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), Out_MGS($AgentId, $ClientId, <'HandshakeComplete', senc(<'HandshakeCompletePayload', msg>, kdf1(Y^~x))>) ]
 // #ifdef TRUST_MGS
-rule Agent_ReceiveCommands [color=#177AE8]:
-    [ Agent_S9(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), In_MGS($ClientId, $AgentId, <ExecuteCommand(), senc(cmd, kdf1(Y^~x))>) ]
-  --[ Agent_Finish3($AgentId), ExecuteCommand(cmd), AgentSessKey(kdf1(Y^~x)) ]->
-    [ Agent_S9(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), Command(cmd) ]
+rule Agent_ReceiveMessages [color=#177AE8]:
+    [ Agent_S10(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), In_MGS($ClientId, $AgentId, <'Message', senc(msg, kdf2(Y^~x))>) ]
+  --[ AgentReceivedMessage(msg), AgentRecvLoop(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, ClientLtKeyId, Y) ]->
+    [ Agent_S10(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey) ]
+
+rule Agent_SendMessages [color=#177AE8]:
+    [ Agent_S10(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), In(msg) ]
+  --[ AgentSendMessage(msg), AgentSendLoop(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, ClientLtKeyId, Y) ]->
+    [ Agent_S10(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), Out_MGS($AgentId, $ClientId, <'Message', senc(msg, kdf1(Y^~x))>) ]
 // #else
 // rule Agent_ReceiveCommands [color=#177AE8]:
 //     [ Agent_S9(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), In(<ExecuteCommand(), senc(cmd, kdf1(Y^~x))>) ]
@@ -295,20 +306,20 @@ rule Agent_ReceiveCommands [color=#177AE8]:
 // rule Agent_SendHandshakeRequest [color=#177AE8]:
 //     [ Agent_Init($AgentId, $ClientId, $KMSKeyId, $AgentLtKeyId, SessId), Fr(~x) ]
 //   --[ KMSEncryptionRequest($KMSKeyId, SessId) ]->
-//     [ Agent_S1($AgentId, $ClientId, $KMSKeyId, SessId), Out_MGS($AgentId, $ClientId, SessId, <HandshakeRequest(), $KMSKeyId>) ]
+//     [ Agent_S1($AgentId, $ClientId, $KMSKeyId, SessId), Out_MGS($AgentId, $ClientId, SessId, <'HandshakeRequest', $KMSKeyId>) ]
 
 // rule Agent_RecvHandshakeRequestResponse [color=#177AE8]:
-//     [ Agent_S1($AgentId, $ClientId, $KMSKeyId, SessId), In_MGS($ClientId, $AgentId, SessId, <HandshakeActionSuccess(), encrypteddatakey>) ]
+//     [ Agent_S1($AgentId, $ClientId, $KMSKeyId, SessId), In_MGS($ClientId, $AgentId, SessId, <'HandshakeActionSuccess', encrypteddatakey>) ]
 //   -->
 //     [ Agent_S2($AgentId, $ClientId, $KMSKeyId, SessId, encrypteddatakey) ]
 
 // rule Agent_SendKeyDecryptRequest [color=#177AE8]:
 //     [ Agent_S2($AgentId, $ClientId, $KMSKeyId, SessId, encrypteddatakey)]
 //   -->
-//     [ Agent_S3($AgentId, $ClientId, $KMSId, $KMSKeyId, SessId, encrypteddatakey), Out_S($AgentId, $KMSId, <DecryptRequest(), $AgentId, SessId, encrypteddatakey>) ] // `$AgentId` (aka InstanceId) and `SessId` form the encryption context
+//     [ Agent_S3($AgentId, $ClientId, $KMSId, $KMSKeyId, SessId, encrypteddatakey), Out_S($AgentId, $KMSId, <'DecryptRequest', $AgentId, SessId, encrypteddatakey>) ] // `$AgentId` (aka InstanceId) and `SessId` form the encryption context
 
 // rule Agent_RecvKeyDecryptResponse [color=#177AE8]:
-//     [ Agent_S3($AgentId, $ClientId, $KMSId, $KMSKeyId, SessId, encrypteddatakey), In_S($KMSId, $AgentId, <DecryptResponse(), datakey>) ]
+//     [ Agent_S3($AgentId, $ClientId, $KMSId, $KMSKeyId, SessId, encrypteddatakey), In_S($KMSId, $AgentId, <'DecryptResponse', datakey>) ]
 //   --[ AgentDataKeyReceived($AgentId, SessId, datakey), Agent_Finish($AgentId, $ClientId, $KMSId, SessId), Secret(SessId, datakey) ]-> // TODO: add challenge roundtrip and move Finish label!
 //     [ Agent_S4($AgentId, $ClientId, $KMSId, $KMSKeyId, SessId, datakey), !DataKeyInMemory($AgentId, SessId, datakey) ]
 
@@ -325,7 +336,7 @@ rule Client_Init [color=#E817E3]:
 rule Client_RecvSecureSessionRequest [color=#E817E3]:
     let
       X = 'g' ^ z // think of this as a group element check
-      msg = <SecureSessionRequest(), X, SigX, AgentLtKeyId, ReaderId>
+      msg = <'SecureSessionRequest', X, SigX, AgentLtKeyId, ReaderId>
     in
     [ Client_Init(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId), In_MGS($AgentId, $ClientId, msg) ]
   --[ ClientStarted(), ClientSecureSessionRequest($AgentId, $ClientId, X, SigX, AgentLtKeyId) ]->
@@ -334,7 +345,7 @@ rule Client_RecvSecureSessionRequest [color=#E817E3]:
 // rule Client_RecvSecureSessionRequest [color=#E817E3]:
 //     let
 //       X = 'g' ^ z // think of this as a group element check
-//       msg = <SecureSessionRequest(), X, SigX, AgentLtKeyId>
+//       msg = <'SecureSessionRequest', X, SigX, AgentLtKeyId>
 //     in
 //     [ Client_Init(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId), In(msg) ]
 //   --[ ClientStarted(), ClientSecureSessionRequest($AgentId, $ClientId, X, SigX, AgentLtKeyId) ]->
@@ -344,72 +355,81 @@ rule Client_RecvSecureSessionRequest [color=#E817E3]:
 rule Client_SendVerifyRequest [color=#E817E3]:
     [ Client_S1(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId) ]
   -->
-    [ Client_S2(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId), Out_KMS($ClientId, $KMSId, ~RunId, <VerifyRequest(), AgentLtKeyId, <X, ReaderId>, SigX, $ClientId>) ]
+    [ Client_S2(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId), Out_KMS($ClientId, $KMSId, ~RunId, <'VerifyRequest', AgentLtKeyId, <X, ReaderId>, SigX, $ClientId>) ]
 
 rule Client_RecvVerifyResponse [color=#E817E3]:
-    [ Client_S2(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId), In_KMS($KMSId, $ClientId, ~RunId, VerifyResponse())[+] ]
+    [ Client_S2(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId), In_KMS($KMSId, $ClientId, ~RunId, 'VerifyResponse')[+] ]
   --[ Sig_Verified(AgentLtKeyId, X, SigX), WasVerified($AgentId, SigX, AgentLtKeyId, X, $ClientId) ]->
     [ Client_S3(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId) ]
 
 rule Client_SendSignRequest [color=#E817E3]:
     [ Client_S3(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId), Fr(~y) ]
   -->
-    [ Client_S4(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y), Out_KMS($ClientId, $KMSId, ~RunId, <SignRequest(), $ClientLtKeyId, 'g'^~y, $AgentId>) ]
+    [ Client_S4(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y), Out_KMS($ClientId, $KMSId, ~RunId, <'SignRequest', $ClientLtKeyId, 'g'^~y, $AgentId>) ]
 
 rule Client_RecvSignResponse [color=#E817E3]:
-    [ Client_S4(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y), In_KMS($KMSId, $ClientId, ~RunId, <SignResponse(), SigY>)[+] ]
-  --[ ClientSignResponse($KMSId, $ClientId, ~RunId, <SignResponse(), SigY>), WasSigned($ClientId, SigY, $ClientLtKeyId, 'g'^~y, $AgentId) ]->
+    [ Client_S4(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y), In_KMS($KMSId, $ClientId, ~RunId, <'SignResponse', SigY>)[+] ]
+  --[ ClientSignResponse($KMSId, $ClientId, ~RunId, <'SignResponse', SigY>), WasSigned($ClientId, SigY, $ClientLtKeyId, 'g'^~y, $AgentId) ]->
     [ Client_S5(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y, SigY) ]
 
 // #ifdef TRUST_MGS
 rule Client_SendSecureSessionResponse [color=#E817E3]:
     let
-      msg = <SecureSessionResponse(), 'g'^~y, SigY, $ClientLtKeyId, hash(X^~y)>
+      msg = <'SecureSessionResponse', 'g'^~y, SigY, $ClientLtKeyId, hash(X^~y)>
     in
     [ Client_S5(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y, SigY) ]
-  --[ Secret(kdf1(X^~y)), /* Commit('Client', 'Agent', <$AgentId, $ClientId, kdf1(X^~y)>), HonestReaders(),*/ HonestKmsOwner($AgentId), HonestKmsOwner($ClientId), HonestReader(ReaderId), SecretY(~y), Client_Finish($ClientId), ClientSecureSessionResponse($ClientId, $AgentId, X, SigX, 'g'^~y, SigY, AgentLtKeyId, $ClientLtKeyId, hash(X^~y)), Running('Client', 'Agent', <$AgentId, $ClientId, kdf1(X^~y)>), ClientDHHK('g'^~y), ClientSecSessResp(kdf1(X^~y)) ]->
+  --[ /* Commit('Client', 'Agent', <$AgentId, $ClientId, kdf1(X^~y)>), HonestReaders(),*/ HonestKmsOwner($AgentId), HonestKmsOwner($ClientId), HonestReader(ReaderId), SecretY(~y), Client_Finish($ClientId), ClientSecureSessionResponse($ClientId, $AgentId, X, SigX, 'g'^~y, SigY, AgentLtKeyId, $ClientLtKeyId, hash(X^~y)), Running('Client', 'Agent', <$AgentId, $ClientId, kdf1(X^~y), kdf2(X^~y)>), ClientDHHK('g'^~y), ClientSecSessResp(kdf1(X^~y)) ]->
     [ Client_S6(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y, SigY), Out_MGS($ClientId, $AgentId, msg) ]
 // #else
 // rule Client_SendSecureSessionResponse [color=#E817E3]:
 //     let
-//       msg = <SecureSessionResponse(), 'g'^~y, SigY, $ClientLtKeyId, hash(X^~y)>
+//       msg = <'SecureSessionResponse', 'g'^~y, SigY, $ClientLtKeyId, hash(X^~y)>
 //     in
 //     [ Client_S5(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ~y, SigY) ]
 //   --[ Secret(kdf1(X^~y)), HonestKMS(AgentLtKeyId), HonestKMS($ClientLtKeyId), SecretY(~y), Client_Finish($ClientId), ClientSecureSessionResponse($ClientId, $AgentId, X, SigX, 'g'^~y, SigY, AgentLtKeyId, $ClientLtKeyId, hash(X^~y)), Running($ClientId, $AgentId, X^~y), ClientDHHK('g'^~y) ]->
 //     [ Client_S6(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ~y, SigY), Out(msg) ]
 // #endif
 
+rule Client_RecvHandshakeComplete [color=#E817E3]:
+    [ Client_S6(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y, SigY), In_MGS($AgentId, $ClientId, <'HandshakeComplete', senc(<'HandshakeCompletePayload', msg>, kdf1(X^~y))>) ]
+  --[ Client_Finish3($ClientId), Secret(<kdf1(X^~y), kdf2(X^~y)>), Commit('Client', 'Agent', <$AgentId, $ClientId, kdf1(X^~y), kdf2(X^~y)>), HonestReader(ReaderId), HonestKmsOwner($AgentId), HonestKmsOwner($ClientId), ClientHandshakeCompleted(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, ~y) ]->
+    [ Client_S7(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y, SigY) ]
+
 // #ifdef TRUST_MGS
-rule Client_SendCommand [color=#E817E3]:
-    [ Client_S6(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y, SigY), In(cmd) ] // we treat `cmd` to be arbitrary
-  --[ SendCommand($ClientId, $AgentId, cmd), Client_Finish3($ClientId) ]->
-    [ Client_S6(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y, SigY), Out_MGS($ClientId, $AgentId, <ExecuteCommand(), senc(cmd, kdf1(X^~y))>)]
+rule Client_SendMessage [color=#E817E3]:
+    [ Client_S7(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y, SigY), In(msg) ] // we treat `msg` to be arbitrary
+  --[ ClientSendMessage(msg), ClientSendLoop(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, ~y) ]->
+    [ Client_S7(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y, SigY), Out_MGS($ClientId, $AgentId, <'Message', senc(msg, kdf2(X^~y))>) ]
 // #else
 // rule Client_SendCommand [color=#E817E3]:
 //     [ Client_S6(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ~y, SigY), In(cmd) ] // we treat `cmd` to be arbitrary
 //   --[ SendCommand($ClientId, $AgentId, cmd) ]->
 //     [ Client_S6(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ~y, SigY), Out(<ExecuteCommand(), senc(cmd, kdf1(X^~y))>)]
 // #endif
+rule Client_RecvMessage [color=#E817E3]:
+    [ Client_S7(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y, SigY), In_MGS($AgentId, $ClientId, <'Message', senc(msg, kdf1(X^~y))>) ]
+  --[ ClientRecvMessage(msg), ClientRecvLoop(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, ~y) ]->
+    [ Client_S7(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y, SigY) ]
 
 // rule Client_RecvHandshakeRequest [color=#E817E3]:
-//     [ !Client_Init($ClientId, $AgentId, SessId), In_MGS($AgentId, $ClientId, SessId, <HandshakeRequest(), KMSKeyId>) ]
+//     [ !Client_Init($ClientId, $AgentId, SessId), In_MGS($AgentId, $ClientId, SessId, <'HandshakeRequest', KMSKeyId>) ]
 //   --[ ClientStarted() ]->
 //     [ Client_S1($ClientId, $AgentId, SessId, KMSKeyId) ]
 
 // rule Client_SendDataKeyRequest [color=#E817E3]:
 //     [ Client_S1($ClientId, $AgentId, SessId, KMSKeyId) ]
 //   -->
-//     [ Client_S2($ClientId, $AgentId, $KMSId, SessId, KMSKeyId), Out_S($ClientId, $KMSId, <DataKeyRequest(), KMSKeyId, SessId, $AgentId>) ] // `SessId` and `$AgentId` form the encryption context
+//     [ Client_S2($ClientId, $AgentId, $KMSId, SessId, KMSKeyId), Out_S($ClientId, $KMSId, <'DataKeyRequest', KMSKeyId, SessId, $AgentId>) ] // `SessId` and `$AgentId` form the encryption context
 
 // rule Client_RecvHandshakeRequestResponse [color=#E817E3]:
-//     [ Client_S2($ClientId, $AgentId, $KMSId, SessId, KMSKeyId), In_S($KMSId, $ClientId, <HandshakeRequestResponse(), datakey, encrypteddatakey>) ]
+//     [ Client_S2($ClientId, $AgentId, $KMSId, SessId, KMSKeyId), In_S($KMSId, $ClientId, <'HandshakeRequestResponse', datakey, encrypteddatakey>) ]
 //   --[ ClientDataKeyReceived($ClientId, datakey) ]->
 //     [ Client_S3($ClientId, $AgentId, $KMSId, SessId, KMSKeyId, datakey, encrypteddatakey), !DataKeyInMemory($ClientId, SessId, datakey) ]
     
 // rule Client_SendHandshakeActionSuccess [color=#E817E3]:
 //     [ Client_S3($ClientId, $AgentId, $KMSId, SessId, KMSKeyId, datakey, encrypteddatakey) ]
 //   --[ Secret(SessId, datakey) ]->
-//     [ Client_S4($ClientId, $AgentId, $KMSId, SessId, KMSKeyId, datakey), Out_MGS($ClientId, $AgentId, SessId, <HandshakeActionSuccess(), encrypteddatakey>) ] // Note that `SessId` is not part of the response! (also, we omit `encrypteddatakey` in the state as it's no longer needed)
+//     [ Client_S4($ClientId, $AgentId, $KMSId, SessId, KMSKeyId, datakey), Out_MGS($ClientId, $AgentId, SessId, <'HandshakeActionSuccess', encrypteddatakey>) ] // Note that `SessId` is not part of the response! (also, we omit `encrypteddatakey` in the state as it's no longer needed)
 
 // End Client
 
@@ -422,54 +442,54 @@ rule KMS_Init [color=#E88517]:
 
 rule KMS_RecvSignRequest [color=#E88517]:
     // TODO: is it okay to assume that agent key belongs to agent id (from session)?
-    [ !KMS_Init($KMSId), !KmsSignKey(AgentId, AgentLtKeyId, AgentLtKey), In_KMS(AgentId, $KMSId, AgentRunId, <SignRequest(), AgentLtKeyId, payload, ReceiverId>)[+] ]
+    [ !KMS_Init($KMSId), !KmsSignKey(AgentId, AgentLtKeyId, AgentLtKey), In_KMS(AgentId, $KMSId, AgentRunId, <'SignRequest', AgentLtKeyId, payload, ReceiverId>)[+] ]
   --[ KMSSign(AgentId) ]->
     [ KMS_Sign_S1($KMSId, AgentId, AgentRunId, AgentLtKeyId, AgentLtKey, payload, ReceiverId) ]
   
 rule KMS_SendSignResponse [color=#E88517]:
     [ KMS_Sign_S1($KMSId, AgentId, AgentRunId, AgentLtKeyId, AgentLtKey, payload, ReceiverId) ]
-  --[ Sig_Created(payload, sign(<payload, ReceiverId>, AgentLtKey)), KMSSignResponse($KMSId, AgentId, AgentRunId, <SignResponse(), sign(<payload, ReceiverId>, AgentLtKey)>) ]->
-    [ KMS_Sign_S2($KMSId, AgentId, AgentRunId, AgentLtKeyId, AgentLtKey, payload, ReceiverId), Out_KMS($KMSId, AgentId, AgentRunId, <SignResponse(), sign(<payload, ReceiverId>, AgentLtKey)>) ]
+  --[ Sig_Created(payload, sign(<payload, ReceiverId>, AgentLtKey)), KMSSignResponse($KMSId, AgentId, AgentRunId, <'SignResponse', sign(<payload, ReceiverId>, AgentLtKey)>), KMSSigned(payload) ]->
+    [ KMS_Sign_S2($KMSId, AgentId, AgentRunId, AgentLtKeyId, AgentLtKey, payload, ReceiverId), Out_KMS($KMSId, AgentId, AgentRunId, <'SignResponse', sign(<payload, ReceiverId>, AgentLtKey)>) ]
 
 rule KMS_RecvVerifyRequest [color=#E88517]:
-    [ !KMS_Init($KMSId), !KmsSignKey(AgentId, AgentLtKeyId, AgentLtKey), In_KMS(ClientId, $KMSId, ClientRunId, <VerifyRequest(), AgentLtKeyId, payload, sign(<payload, AgentId>, AgentLtKey), AgentId>)[+] ]
+    [ !KMS_Init($KMSId), !KmsSignKey(AgentId, AgentLtKeyId, AgentLtKey), In_KMS(ClientId, $KMSId, ClientRunId, <'VerifyRequest', AgentLtKeyId, payload, sign(<payload, AgentId>, AgentLtKey), AgentId>)[+] ]
   --[ KMSVerify(AgentId) ]->
     [ KMS_Verify_S1($KMSId, ClientId, ClientRunId, AgentId, AgentLtKeyId, AgentLtKey, payload) ]
   
 rule KMS_SendVerifyResponse [color=#E88517]:
     [ KMS_Verify_S1($KMSId, ClientId, ClientRunId, AgentId, AgentLtKeyId, AgentLtKey, payload) ]
   -->
-    [ KMS_Verify_S2($KMSId, ClientId, ClientRunId, AgentId, AgentLtKeyId, AgentLtKey, payload), Out_KMS($KMSId, ClientId, ClientRunId, VerifyResponse()) ]
+    [ KMS_Verify_S2($KMSId, ClientId, ClientRunId, AgentId, AgentLtKeyId, AgentLtKey, payload), Out_KMS($KMSId, ClientId, ClientRunId, 'VerifyResponse') ]
 
 // rule KMS_RecvVerifyRequest2 [color=#E88517]:
-//     [ !KMS_Init($KMSId), !KmsSignKey(AgentId, AgentLtKeyId, AgentLtKey), In_KMS(ClientId, $KMSId, ClientRunId, <VerifyRequest2(), AgentLtKeyId, payload, sign(<payload, ReceiverId>, AgentLtKey), ReceiverId>)[+] ]
+//     [ !KMS_Init($KMSId), !KmsSignKey(AgentId, AgentLtKeyId, AgentLtKey), In_KMS(ClientId, $KMSId, ClientRunId, <'VerifyRequest2', AgentLtKeyId, payload, sign(<payload, ReceiverId>, AgentLtKey), ReceiverId>)[+] ]
 //   --[ KMSVerify(AgentId) ]->
 //     [ KMS_Verify_S1($KMSId, ClientId, ClientRunId, AgentId, AgentLtKeyId, AgentLtKey, payload, ReceiverId) ]
   
 // rule KMS_SendVerifyResponse2 [color=#E88517]:
 //     [ KMS_Verify_S1($KMSId, ClientId, ClientRunId, AgentId, AgentLtKeyId, AgentLtKey, payload, ReceiverId) ]
 //   -->
-//     [ KMS_Verify_S2($KMSId, ClientId, ClientRunId, AgentId, AgentLtKeyId, AgentLtKey, payload, ReceiverId), Out_KMS($KMSId, ClientId, ClientRunId, <VerifyResponse2(), AgentLtKeyId, payload, sign(<payload, ReceiverId>, AgentLtKey), ReceiverId>) ]
+//     [ KMS_Verify_S2($KMSId, ClientId, ClientRunId, AgentId, AgentLtKeyId, AgentLtKey, payload, ReceiverId), Out_KMS($KMSId, ClientId, ClientRunId, <'VerifyResponse2', AgentLtKeyId, payload, sign(<payload, ReceiverId>, AgentLtKey), ReceiverId>) ]
 
 // rule KMS_RecvDataKeyRequest [color=#E88517]:
-//     [ !KMS_Init(~RunId, $KMSId), !KmsKey(KMSKeyId, KmsKey), In_KMS($ClientId, $KMSId, <DataKeyRequest(), KMSKeyId, SessId, InstanceId>) ]
+//     [ !KMS_Init(~RunId, $KMSId), !KmsKey(KMSKeyId, KmsKey), In_KMS($ClientId, $KMSId, <'DataKeyRequest', KMSKeyId, SessId, InstanceId>) ]
 //   --[ KMSStarted() ]->
 //     [ KMS_S1($KMSId, $ClientId, InstanceId, SessId, KMSKeyId, KmsKey) ]
 
 // rule KMS_SendDataKeyResponse [color=#E88517]:
 //     [ KMS_S1($KMSId, $ClientId, InstanceId, SessId, KMSKeyId, KmsKey), Fr(~datakey) ] // we assume here that `datakey` is freshly generated at this point
 //   --[ DataKeyCreated($ClientId, ~datakey) ]->
-//     [ KMS_S2($KMSId, $ClientId, InstanceId, SessId, KMSKeyId, KmsKey, ~datakey), !DataKeyInMemory($KMSId, SessId, ~datakey), Out_S($KMSId, $ClientId, <HandshakeRequestResponse(), ~datakey, senc(~datakey, KmsKey)>) ]
+//     [ KMS_S2($KMSId, $ClientId, InstanceId, SessId, KMSKeyId, KmsKey, ~datakey), !DataKeyInMemory($KMSId, SessId, ~datakey), Out_S($KMSId, $ClientId, <'HandshakeRequestResponse', ~datakey, senc(~datakey, KmsKey)>) ]
 
 // rule KMS_RecvDecryptRequest [color=#E88517]:
-//     [ KMS_S2($KMSId, $ClientId, InstanceId, SessId, KMSKeyId, KmsKey, ~datakey), In_S($AgentId, $KMSId, <DecryptRequest(), InstanceId, SessId, senc(~datakey, KmsKey)>) ]
+//     [ KMS_S2($KMSId, $ClientId, InstanceId, SessId, KMSKeyId, KmsKey, ~datakey), In_S($AgentId, $KMSId, <'DecryptRequest', InstanceId, SessId, senc(~datakey, KmsKey)>) ]
 //   -->
 //     [ KMS_S3($KMSId, $ClientId, $AgentId, InstanceId, SessId, KMSKeyId, KmsKey, ~datakey) ]
 
 // rule KMS_SendDecryptResponse [color=#E88517]:
 //     [ KMS_S3($KMSId, $ClientId, $AgentId, InstanceId, SessId, KMSKeyId, KmsKey, ~datakey) ]
 //   --[ KeyDecrypt(InstanceId, SessId, ~datakey), KMS_Finish($KMSId, $ClientId, $AgentId, SessId), Secret(SessId, ~datakey) ]->
-//     [ KMS_S4($KMSId, $ClientId, $AgentId, InstanceId, SessId, KMSKeyId, KmsKey, ~datakey), Out_S($KMSId, $AgentId, <DecryptResponse(), ~datakey>) ]
+//     [ KMS_S4($KMSId, $ClientId, $AgentId, InstanceId, SessId, KMSKeyId, KmsKey, ~datakey), Out_S($KMSId, $AgentId, <'DecryptResponse', ~datakey>) ]
 
 // End KMS
 
@@ -481,32 +501,37 @@ rule Reader_Init [color=#17E81C]:
   [ Reader_Init(~RunId, $ReaderId, $KMSId, ~ltk) ]
 
 rule Reader_RecvEncryptedSessionKey [color=#17E81C]:
-  [ Reader_Init(~RunId, $ReaderId, $KMSId, ~ltk), In(<EncryptedSessionKey(), aenc(sessionKey, pk(~ltk)), SigSessionKey, AgentLtKeyId, ClientId>) ]
-    --[ ReaderGotSessKey(sessionKey), IN_EncryptedSessKey(<aenc(sessionKey, pk(~ltk)), SigSessionKey, AgentLtKeyId, ClientId>) ]->
-  [ Reader_S1(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey, SigSessionKey, AgentLtKeyId) ]
+  [ Reader_Init(~RunId, $ReaderId, $KMSId, ~ltk), In(<'EncryptedSessionKey', aenc(<sessionKey1, sessionKey2>, pk(~ltk)), SigSessionKey, AgentLtKeyId, ClientId>) ]
+    --[ IN_EncryptedSessKey(<aenc(<sessionKey1, sessionKey2>, pk(~ltk)), SigSessionKey, AgentLtKeyId, ClientId>) ]->
+  [ Reader_S1(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId) ]
 
 rule Reader_SendEncryptedSessionKeyVerifyRequest [color=#17E81C]:
-  [ Reader_S1(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey, SigSessionKey, AgentLtKeyId) ]
+  [ Reader_S1(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId) ]
     -->
-  [ Reader_S2(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey, SigSessionKey, AgentLtKeyId), Out_KMS($ReaderId, $KMSId, ~RunId, <VerifyRequest(), AgentLtKeyId, aenc(sessionKey, pk(~ltk)), SigSessionKey, ClientId>) ]
+  [ Reader_S2(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId), Out_KMS($ReaderId, $KMSId, ~RunId, <'VerifyRequest', AgentLtKeyId, aenc(<sessionKey1, sessionKey2>, pk(~ltk)), SigSessionKey, ClientId>) ]
 // rule Reader_SendEncryptedSessionKeyVerifyRequest [color=#17E81C]:
-//   [ Reader_S1(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey, SigSessionKey, AgentLtKeyId) ]
+//   [ Reader_S1(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId) ]
 //     -->
-//   [ Reader_S2(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey, SigSessionKey, AgentLtKeyId), Out_KMS($ReaderId, $KMSId, ~RunId, <VerifyRequest2(), AgentLtKeyId, aenc(sessionKey, pk(~ltk)), SigSessionKey, ClientId>) ]
+//   [ Reader_S2(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId), Out_KMS($ReaderId, $KMSId, ~RunId, <'VerifyRequest2', AgentLtKeyId, aenc(<sessionKey1, sessionKey2>, pk(~ltk)), SigSessionKey, ClientId>) ]
 
 rule Reader_RecvEncryptedSessionKeyVerifyResponse [color=#17E81C]:
-  [ Reader_S2(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey, SigSessionKey, AgentLtKeyId), In_KMS($KMSId, $ReaderId, ~RunId, VerifyResponse())[+] ]
-    --[ WasVerified($AgentId, SigSessionKey, AgentLtKeyId, aenc(sessionKey, pk(~ltk)), ClientId), ReaderVerifiedSessKey(sessionKey) ]->
-  [ Reader_S3(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey, SigSessionKey, AgentLtKeyId) ]
+  [ Reader_S2(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId), In_KMS($KMSId, $ReaderId, ~RunId, 'VerifyResponse')[+] ]
+    --[ WasVerified($AgentId, SigSessionKey, AgentLtKeyId, aenc(<sessionKey1, sessionKey2>, pk(~ltk)), ClientId) ]->
+  [ Reader_S3(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId) ]
 // rule Reader_RecvEncryptedSessionKeyVerifyResponse [color=#17E81C]:
-//   [ Reader_S2(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey, SigSessionKey, AgentLtKeyId), In_KMS($KMSId, $ReaderId, ~RunId, <VerifyResponse2(), AgentLtKeyId, aenc(sessionKey, pk(~ltk)), SigSessionKey, ClientId>)[+] ]
-//     --[ WasVerified($AgentId, SigSessionKey, AgentLtKeyId, aenc(sessionKey, pk(~ltk)), ClientId), ReaderVerifiedSessKey(sessionKey) ]->
-//   [ Reader_S3(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey, SigSessionKey, AgentLtKeyId) ]
+//   [ Reader_S2(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId), In_KMS($KMSId, $ReaderId, ~RunId, <'VerifyResponse2', AgentLtKeyId, aenc(<sessionKey1, sessionKey2>, pk(~ltk)), SigSessionKey, ClientId>)[+] ]
+//     --[ WasVerified($AgentId, SigSessionKey, AgentLtKeyId, aenc(<sessionKey1, sessionKey2>, pk(~ltk)), ClientId) ]->
+//   [ Reader_S3(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId) ]
 
-rule Reader_DecryptCommand [color=#17E81C]:
-  [ Reader_S3(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey, SigSessionKey, AgentLtKeyId), In(<Log(), <ExecuteCommand(), senc(cmd, sessionKey)>>) ]
-    --[ LoggedCommand(cmd), ReaderSessKey(sessionKey) ]->
-  [ Reader_S3(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey, SigSessionKey, AgentLtKeyId) ]
+rule Reader_DecryptMessage1 [color=#17E81C]:
+  [ Reader_S3(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId), In(<'Log', <'Message', senc(msg, sessionKey1)>>) ]
+    --[ LoggedMessage(msg) ]->
+  [ Reader_S3(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId) ]
+
+rule Reader_DecryptMessage2 [color=#17E81C]:
+  [ Reader_S3(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId), In(<'Log', <'Message', senc(msg, sessionKey2)>>) ]
+    --[ LoggedMessage(msg) ]->
+  [ Reader_S3(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId) ]
 
 // End Log Reader
 
@@ -547,6 +572,162 @@ restriction NotEqual:
 //       & (All ClientId AgentId Y SigY ClientLtKeyId sharedSecret #j. AgentSecureSessionResponse(ClientId, AgentId, Y, SigY, ClientLtKeyId, sharedSecret) @ #j ==> Ex X SigX AgentLtKeyId #k. ClientSecureSessionResponse(ClientId, AgentId, X, SigX, Y, SigY, AgentLtKeyId, ClientLtKeyId, sharedSecret) @ #k)
 //   "
 
+
+// similar to what `--auto-sources` would generate:
+// auto-proven!
+lemma agent_recv_sign_response_valid [sources]:
+    "All KMSId AgentId RunId SigX #i.
+      AgentSignResponse(KMSId, AgentId, RunId, <'SignResponse', SigX>)@i ==>
+        Ex #j. KMSSignResponse(KMSId, AgentId, RunId, <'SignResponse', SigX>)@j & #j < #i
+    "
+
+// similar to what `--auto-sources` would generate:
+// auto-proven!
+lemma client_recv_sign_response_valid [sources]:
+    "All KMSId ClientId RunId SigY #i.
+      ClientSignResponse(KMSId, ClientId, RunId, <'SignResponse', SigY>)@i ==>
+        Ex #j. KMSSignResponse(KMSId, ClientId, RunId, <'SignResponse', SigY>)@j & #j < #i
+    "
+
+
+/* Auxiliary lemmas to escape the loop in the transport phase */
+lemma loop_induction_client [use_induction, reuse]:
+  "(All RunId ClientId KMSId AgentId ClientLtKeyId AgentLtKeyId X y #i.
+    (ClientSendLoop(RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, y)@i ==> (Ex #j. ClientHandshakeCompleted(RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, y)@j & j < i))) &
+   (All RunId ClientId KMSId AgentId ClientLtKeyId AgentLtKeyId X y #i.
+    (ClientRecvLoop(RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, y)@i ==> (Ex #j. ClientHandshakeCompleted(RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, y)@j & j < i)))"
+// #region(collapsed) Proof
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (∃ RunId ClientId KMSId AgentId ClientLtKeyId AgentLtKeyId X
+            y #i.
+           (ClientSendLoop( RunId, ClientId, KMSId, AgentId, ClientLtKeyId,
+                            AgentLtKeyId, X, y
+            ) @ #i)
+          ∧
+           ∀ #j.
+            (ClientHandshakeCompleted( RunId, ClientId, KMSId, AgentId,
+                                       ClientLtKeyId, AgentLtKeyId, X, y
+             ) @ #j)
+           ⇒
+            ¬(#j < #i)) ∥
+         (∃ RunId ClientId KMSId AgentId ClientLtKeyId AgentLtKeyId X y #i.
+           (ClientRecvLoop( RunId, ClientId, KMSId, AgentId, ClientLtKeyId,
+                            AgentLtKeyId, X, y
+            ) @ #i)
+          ∧
+           ∀ #j.
+            (ClientHandshakeCompleted( RunId, ClientId, KMSId, AgentId,
+                                       ClientLtKeyId, AgentLtKeyId, X, y
+             ) @ #j)
+           ⇒
+            ¬(#j < #i)) )
+    case case_1
+    solve( Client_S7( ~RunId, $ClientId, $KMSId, $AgentId,
+                      $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y, SigY
+           ) ▶₀ #i )
+      case Client_RecvHandshakeComplete
+      by contradiction /* from formulas */
+    next
+      case Client_RecvMessage
+      by contradiction /* from formulas */
+    next
+      case Client_SendMessage
+      by contradiction /* from formulas */
+    qed
+  next
+    case case_2
+    solve( Client_S7( ~RunId, $ClientId, $KMSId, $AgentId,
+                      $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y, SigY
+           ) ▶₀ #i )
+      case Client_RecvHandshakeComplete
+      by contradiction /* from formulas */
+    next
+      case Client_RecvMessage
+      by contradiction /* from formulas */
+    next
+      case Client_SendMessage
+      by contradiction /* from formulas */
+    qed
+  qed
+qed
+// #endregion
+    
+
+lemma loop_induction_agent [use_induction, reuse]:
+  "(All RunId AgentId KMSId ClientId ReaderId AgentLtKeyId logPk x ClientLtKeyId Y #i.
+     (AgentSendLoop(RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, ClientLtKeyId, Y)@i ==> (Ex #j. AgentHandshakeCompleted(RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, ClientLtKeyId, Y)@j & j < i))) &
+   (All RunId AgentId KMSId ClientId ReaderId AgentLtKeyId logPk x ClientLtKeyId Y #i.
+     (AgentRecvLoop(RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, ClientLtKeyId, Y)@i ==> (Ex #j. AgentHandshakeCompleted(RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, ClientLtKeyId, Y)@j & j < i)))"
+// #region(collapsed) Proof
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (∃ RunId AgentId KMSId ClientId ReaderId AgentLtKeyId logPk
+            x ClientLtKeyId Y #i.
+           (AgentSendLoop( RunId, AgentId, KMSId, ClientId, ReaderId,
+                           AgentLtKeyId, logPk, x, ClientLtKeyId, Y
+            ) @ #i)
+          ∧
+           ∀ #j.
+            (AgentHandshakeCompleted( RunId, AgentId, KMSId, ClientId,
+                                      ReaderId, AgentLtKeyId, logPk, x, ClientLtKeyId, Y
+             ) @ #j)
+           ⇒
+            ¬(#j < #i)) ∥
+         (∃ RunId AgentId KMSId ClientId ReaderId AgentLtKeyId logPk x
+            ClientLtKeyId Y #i.
+           (AgentRecvLoop( RunId, AgentId, KMSId, ClientId, ReaderId,
+                           AgentLtKeyId, logPk, x, ClientLtKeyId, Y
+            ) @ #i)
+          ∧
+           ∀ #j.
+            (AgentHandshakeCompleted( RunId, AgentId, KMSId, ClientId,
+                                      ReaderId, AgentLtKeyId, logPk, x, ClientLtKeyId, Y
+             ) @ #j)
+           ⇒
+            ¬(#j < #i)) )
+    case case_1
+    solve( Agent_S10( ~RunId, $AgentId, $KMSId, $ClientId, $ReaderId,
+                      $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY,
+                      SigSessionKey
+           ) ▶₀ #i )
+      case Agent_ReceiveMessages
+      by contradiction /* from formulas */
+    next
+      case Agent_SendHandshakeComplete
+      by contradiction /* from formulas */
+    next
+      case Agent_SendMessages
+      by contradiction /* from formulas */
+    qed
+  next
+    case case_2
+    solve( Agent_S10( ~RunId, $AgentId, $KMSId, $ClientId, $ReaderId,
+                      $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY,
+                      SigSessionKey
+           ) ▶₀ #i )
+      case Agent_ReceiveMessages
+      by contradiction /* from formulas */
+    next
+      case Agent_SendHandshakeComplete
+      by contradiction /* from formulas */
+    next
+      case Agent_SendMessages
+      by contradiction /* from formulas */
+    qed
+  qed
+qed
+// #endregion
+
+
 // auto-proven
 lemma Agent_can_finish_wo_reveal3:
   exists-trace
@@ -561,7 +742,7 @@ lemma Agent_can_finish_wo_reveal3:
       & (All AgentId ClientId X SigX AgentLtKeyId #j. ClientSecureSessionRequest(AgentId, ClientId, X, SigX, AgentLtKeyId) @ #j ==> Ex #k. AgentSecureSessionRequest(AgentId, ClientId, X, SigX, AgentLtKeyId) @ #k)
       & (All ClientId AgentId Y SigY ClientLtKeyId sharedSecret #j. AgentSecureSessionResponse(ClientId, AgentId, Y, SigY, ClientLtKeyId, sharedSecret) @ #j ==> Ex X SigX AgentLtKeyId #k. ClientSecureSessionResponse(ClientId, AgentId, X, SigX, Y, SigY, AgentLtKeyId, ClientLtKeyId, sharedSecret) @ #k)
       & (All AgentId2 #j. Agent_Finish3(AgentId2) @ #j ==> #i = #j)
-      & (All ClientId1 AgentId1 cmd1 ClientId2 AgentId2 cmd2 #j #k. SendCommand(ClientId1, AgentId1, cmd1) @ #j & SendCommand(ClientId2, AgentId2, cmd2) @ #k ==> #j = #k)
+      & (All msg1 msg2 #j #k. ClientSendMessage(msg1) @ #j & ClientSendMessage(msg2) @ #k ==> #j = #k)
   "
 
 // // does not terminate
@@ -616,7 +797,7 @@ lemma Agent_can_finish_wo_reveal3:
 //   "
 
 // auto-proven!
-lemma Client_can_finish_wo_reveal3:
+lemma Client_can_finish_wo_reveal3 [heuristic=C]: // [heuristic=O "./executability.oracle"]:
   exists-trace
   " Ex ClientId #i.
         Client_Finish3(ClientId) @ #i
@@ -626,7 +807,10 @@ lemma Client_can_finish_wo_reveal3:
       // & (All id1 id2 #j #k. KMSSign(id1) @ #j & KMSSign(id2) @ #k ==> #j = #k | not(id1 = id2))
       & (All AgentId ClientId X SigX AgentLtKeyId #j. ClientSecureSessionRequest(AgentId, ClientId, X, SigX, AgentLtKeyId) @ #j ==> Ex #k. AgentSecureSessionRequest(AgentId, ClientId, X, SigX, AgentLtKeyId) @ #k)
       & (All ClientId AgentId Y SigY ClientLtKeyId sharedSecret #j. AgentSecureSessionResponse(ClientId, AgentId, Y, SigY, ClientLtKeyId, sharedSecret) @ #j ==> Ex X SigX AgentLtKeyId #k. ClientSecureSessionResponse(ClientId, AgentId, X, SigX, Y, SigY, AgentLtKeyId, ClientLtKeyId, sharedSecret) @ #k)
+      & (All AgentId1 AgentId2 #j #k. Agent_Finish3(AgentId1) @ #j & Agent_Finish3(AgentId2) @ #k ==> #j = #k)
       & (All ClientId2 #j. Client_Finish3(ClientId2) @ #j ==> #i = #j)
+      & (All ClientId1 ClientId2 #j #k. Client_Finish(ClientId1) @ #j & Client_Finish(ClientId2) @ #k ==> #j = #k)
+      // & (All payload1 payload2 payload3 payload4 #j #k #l #m. KMSSigned(payload1) @ #j & KMSSigned(payload2) @ #k & KMSSigned(payload3) @ #l & KMSSigned(payload4) @ #m ==> (#j = #m | #k = #m | #l = #m)) // 3 sign responses are sufficient
   "
 
 // // doesn't hold
@@ -686,22 +870,6 @@ lemma Client_can_finish_wo_reveal3:
 //       & (All msg1 msg2 #k #l. OUT_EncryptedSessKey(msg1) @ #k & OUT_EncryptedSessKey(msg2) @ #l ==> #k = #l)
 //   "
 
-// similar to what `--auto-sources` would generate:
-// auto-proven!
-lemma agent_recv_sign_response_valid [sources]:
-    "All KMSId AgentId RunId SigX #i.
-      AgentSignResponse(KMSId, AgentId, RunId, <SignResponse(), SigX>)@i ==>
-        Ex #j. KMSSignResponse(KMSId, AgentId, RunId, <SignResponse(), SigX>)@j & #j < #i
-    "
-
-// similar to what `--auto-sources` would generate:
-// auto-proven!
-lemma client_recv_sign_response_valid [sources]:
-    "All KMSId ClientId RunId SigY #i.
-      ClientSignResponse(KMSId, ClientId, RunId, <SignResponse(), SigY>)@i ==>
-        Ex #j. KMSSignResponse(KMSId, ClientId, RunId, <SignResponse(), SigY>)@j & #j < #i
-    "
-
 // auto-proven!
 lemma x_is_secret [reuse, heuristic=S]:
     "All x #i.
@@ -752,157 +920,502 @@ lemma SharedSecret_is_secret[reuse]:
 // #region(collapsed) Proof
 simplify
 solve( Secret( x ) @ #i )
-  case Agent_SendEncryptedSessionKey
-  solve( Agent_S8( ~RunId, $AgentId, $KMSId, $ClientId, $ReaderId,
+  case Agent_SendHandshakeComplete
+  solve( Agent_S9( ~RunId, $AgentId, $KMSId, $ClientId, $ReaderId,
                    $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY,
                    SigSessionKey
          ) ▶₀ #i )
-    case Agent_RecvSessionKeySignResponse
-    solve( In_KMS( $KMSId, $AgentId, ~RunId, VerifyResponse
-           )[+] ▶₁ #vr.3 )
+    case Agent_SendEncryptedSessionKey
+    solve( In_KMS( $KMSId, $AgentId, ~RunId, 'VerifyResponse'
+           )[+] ▶₁ #vr.4 )
       case ChanIn_KMS
       solve( In_KMS( $AgentId, $KMSId, ~RunId,
-                     <VerifyRequest, $LtkARN.2, payload.2,
+                     <'VerifyRequest', $LtkARN.2, payload.2,
                       sign(<payload.2, $KeyOwnerId>, ~SignKey.2), $KeyOwnerId>
-             )[+] ▶₂ #vr.23 )
+             )[+] ▶₂ #vr.24 )
         case ChanIn_KMS
         solve( In_KMS( $KMSId, $AgentId, ~RunId,
-                       <SignResponse, sign(<payload, ReceiverId>, ~SignKey)>
-               )[+] ▶₁ #vr.13 )
+                       <'SignResponse',
+                        sign(<payload, ReceiverId>, ~SignKey)>
+               )[+] ▶₁ #vr.14 )
           case ChanIn_KMS
-          solve( !KU( sign(<Y, $AgentId>, ~SignKey.1) ) @ #vk.8 )
-            case Agent_SendEncryptedSessionKey
-            by solve( In_KMS( $AgentId, $KMSId.1, ~RunId.1,
-                              <SignRequest, $LtkARN, Y, $AgentId>
-                      )[+] ▶₂ #vr.47 )
-          next
-            case ChanOut_MGS_case_1
-            solve( In_KMS( $KMSId.1, $AgentId, ~RunId.1,
-                           <SignResponse, sign(<Y, $AgentId>, ~SignKey.1)>
-                   )[+] ▶₁ #vr.40 )
+          solve( In_KMS( $AgentId, $KMSId, ~RunId,
+                         <'SignRequest', $LtkARN.1, payload, ReceiverId>
+                 )[+] ▶₂ #vr.34 )
+            case ChanIn_KMS_case_1
+            solve( In_KMS( $AgentId, $KMSId, ~RunId,
+                           <'SignRequest', $LtkARN.1, payload, ReceiverId>
+                   )[+] ▶₂ #vr.9 )
               case ChanIn_KMS
-              by solve( In_KMS( $AgentId, $KMSId.1, ~RunId.1,
-                                <SignRequest, $LtkARN, Y, $AgentId>
-                        )[+] ▶₂ #vr.44 )
-            qed
-          next
-            case ChanOut_MGS_case_2
-            solve( In_KMS( $KMSId.1, $AgentId, ~RunId.1, VerifyResponse
-                   )[+] ▶₁ #vr.43 )
-              case ChanIn_KMS
-              solve( In_KMS( $AgentId, $KMSId.1, ~RunId.1,
-                             <VerifyRequest, $LtkARN.3, payload.2,
-                              sign(<payload.2, $KeyOwnerId>, ~SignKey.3), $KeyOwnerId>
-                     )[+] ▶₂ #vr.57 )
-                case ChanIn_KMS
-                solve( In_KMS( $AgentId, $KMSId.1, ~RunId.1,
-                               <SignRequest, $LtkARN, Y, $AgentId>
-                       )[+] ▶₂ #vr.52 )
+              solve( !KU( sign(<Y, $AgentId>, ~SignKey.1) ) @ #vk.11 )
+                case Agent_SendEncryptedSessionKey
+                solve( In_KMS( $KMSId.1, $AgentId, ~RunId.1,
+                               <'SignResponse',
+                                sign(<payload, ReceiverId>, ~SignKey.3)>
+                       )[+] ▶₁ #vr.58 )
                   case ChanIn_KMS
-                  solve( !KU( kdf1('g'^(~x*~y)) ) @ #vk.4 )
-                    case Agent_SendEncryptedSessionKey
-                    solve( !KU( ~ltk.1 ) @ #vk.22 )
-                      case Reveal_ltk
-                      solve( splitEqs(12) )
-                        case split_case_1
-                        by contradiction /* from formulas */
+                  by solve( In_KMS( $AgentId, $KMSId.1, ~RunId.1,
+                                    <'SignRequest', $LtkARN, Y, $AgentId>
+                            )[+] ▶₂ #vr.54 )
+                qed
+              next
+                case ChanOut_MGS_case_1
+                solve( In_KMS( $KMSId.1, $AgentId, ~RunId.1,
+                               <'SignResponse', sign(<Y, $AgentId>, ~SignKey.1)
+                               >
+                       )[+] ▶₁ #vr.47 )
+                  case ChanIn_KMS
+                  by solve( In_KMS( $AgentId, $KMSId.1, ~RunId.1,
+                                    <'SignRequest', $LtkARN, Y, $AgentId>
+                            )[+] ▶₂ #vr.51 )
+                qed
+              next
+                case ChanOut_MGS_case_2
+                solve( In_KMS( $AgentId, $KMSId.1, ~RunId.1,
+                               <'SignRequest', $LtkARN, Y, $AgentId>
+                       )[+] ▶₂ #vr.55 )
+                  case ChanIn_KMS
+                  solve( In_KMS( $KMSId.1, $AgentId, ~RunId.1,
+                                 'VerifyResponse'
+                         )[+] ▶₁ #vr.50 )
+                    case ChanIn_KMS
+                    solve( In_KMS( $AgentId, $KMSId.1, ~RunId.1,
+                                   <'VerifyRequest', $LtkARN, payload,
+                                    sign(<payload, $KeyOwnerId>, ~SignKey.3), $KeyOwnerId>
+                           )[+] ▶₂ #vr.66 )
+                      case ChanIn_KMS
+                      solve( !KU( sign(<<X, ReaderId.1>, $AgentId>,
+                                       ~SignKey.3)
+                             ) @ #vk.20 )
+                        case Agent_SendEncryptedSessionKey
+                        solve( In_KMS( $AgentId, $KMSId.2, ~RunId.2,
+                                       <'SignRequest', $LtkARN, <X, ReaderId.1>,
+                                        $AgentId>
+                               )[+] ▶₂ #vr.83 )
+                          case ChanIn_KMS
+                          solve( In_KMS( $KMSId.2, $AgentId, ~RunId.2,
+                                         <'SignResponse',
+                                          sign(<payload, ReceiverId>, ~SignKey.4)>
+                                 )[+] ▶₁ #vr.87 )
+                            case ChanIn_KMS
+                            solve( In_KMS( $AgentId, $KMSId.2, ~RunId.2,
+                                           <'SignRequest', $LtkARN.1, payload, ReceiverId
+                                           >
+                                   )[+] ▶₂ #vr.99 )
+                              case ChanIn_KMS
+                              by contradiction
+                            qed
+                          qed
+                        qed
                       next
-                        case split_case_2
-                        solve( !KU( 'g'^(~x*~y*inv(~x.1)) ) @ #vk.27 )
-                          case ChanOut_MGS_case_1
-                          by solve( !KU( ~y ) @ #vk.32 )
-                        next
-                          case ChanOut_MGS_case_2
-                          by solve( !KU( ~x ) @ #vk.32 )
-                        next
-                          case c_exp
-                          by solve( !KU( ~x ) @ #vk.33 )
+                        case ChanOut_MGS_case_1
+                        solve( In_KMS( $KMSId.2, $AgentId, ~RunId.2,
+                                       <'SignResponse',
+                                        sign(<<X, ReaderId.1>, $AgentId>, ~SignKey.3)
+                                       >
+                               )[+] ▶₁ #vr.76 )
+                          case ChanIn_KMS
+                          solve( In_KMS( $AgentId, $KMSId.2, ~RunId.2,
+                                         <'SignRequest', $LtkARN, <X, ReaderId.1>,
+                                          $AgentId>
+                                 )[+] ▶₂ #vr.85 )
+                            case ChanIn_KMS
+                            solve( !KU( hash('g'^(~x*~y)) ) @ #vk.18 )
+                              case ChanOut_MGS
+                              solve( In_KMS( $ClientId.1, $KMSId.3, ~RunId.3,
+                                             <'SignRequest', $LtkARN.1, payload,
+                                              ReceiverId>
+                                     )[+] ▶₂ #vr.103 )
+                                case ChanIn_KMS
+                                solve( In_KMS( $KMSId.3, $ClientId.1, ~RunId.3,
+                                               'VerifyResponse'
+                                       )[+] ▶₁ #vr.98 )
+                                  case ChanIn_KMS
+                                  solve( splitEqs(12) )
+                                    case split_case_1
+                                    solve( !KU( kdf1('g'^(~x*~y)) ) @ #vk.12 )
+                                      case Agent_SendEncryptedSessionKey
+                                      solve( splitEqs(18) )
+                                        case split_case_1
+                                        solve( !KU( ~ltk ) @ #vk.23 )
+                                          case Reveal_ltk
+                                          by contradiction
+                                        qed
+                                      next
+                                        case split_case_2
+                                        solve( !KU( 'g'^(~x*~y*inv(~x.1)) ) @ #vk.29 )
+                                          case ChanOut_MGS_case_1
+                                          by solve( !KU( ~y ) @ #vk.34 )
+                                        next
+                                          case ChanOut_MGS_case_2
+                                          by solve( !KU( ~x ) @ #vk.34 )
+                                        next
+                                          case c_exp
+                                          by solve( !KU( ~x ) @ #vk.35 )
+                                        qed
+                                      qed
+                                    next
+                                      case c_kdf1
+                                      solve( !KU( 'g'^(~x*~y) ) @ #vk.23 )
+                                        case ChanOut_MGS_case_1
+                                        by solve( !KU( ~y ) @ #vk.24 )
+                                      next
+                                        case ChanOut_MGS_case_2
+                                        by solve( !KU( ~x ) @ #vk.24 )
+                                      next
+                                        case c_exp
+                                        by solve( !KU( ~x ) @ #vk.26 )
+                                      qed
+                                    qed
+                                  next
+                                    case split_case_2
+                                    solve( !KU( 'g'^(~x*~y*inv(~y.1)) ) @ #vk.28 )
+                                      case ChanOut_MGS_case_1
+                                      by solve( !KU( ~y ) @ #vk.35 )
+                                    next
+                                      case ChanOut_MGS_case_2
+                                      by solve( !KU( ~x ) @ #vk.35 )
+                                    next
+                                      case c_exp
+                                      by solve( !KU( ~x ) @ #vk.36 )
+                                    qed
+                                  qed
+                                qed
+                              qed
+                            next
+                              case c_hash
+                              solve( !KU( 'g'^(~x*~y) ) @ #vk.24 )
+                                case ChanOut_MGS_case_1
+                                by solve( !KU( ~y ) @ #vk.25 )
+                              next
+                                case ChanOut_MGS_case_2
+                                by solve( !KU( ~x ) @ #vk.25 )
+                              next
+                                case c_exp
+                                by solve( !KU( ~x ) @ #vk.27 )
+                              qed
+                            qed
+                          qed
+                        qed
+                      next
+                        case ChanOut_MGS_case_2
+                        by solve( In_KMS( $AgentId, $KMSId.2, ~RunId.2,
+                                          <'SignRequest', $LtkARN,
+                                           <X, ReaderId.1>, $AgentId>
+                                  )[+] ▶₂ #vr.84 )
+                      next
+                        case c_sign
+                        solve( !KU( ~SignKey.3 ) @ #vk.26 )
+                          case Reveal_KmsSignKey
+                          by contradiction
                         qed
                       qed
                     qed
-                  next
-                    case c_kdf1
-                    solve( !KU( 'g'^(~x*~y) ) @ #vk.21 )
-                      case ChanOut_MGS_case_1
-                      by solve( !KU( ~y ) @ #vk.22 )
-                    next
-                      case ChanOut_MGS_case_2
-                      by solve( !KU( ~x ) @ #vk.22 )
-                    next
-                      case c_exp
-                      by solve( !KU( ~x ) @ #vk.24 )
-                    qed
                   qed
+                qed
+              next
+                case c_sign
+                solve( !KU( ~SignKey.1 ) @ #vk.16 )
+                  case Reveal_KmsSignKey
+                  by contradiction
                 qed
               qed
             qed
           next
-            case c_sign
-            solve( !KU( ~SignKey.1 ) @ #vk.13 )
-              case Reveal_KmsSignKey
-              by contradiction
-            qed
+            case ChanIn_KMS_case_2
+            by contradiction
           qed
         qed
       qed
     qed
   qed
 next
-  case Client_SendSecureSessionResponse
-  solve( Client_S5( ~RunId, $ClientId, $KMSId, $AgentId,
+  case Client_RecvHandshakeComplete
+  solve( Client_S6( ~RunId, $ClientId, $KMSId, $AgentId,
                     $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y, SigY
          ) ▶₀ #i )
-    case Client_RecvSignResponse
-    solve( In_KMS( $KMSId, $ClientId, ~RunId, VerifyResponse
-           )[+] ▶₁ #vr.3 )
-      case ChanIn_KMS
-      solve( In_KMS( $ClientId, $KMSId, ~RunId,
-                     <VerifyRequest, $LtkARN.1, payload.1,
-                      sign(<payload.1, $KeyOwnerId>, ~SignKey.1), $KeyOwnerId>
-             )[+] ▶₂ #vr.18 )
+    case Client_SendSecureSessionResponse
+    solve( In_MGS( $AgentId, $ClientId,
+                   <'HandshakeComplete',
+                    senc(<'HandshakeCompletePayload', msg>, kdf1(z))>
+           ) ▶₁ #i )
+      case ChanIn_MGS
+      solve( In_KMS( $KMSId, $ClientId, ~RunId, 'VerifyResponse'
+             )[+] ▶₁ #vr.4 )
         case ChanIn_KMS
         solve( In_KMS( $ClientId, $KMSId, ~RunId,
-                       <SignRequest, $LtkARN.1, payload, ReceiverId>
-               )[+] ▶₂ #vr.8 )
+                       <'VerifyRequest', $LtkARN.1, payload.1,
+                        sign(<payload.1, $KeyOwnerId>, ~SignKey.1), $KeyOwnerId>
+               )[+] ▶₂ #vr.20 )
           case ChanIn_KMS
-          solve( !KU( sign(<<X, ReaderId>, $ClientId>, ~SignKey)
-                 ) @ #vk.8 )
-            case Agent_SendEncryptedSessionKey
-            solve( In_KMS( $KMSId.1, $ClientId, ~RunId.1, VerifyResponse
-                   )[+] ▶₁ #vr.32 )
-              case ChanIn_KMS
+          solve( In_KMS( $ClientId, $KMSId, ~RunId,
+                         <'SignRequest', $LtkARN.1, payload, ReceiverId>
+                 )[+] ▶₂ #vr.9 )
+            case ChanIn_KMS
+            solve( !KU( sign(<<X, ReaderId>, $ClientId>, ~SignKey)
+                   ) @ #vk.10 )
+              case Agent_SendEncryptedSessionKey
               solve( In_KMS( $ClientId, $KMSId.1, ~RunId.1,
-                             <VerifyRequest, $LtkARN.2, payload.1,
-                              sign(<payload.1, $KeyOwnerId>, ~SignKey.3), $KeyOwnerId>
-                     )[+] ▶₂ #vr.51 )
-                case ChanIn_KMS
+                             <'SignRequest', $LtkARN.1, payload, ReceiverId>
+                     )[+] ▶₂ #vr.47 )
+                case ChanIn_KMS_case_1
                 solve( In_KMS( $KMSId.1, $ClientId, ~RunId.1,
-                               <SignResponse, sign(<payload, ReceiverId>, ~SignKey.2)>
-                       )[+] ▶₁ #vr.41 )
+                               <'SignResponse',
+                                sign(<<'g'^~x, $ReaderId.1>, $ClientId.1>,
+                                     ~SignKey.2)
+                               >
+                       )[+] ▶₁ #vr.43 )
                   case ChanIn_KMS
                   solve( In_KMS( $ClientId, $KMSId.1, ~RunId.1,
-                                 <SignRequest, $LtkARN, <X, ReaderId>, $ClientId>
-                         )[+] ▶₂ #vr.37 )
+                                 <'SignRequest', $LtkARN, <X, ReaderId>, $ClientId
+                                 >
+                         )[+] ▶₂ #vr.39 )
                     case ChanIn_KMS
-                    solve( !KU( kdf1('g'^(~x*~y)) ) @ #vk.4 )
-                      case Agent_SendEncryptedSessionKey
-                      solve( splitEqs(12) )
-                        case split_case_1
-                        solve( !KU( ~ltk ) @ #vk.21 )
-                          case Reveal_ltk
-                          by contradiction /* from formulas */
-                        qed
-                      next
-                        case split_case_2
-                        solve( !KU( 'g'^(~x*~y*inv(~x.1)) ) @ #vk.26 )
+                    by solve( In_KMS( $ClientId, $KMSId.1, ~RunId.1,
+                                      <'SignRequest', $AgentLtKeyId,
+                                       <'g'^~x, $ReaderId>, $ClientId>
+                              )[+] ▶₂ #vr.51 )
+                  qed
+                qed
+              next
+                case ChanIn_KMS_case_2
+                by contradiction
+              qed
+            next
+              case ChanOut_MGS_case_1
+              solve( In_KMS( $KMSId.1, $ClientId, ~RunId.1,
+                             <'SignResponse',
+                              sign(<<X, ReaderId>, $ClientId>, ~SignKey)>
+                     )[+] ▶₁ #vr.32 )
+                case ChanIn_KMS
+                solve( In_KMS( $ClientId, $KMSId.1, ~RunId.1,
+                               <'SignRequest', $LtkARN, <X, ReaderId>, $ClientId
+                               >
+                       )[+] ▶₂ #vr.41 )
+                  case ChanIn_KMS
+                  solve( !KU( senc(<'HandshakeCompletePayload', msg>,
+                                   kdf1('g'^(~x*~y)))
+                         ) @ #vk.16 )
+                    case ChanOut_MGS_case_1
+                    solve( In_KMS( $AgentId.1, $KMSId.2, ~RunId.2,
+                                   <'SignRequest', $LtkARN, payload.1, ReceiverId.1>
+                           )[+] ▶₂ #vr.57 )
+                      case ChanIn_KMS_case_1
+                      solve( splitEqs(9) )
+                        case split
+                        solve( !KU( 'g'^(~x*~y*inv(~x.1)) ) @ #vk.23 )
                           case ChanOut_MGS_case_1
-                          by solve( !KU( ~y ) @ #vk.33 )
+                          by solve( !KU( ~y ) @ #vk.30 )
                         next
                           case ChanOut_MGS_case_2
-                          by solve( !KU( ~x ) @ #vk.33 )
+                          by solve( !KU( ~x ) @ #vk.30 )
                         next
                           case c_exp
-                          by solve( !KU( ~x ) @ #vk.34 )
+                          by solve( !KU( ~x ) @ #vk.31 )
+                        qed
+                      qed
+                    next
+                      case ChanIn_KMS_case_2
+                      solve( In_KMS( $KMSId.2, $AgentId.1, ~RunId.2,
+                                     <'SignResponse',
+                                      sign(<payload, ReceiverId>, ~SignKey.2)>
+                             )[+] ▶₁ #vr.62 )
+                        case ChanIn_KMS
+                        solve( In_KMS( $KMSId.2, $AgentId.1, ~RunId.2,
+                                       'VerifyResponse'
+                               )[+] ▶₁ #vr.52 )
+                          case ChanIn_KMS
+                          solve( splitEqs(9) )
+                            case split_case_1
+                            solve( In_KMS( $ClientId, $KMSId.1, ~RunId.1,
+                                           <'VerifyRequest', $LtkARN, payload,
+                                            sign(<payload, $KeyOwnerId>, ~SignKey.3),
+                                            $KeyOwnerId>
+                                   )[+] ▶₂ #vr.70 )
+                              case ChanIn_KMS
+                              solve( !KU( hash('g'^(~x*~y)) ) @ #vk.26 )
+                                case ChanOut_MGS
+                                solve( In_KMS( $KMSId.2, $ClientId.1, ~RunId.2,
+                                               'VerifyResponse'
+                                       )[+] ▶₁ #vr.86 )
+                                  case ChanIn_KMS
+                                  solve( In_KMS( $ClientId.1, $KMSId.2, ~RunId.2,
+                                                 <'VerifyRequest', $LtkARN.2, payload.1,
+                                                  sign(<payload.1, $KeyOwnerId>, ~SignKey.5),
+                                                  $KeyOwnerId>
+                                         )[+] ▶₂ #vr.101 )
+                                    case ChanIn_KMS
+                                    solve( In_KMS( $KeyOwnerId, $KMSId.2, ~RunId.2,
+                                                   <'SignRequest', $LtkARN, payload,
+                                                    ReceiverId>
+                                           )[+] ▶₂ #vr.91 )
+                                      case ChanIn_KMS
+                                      solve( splitEqs(14) )
+                                        case split_case_1
+                                        solve( !KU( sign(<'g'^~y, $ClientId>,
+                                                         ~SignKey.2)
+                                               ) @ #vk.25 )
+                                          case Agent_SendEncryptedSessionKey
+                                          solve( In_KMS( $KMSId.2, $ClientId, ~RunId.2,
+                                                         <'SignResponse',
+                                                          sign(<payload, ReceiverId>,
+                                                               ~SignKey.4)
+                                                         >
+                                                 )[+] ▶₁ #vr.100 )
+                                            case ChanIn_KMS
+                                            by solve( In_KMS( $ClientId, $KMSId.2, ~RunId.2,
+                                                              <'SignRequest', $LtkARN.1,
+                                                               'g'^~y, $ClientId>
+                                                      )[+] ▶₂ #vr.96 )
+                                          qed
+                                        next
+                                          case ChanOut_MGS_case_1
+                                          solve( In_KMS( $KMSId.2, $ClientId, ~RunId.2,
+                                                         <'SignResponse',
+                                                          sign(<'g'^~y, $ClientId>,
+                                                               ~SignKey.2)
+                                                         >
+                                                 )[+] ▶₁ #vr.89 )
+                                            case ChanIn_KMS
+                                            by solve( In_KMS( $ClientId, $KMSId.2, ~RunId.2,
+                                                              <'SignRequest', $LtkARN,
+                                                               'g'^~y, $ClientId>
+                                                      )[+] ▶₂ #vr.98 )
+                                          qed
+                                        next
+                                          case ChanOut_MGS_case_2
+                                          solve( In_KMS( $KMSId.2, $ClientId, ~RunId.2,
+                                                         'VerifyResponse'
+                                                 )[+] ▶₁ #vr.92 )
+                                            case ChanIn_KMS
+                                            solve( In_KMS( $ClientId, $KMSId.2, ~RunId.2,
+                                                           <'VerifyRequest', $LtkARN.1,
+                                                            payload,
+                                                            sign(<payload, $KeyOwnerId>,
+                                                                 ~SignKey.4),
+                                                            $KeyOwnerId>
+                                                   )[+] ▶₂ #vr.106 )
+                                              case ChanIn_KMS
+                                              solve( In_KMS( $ClientId, $KMSId.2, ~RunId.2,
+                                                             <'SignRequest', $LtkARN,
+                                                              'g'^~y, $ClientId>
+                                                     )[+] ▶₂ #vr.97 )
+                                                case ChanIn_KMS
+                                                solve( !KU( kdf1('g'^(~x*~y)) ) @ #vk.13 )
+                                                  case Agent_SendEncryptedSessionKey
+                                                  solve( splitEqs(25) )
+                                                    case split_case_1
+                                                    solve( !KU( ~ltk ) @ #vk.26 )
+                                                      case Reveal_ltk
+                                                      by contradiction
+                                                    qed
+                                                  next
+                                                    case split_case_2
+                                                    solve( !KU( 'g'^(~x*~y*inv(~x.1))
+                                                           ) @ #vk.32 )
+                                                      case ChanOut_MGS_case_1
+                                                      by solve( !KU( ~y ) @ #vk.37 )
+                                                    next
+                                                      case ChanOut_MGS_case_2
+                                                      by solve( !KU( ~x ) @ #vk.37 )
+                                                    next
+                                                      case c_exp
+                                                      by solve( !KU( ~x ) @ #vk.38 )
+                                                    qed
+                                                  qed
+                                                next
+                                                  case c_kdf1
+                                                  solve( !KU( 'g'^(~x*~y) ) @ #vk.26 )
+                                                    case ChanOut_MGS_case_1
+                                                    by solve( !KU( ~y ) @ #vk.27 )
+                                                  next
+                                                    case ChanOut_MGS_case_2
+                                                    by solve( !KU( ~x ) @ #vk.27 )
+                                                  next
+                                                    case c_exp
+                                                    by solve( !KU( ~x ) @ #vk.29 )
+                                                  qed
+                                                qed
+                                              qed
+                                            qed
+                                          qed
+                                        next
+                                          case c_sign
+                                          solve( !KU( ~SignKey.2 ) @ #vk.28 )
+                                            case Reveal_KmsSignKey
+                                            by contradiction
+                                          qed
+                                        qed
+                                      next
+                                        case split_case_2
+                                        solve( !KU( 'g'^(~x*~y*inv(~y.1)) ) @ #vk.31 )
+                                          case ChanOut_MGS_case_1
+                                          by solve( !KU( ~y ) @ #vk.38 )
+                                        next
+                                          case ChanOut_MGS_case_2
+                                          by solve( !KU( ~x ) @ #vk.38 )
+                                        next
+                                          case c_exp
+                                          by solve( !KU( ~x ) @ #vk.39 )
+                                        qed
+                                      qed
+                                    qed
+                                  qed
+                                qed
+                              next
+                                case c_hash
+                                solve( !KU( 'g'^(~x*~y) ) @ #vk.27 )
+                                  case ChanOut_MGS_case_1
+                                  by solve( !KU( ~y ) @ #vk.28 )
+                                next
+                                  case ChanOut_MGS_case_2
+                                  by solve( !KU( ~x ) @ #vk.28 )
+                                next
+                                  case c_exp
+                                  by solve( !KU( ~x ) @ #vk.30 )
+                                qed
+                              qed
+                            qed
+                          next
+                            case split_case_2
+                            solve( !KU( 'g'^(~x*~y*inv(~x.1)) ) @ #vk.23 )
+                              case ChanOut_MGS_case_1
+                              by solve( !KU( ~y ) @ #vk.30 )
+                            next
+                              case ChanOut_MGS_case_2
+                              by solve( !KU( ~x ) @ #vk.30 )
+                            next
+                              case c_exp
+                              by solve( !KU( ~x ) @ #vk.31 )
+                            qed
+                          qed
+                        qed
+                      qed
+                    qed
+                  next
+                    case ChanOut_MGS_case_2
+                    solve( !KU( kdf1('g'^(~x*~y)) ) @ #vk.6 )
+                      case Agent_SendEncryptedSessionKey
+                      solve( !KU( ~ltk.1 ) @ #vk.21 )
+                        case Reveal_ltk
+                        solve( splitEqs(9) )
+                          case split_case_1
+                          solve( !KU( 'g'^(~x*~y*inv(~x.3)) ) @ #vk.27 )
+                            case ChanOut_MGS_case_1
+                            by solve( !KU( ~y ) @ #vk.34 )
+                          next
+                            case ChanOut_MGS_case_2
+                            by solve( !KU( ~x ) @ #vk.34 )
+                          next
+                            case c_exp
+                            by solve( !KU( ~x ) @ #vk.35 )
+                          qed
+                        next
+                          case split_case_2
+                          solve( splitEqs(10) )
+                            case split
+                            by contradiction /* from formulas */
+                          qed
                         qed
                       qed
                     next
@@ -918,77 +1431,68 @@ next
                         by solve( !KU( ~x ) @ #vk.24 )
                       qed
                     qed
-                  qed
-                qed
-              qed
-            qed
-          next
-            case ChanOut_MGS_case_1
-            solve( In_KMS( $KMSId.1, $ClientId, ~RunId.1,
-                           <SignResponse,
-                            sign(<<X, ReaderId>, $ClientId>, ~SignKey)>
-                   )[+] ▶₁ #vr.30 )
-              case ChanIn_KMS
-              solve( In_KMS( $ClientId, $KMSId.1, ~RunId.1,
-                             <SignRequest, $LtkARN, <X, ReaderId>, $ClientId>
-                     )[+] ▶₂ #vr.39 )
-                case ChanIn_KMS
-                solve( !KU( kdf1('g'^(~x*~y)) ) @ #vk.4 )
-                  case Agent_SendEncryptedSessionKey
-                  solve( !KU( ~ltk.1 ) @ #vk.12 )
-                    case Reveal_ltk
-                    solve( splitEqs(7) )
-                      case split_case_1
-                      by contradiction
+                  next
+                    case c_senc
+                    solve( !KU( kdf1('g'^(~x*~y)) ) @ #vk.6 )
+                      case Agent_SendEncryptedSessionKey
+                      solve( !KU( ~ltk.1 ) @ #vk.20 )
+                        case Reveal_ltk
+                        solve( splitEqs(8) )
+                          case split_case_1
+                          by contradiction
+                        next
+                          case split_case_2
+                          solve( !KU( 'g'^(~x*~y*inv(~x.1)) ) @ #vk.26 )
+                            case ChanOut_MGS_case_1
+                            by solve( !KU( ~y ) @ #vk.33 )
+                          next
+                            case ChanOut_MGS_case_2
+                            by solve( !KU( ~x ) @ #vk.33 )
+                          next
+                            case c_exp
+                            by solve( !KU( ~x ) @ #vk.34 )
+                          qed
+                        qed
+                      qed
                     next
-                      case split_case_2
-                      solve( !KU( 'g'^(~x*~y*inv(~x.1)) ) @ #vk.18 )
+                      case c_kdf1
+                      solve( !KU( 'g'^(~x*~y) ) @ #vk.20 )
                         case ChanOut_MGS_case_1
-                        by solve( !KU( ~y ) @ #vk.25 )
+                        by solve( !KU( ~y ) @ #vk.21 )
                       next
                         case ChanOut_MGS_case_2
-                        by solve( !KU( ~x ) @ #vk.25 )
+                        by solve( !KU( ~x ) @ #vk.21 )
                       next
                         case c_exp
-                        by solve( !KU( ~x ) @ #vk.26 )
+                        by solve( !KU( ~x ) @ #vk.23 )
                       qed
                     qed
                   qed
-                next
-                  case c_kdf1
-                  solve( !KU( 'g'^(~x*~y) ) @ #vk.12 )
-                    case ChanOut_MGS_case_1
-                    by solve( !KU( ~y ) @ #vk.13 )
-                  next
-                    case ChanOut_MGS_case_2
-                    by solve( !KU( ~x ) @ #vk.13 )
-                  next
-                    case c_exp
-                    by solve( !KU( ~x ) @ #vk.15 )
-                  qed
                 qed
               qed
-            qed
-          next
-            case ChanOut_MGS_case_2
-            solve( In_KMS( $KMSId.1, $ClientId, ~RunId.1, VerifyResponse
-                   )[+] ▶₁ #vr.33 )
-              case ChanIn_KMS
-              solve( In_KMS( $ClientId, $KMSId.1, ~RunId.1,
-                             <VerifyRequest, $LtkARN.1, payload,
-                              sign(<payload, $KeyOwnerId>, ~SignKey.2), $KeyOwnerId>
-                     )[+] ▶₂ #vr.47 )
+            next
+              case ChanOut_MGS_case_2
+              solve( In_KMS( $KMSId.1, $ClientId, ~RunId.1,
+                             'VerifyResponse'
+                     )[+] ▶₁ #vr.35 )
                 case ChanIn_KMS
-                by solve( In_KMS( $ClientId, $KMSId.1, ~RunId.1,
-                                  <SignRequest, $LtkARN, <X, ReaderId>, $ClientId>
-                          )[+] ▶₂ #vr.38 )
+                solve( In_KMS( $ClientId, $KMSId.1, ~RunId.1,
+                               <'VerifyRequest', $LtkARN.1, payload,
+                                sign(<payload, $KeyOwnerId>, ~SignKey.2), $KeyOwnerId>
+                       )[+] ▶₂ #vr.49 )
+                  case ChanIn_KMS
+                  by solve( In_KMS( $ClientId, $KMSId.1, ~RunId.1,
+                                    <'SignRequest', $LtkARN, <X, ReaderId>,
+                                     $ClientId>
+                            )[+] ▶₂ #vr.40 )
+                qed
               qed
-            qed
-          next
-            case c_sign
-            solve( !KU( ~SignKey ) @ #vk.14 )
-              case Reveal_KmsSignKey
-              by contradiction /* from formulas */
+            next
+              case c_sign
+              solve( !KU( ~SignKey ) @ #vk.19 )
+                case Reveal_KmsSignKey
+                by contradiction
+              qed
             qed
           qed
         qed
@@ -999,74 +1503,382 @@ qed
 // #endregion
 
 lemma injectiveagreement_agent:
-    "All AgentId ClientId k #i.
-      Commit('Agent', 'Client', <AgentId, ClientId, k>) @i
-      ==> (Ex #j. Running('Client', 'Agent', <AgentId, ClientId, k>) @j & j < i
-          & not (Ex AgentId2 ClientId2 #i2. Commit('Agent', 'Client', <AgentId2, ClientId2, k>) @i2
+    "All AgentId ClientId k1 k2 #i.
+      Commit('Agent', 'Client', <AgentId, ClientId, k1, k2>) @i
+      ==> (Ex #j. Running('Client', 'Agent', <AgentId, ClientId, k1, k2>) @j & j < i
+          & not (Ex AgentId2 ClientId2 #i2. Commit('Agent', 'Client', <AgentId2, ClientId2, k1, k2>) @i2
                              & not (#i2 = #i)))
                 | (Ex C #r. LtkReveal(C)@r & HonestReader(C)@i)
                 | (Ex C #r. KmsSignKeyRevealOwner(C)@r & HonestKmsOwner(C)@i)"
 // #region(collapsed) Proof
 simplify
-solve( Agent_S8( ~RunId, $AgentId, $KMSId, $ClientId, $ReaderId,
-                 $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY,
-                 SigSessionKey
-       ) ▶₀ #i )
-  case Agent_RecvSessionKeySignResponse
-  solve( In_KMS( $KMSId, $AgentId, ~RunId, VerifyResponse
-         )[+] ▶₁ #vr.3 )
-    case ChanIn_KMS
-    solve( In_KMS( $AgentId, $KMSId, ~RunId,
-                   <VerifyRequest, $LtkARN.2, payload.2,
-                    sign(<payload.2, $KeyOwnerId>, ~SignKey.2), $KeyOwnerId>
-           )[+] ▶₂ #vr.23 )
+solve( Commit( 'Agent', 'Client',
+               <AgentId, ClientId, k1, k2>
+       ) @ #i )
+  case Agent_SendHandshakeComplete
+  solve( Agent_S9( ~RunId, $AgentId, $KMSId, $ClientId, $ReaderId,
+                   $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY,
+                   SigSessionKey
+         ) ▶₀ #i )
+    case Agent_SendEncryptedSessionKey
+    solve( In_KMS( $KMSId, $AgentId, ~RunId, 'VerifyResponse'
+           )[+] ▶₁ #vr.4 )
       case ChanIn_KMS
       solve( In_KMS( $AgentId, $KMSId, ~RunId,
-                     <SignRequest, $LtkARN.2, payload.1, ReceiverId.1>
-             )[+] ▶₂ #vr.8 )
-        case ChanIn_KMS_case_1
-        solve( In_KMS( $KMSId, $AgentId, ~RunId,
-                       <SignResponse, sign(<payload, ReceiverId>, ~SignKey)>
-               )[+] ▶₁ #vr.13 )
-          case ChanIn_KMS
-          solve( In_KMS( $AgentId, $KMSId, ~RunId,
-                         <SignRequest, $LtkARN.1, payload, ReceiverId>
-                 )[+] ▶₂ #vr.35 )
+                     <'VerifyRequest', $LtkARN.2, payload.2,
+                      sign(<payload.2, $KeyOwnerId>, ~SignKey.2), $KeyOwnerId>
+             )[+] ▶₂ #vr.24 )
+        case ChanIn_KMS
+        solve( In_KMS( $AgentId, $KMSId, ~RunId,
+                       <'SignRequest', $LtkARN.2, payload.1, ReceiverId.1>
+               )[+] ▶₂ #vr.9 )
+          case ChanIn_KMS_case_1
+          solve( In_KMS( $KMSId, $AgentId, ~RunId,
+                         <'SignResponse', sign(<payload, ReceiverId>, ~SignKey)>
+                 )[+] ▶₁ #vr.14 )
             case ChanIn_KMS
-            by contradiction
+            solve( In_KMS( $AgentId, $KMSId, ~RunId,
+                           <'SignRequest', $LtkARN.1, payload, ReceiverId>
+                   )[+] ▶₂ #vr.36 )
+              case ChanIn_KMS
+              by contradiction /* cyclic */
+            qed
           qed
-        qed
-      next
-        case ChanIn_KMS_case_2
-        solve( In_KMS( $KMSId, $AgentId, ~RunId,
-                       <SignResponse, sign(<payload, ReceiverId>, ~SignKey)>
-               )[+] ▶₁ #vr.13 )
-          case ChanIn_KMS
-          solve( In_KMS( $AgentId, $KMSId, ~RunId,
-                         <SignRequest, $LtkARN.1, payload, ReceiverId>
-                 )[+] ▶₂ #vr.37 )
+        next
+          case ChanIn_KMS_case_2
+          solve( In_KMS( $KMSId, $AgentId, ~RunId,
+                         <'SignResponse', sign(<payload, ReceiverId>, ~SignKey)>
+                 )[+] ▶₁ #vr.14 )
             case ChanIn_KMS
-            solve( !KU( sign(<Y, $AgentId>, ~SignKey.1) ) @ #vk.7 )
-              case Agent_SendEncryptedSessionKey
-              solve( In_KMS( $KMSId.1, $AgentId, ~RunId.1, VerifyResponse
-                     )[+] ▶₁ #vr.48 )
-                case ChanIn_KMS
-                solve( In_KMS( $AgentId, $KMSId.1, ~RunId.1,
-                               <VerifyRequest, $LtkARN.2, payload.1,
-                                sign(<payload.1, $KeyOwnerId>, ~SignKey.4), $KeyOwnerId>
-                       )[+] ▶₂ #vr.67 )
+            solve( In_KMS( $AgentId, $KMSId, ~RunId,
+                           <'SignRequest', $LtkARN.1, payload, ReceiverId>
+                   )[+] ▶₂ #vr.38 )
+              case ChanIn_KMS
+              solve( !KU( sign(<Y, $AgentId>, ~SignKey.1) ) @ #vk.8 )
+                case Agent_SendEncryptedSessionKey
+                solve( In_KMS( $KMSId.1, $AgentId, ~RunId.1, 'VerifyResponse'
+                       )[+] ▶₁ #vr.49 )
                   case ChanIn_KMS
-                  solve( In_KMS( $KMSId.1, $AgentId, ~RunId.1,
-                                 <SignResponse, sign(<payload, ReceiverId>, ~SignKey.3)>
-                         )[+] ▶₁ #vr.57 )
+                  solve( In_KMS( $AgentId, $KMSId.1, ~RunId.1,
+                                 <'VerifyRequest', $LtkARN.2, payload.1,
+                                  sign(<payload.1, $KeyOwnerId>, ~SignKey.4), $KeyOwnerId>
+                         )[+] ▶₂ #vr.68 )
+                    case ChanIn_KMS
+                    solve( In_KMS( $KMSId.1, $AgentId, ~RunId.1,
+                                   <'SignResponse', sign(<payload, ReceiverId>, ~SignKey.3)
+                                   >
+                           )[+] ▶₁ #vr.58 )
+                      case ChanIn_KMS
+                      solve( In_KMS( $AgentId, $KMSId.1, ~RunId.1,
+                                     <'SignRequest', $LtkARN.1, payload, ReceiverId>
+                             )[+] ▶₂ #vr.78 )
+                        case ChanIn_KMS_case_1
+                        by solve( In_KMS( $AgentId, $KMSId.1, ~RunId.1,
+                                          <'SignRequest', $LtkARN, Y, $AgentId>
+                                  )[+] ▶₂ #vr.54 )
+                      next
+                        case ChanIn_KMS_case_2
+                        by contradiction /* cyclic */
+                      qed
+                    qed
+                  qed
+                qed
+              next
+                case ChanOut_MGS_case_1
+                solve( In_KMS( $KMSId.1, $AgentId, ~RunId.1,
+                               <'SignResponse', sign(<Y, $AgentId>, ~SignKey.1)>
+                       )[+] ▶₁ #vr.47 )
+                  case ChanIn_KMS
+                  by solve( In_KMS( $AgentId, $KMSId.1, ~RunId.1,
+                                    <'SignRequest', $LtkARN, Y, $AgentId>
+                            )[+] ▶₂ #vr.56 )
+                qed
+              next
+                case ChanOut_MGS_case_2
+                solve( In_KMS( $KMSId.1, $AgentId, ~RunId.1, 'VerifyResponse'
+                       )[+] ▶₁ #vr.50 )
+                  case ChanIn_KMS
+                  solve( In_KMS( $AgentId, $KMSId.1, ~RunId.1,
+                                 <'VerifyRequest', $LtkARN.1, payload,
+                                  sign(<payload, $KeyOwnerId>, ~SignKey.3), $KeyOwnerId>
+                         )[+] ▶₂ #vr.64 )
                     case ChanIn_KMS
                     solve( In_KMS( $AgentId, $KMSId.1, ~RunId.1,
-                                   <SignRequest, $LtkARN.1, payload, ReceiverId>
-                           )[+] ▶₂ #vr.77 )
+                                   <'SignRequest', $LtkARN, Y, $AgentId>
+                           )[+] ▶₂ #vr.55 )
+                      case ChanIn_KMS
+                      solve( !KU( sign(<<X, ReaderId.1>, $AgentId>,
+                                       ~SignKey.3)
+                             ) @ #vk.17 )
+                        case Agent_SendEncryptedSessionKey
+                        solve( In_KMS( $KMSId.2, $AgentId, ~RunId.2,
+                                       <'SignResponse',
+                                        sign(<payload, ReceiverId>, ~SignKey.4)>
+                               )[+] ▶₁ #vr.87 )
+                          case ChanIn_KMS
+                          solve( In_KMS( $KMSId.2, $AgentId, ~RunId.2, 'VerifyResponse'
+                                 )[+] ▶₁ #vr.78 )
+                            case ChanIn_KMS
+                            solve( In_KMS( $AgentId, $KMSId.2, ~RunId.2,
+                                           <'VerifyRequest', $LtkARN.2, payload.1,
+                                            sign(<payload.1, $KeyOwnerId>, ~SignKey.5),
+                                            $KeyOwnerId>
+                                   )[+] ▶₂ #vr.102 )
+                              case ChanIn_KMS
+                              solve( In_KMS( $AgentId, $KMSId.2, ~RunId.2,
+                                             <'SignRequest', $LtkARN, payload, ReceiverId>
+                                     )[+] ▶₂ #vr.97 )
+                                case ChanIn_KMS_case_1
+                                by solve( In_KMS( $AgentId, $KMSId.2, ~RunId.2,
+                                                  <'SignRequest', $LtkARN.1,
+                                                   <X, ReaderId.1>, $AgentId>
+                                          )[+] ▶₂ #vr.83 )
+                              next
+                                case ChanIn_KMS_case_2
+                                by contradiction /* cyclic */
+                              qed
+                            qed
+                          qed
+                        qed
+                      next
+                        case ChanOut_MGS_case_1
+                        solve( In_KMS( $KMSId.2, $AgentId, ~RunId.2,
+                                       <'SignResponse',
+                                        sign(<<X, ReaderId.1>, $AgentId>, ~SignKey.3)
+                                       >
+                               )[+] ▶₁ #vr.76 )
+                          case ChanIn_KMS
+                          solve( In_KMS( $AgentId, $KMSId.2, ~RunId.2,
+                                         <'SignRequest', $LtkARN, <X, ReaderId.1>, $AgentId
+                                         >
+                                 )[+] ▶₂ #vr.85 )
+                            case ChanIn_KMS
+                            solve( !KU( hash('g'^(~x*~y)) ) @ #vk.15 )
+                              case ChanOut_MGS
+                              solve( In_KMS( $KMSId.3, $ClientId.1, ~RunId.3, 'VerifyResponse'
+                                     )[+] ▶₁ #vr.98 )
+                                case ChanIn_KMS
+                                solve( In_KMS( $ClientId.1, $KMSId.3, ~RunId.3,
+                                               <'VerifyRequest', $LtkARN.2, payload.1,
+                                                sign(<payload.1, $KeyOwnerId>, ~SignKey.5),
+                                                $KeyOwnerId>
+                                       )[+] ▶₂ #vr.113 )
+                                  case ChanIn_KMS
+                                  solve( In_KMS( $KeyOwnerId, $KMSId.3, ~RunId.3,
+                                                 <'SignRequest', $LtkARN.1, payload, ReceiverId>
+                                         )[+] ▶₂ #vr.103 )
+                                    case ChanIn_KMS
+                                    solve( splitEqs(12) )
+                                      case split_case_1
+                                      solve( Commit( 'Agent', 'Client',
+                                                     <AgentId2, ClientId2,
+                                                      kdf1('g'^(~x*~y)),
+                                                      kdf2('g'^(~x*~y))>
+                                             ) @ #i2 )
+                                        case Agent_SendHandshakeComplete
+                                        solve( Agent_S9( ~RunId.1, $AgentId.1, $KMSId.1, $ClientId,
+                                                         $ReaderId.1, $AgentLtKeyId.1, logPk, ~x.1,
+                                                         SigX, ClientLtKeyId.1, 'g'^x.2,
+                                                         SigY, SigSessionKey
+                                               ) ▶₀ #i2 )
+                                          case Agent_SendEncryptedSessionKey
+                                          solve( In_KMS( $KMSId.1, $AgentId.1, ~RunId.1,
+                                                         'VerifyResponse'
+                                                 )[+] ▶₁ #vr.84 )
+                                            case ChanIn_KMS
+                                            solve( In_KMS( $AgentId.1, $KMSId.1, ~RunId.1,
+                                                           <'VerifyRequest', $LtkARN.2, payload.2,
+                                                            sign(<payload.2, $KeyOwnerId>,
+                                                                 ~SignKey.5),
+                                                            $KeyOwnerId>
+                                                   )[+] ▶₂ #vr.104 )
+                                              case ChanIn_KMS
+                                              solve( In_KMS( $KMSId.1, $KeyOwnerId, ~RunId.1,
+                                                             <'SignResponse',
+                                                              sign(<payload, ReceiverId>,
+                                                                   ~SignKey.3)
+                                                             >
+                                                     )[+] ▶₁ #vr.94 )
+                                                case ChanIn_KMS
+                                                solve( splitEqs(16) )
+                                                  case split_case_1
+                                                  by contradiction /* from formulas */
+                                                next
+                                                  case split_case_2
+                                                  solve( !KU( 'g'^(~x*~y*inv(~x.1))
+                                                         ) @ #vk.26 )
+                                                    case ChanOut_MGS_case_1
+                                                    by solve( !KU( ~y ) @ #vk.31 )
+                                                  next
+                                                    case ChanOut_MGS_case_2
+                                                    by solve( !KU( ~x ) @ #vk.31 )
+                                                  next
+                                                    case c_exp
+                                                    by solve( !KU( ~x ) @ #vk.32 )
+                                                  qed
+                                                qed
+                                              qed
+                                            qed
+                                          qed
+                                        qed
+                                      qed
+                                    next
+                                      case split_case_2
+                                      solve( !KU( 'g'^(~x*~y*inv(~y.1)) ) @ #vk.25 )
+                                        case ChanOut_MGS_case_1
+                                        by solve( !KU( ~y ) @ #vk.32 )
+                                      next
+                                        case ChanOut_MGS_case_2
+                                        by solve( !KU( ~x ) @ #vk.32 )
+                                      next
+                                        case c_exp
+                                        by solve( !KU( ~x ) @ #vk.33 )
+                                      qed
+                                    qed
+                                  qed
+                                qed
+                              qed
+                            next
+                              case c_hash
+                              solve( !KU( 'g'^(~x*~y) ) @ #vk.21 )
+                                case ChanOut_MGS_case_1
+                                by solve( !KU( ~y ) @ #vk.22 )
+                              next
+                                case ChanOut_MGS_case_2
+                                by solve( !KU( ~x ) @ #vk.22 )
+                              next
+                                case c_exp
+                                by solve( !KU( ~x ) @ #vk.24 )
+                              qed
+                            qed
+                          qed
+                        qed
+                      next
+                        case ChanOut_MGS_case_2
+                        solve( In_KMS( $KMSId.2, $AgentId, ~RunId.2, 'VerifyResponse'
+                               )[+] ▶₁ #vr.79 )
+                          case ChanIn_KMS
+                          solve( In_KMS( $AgentId, $KMSId.2, ~RunId.2,
+                                         <'VerifyRequest', $LtkARN.1, payload,
+                                          sign(<payload, $KeyOwnerId>, ~SignKey.4),
+                                          $KeyOwnerId>
+                                 )[+] ▶₂ #vr.93 )
+                            case ChanIn_KMS
+                            solve( !KU( hash('g'^(~x*~y)) ) @ #vk.14 )
+                              case ChanOut_MGS
+                              solve( In_KMS( $KMSId.3, $ClientId.1, ~RunId.3, 'VerifyResponse'
+                                     )[+] ▶₁ #vr.107 )
+                                case ChanIn_KMS
+                                solve( In_KMS( $ClientId.1, $KMSId.3, ~RunId.3,
+                                               <'VerifyRequest', $LtkARN.3, payload.1,
+                                                sign(<payload.1, $KeyOwnerId>, ~SignKey.6),
+                                                $KeyOwnerId>
+                                       )[+] ▶₂ #vr.122 )
+                                  case ChanIn_KMS
+                                  by solve( In_KMS( $AgentId, $KMSId.2, ~RunId.2,
+                                                    <'SignRequest', $LtkARN,
+                                                     <X, ReaderId.1>, $AgentId>
+                                            )[+] ▶₂ #vr.84 )
+                                qed
+                              qed
+                            next
+                              case c_hash
+                              solve( !KU( 'g'^(~x*~y) ) @ #vk.30 )
+                                case ChanOut_MGS_case_1
+                                by solve( !KU( ~y ) @ #vk.31 )
+                              next
+                                case ChanOut_MGS_case_2
+                                by solve( !KU( ~x ) @ #vk.31 )
+                              next
+                                case c_exp
+                                by solve( !KU( ~x ) @ #vk.33 )
+                              qed
+                            qed
+                          qed
+                        qed
+                      next
+                        case c_sign
+                        solve( !KU( ~SignKey.3 ) @ #vk.23 )
+                          case Reveal_KmsSignKey
+                          by contradiction /* from formulas */
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              next
+                case c_sign
+                solve( !KU( ~SignKey.1 ) @ #vk.13 )
+                  case Reveal_KmsSignKey
+                  by contradiction /* from formulas */
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+// #endregion
+
+lemma injectiveagreement_client:
+    "All AgentId ClientId k1 k2 #i.
+      Commit('Client', 'Agent', <AgentId, ClientId, k1, k2>) @i
+      ==> (Ex #j. Running('Agent', 'Client', <AgentId, ClientId, k1, k2>) @j & j < i
+          & not (Ex AgentId2 ClientId2 #i2. Commit('Client', 'Agent', <AgentId2, ClientId2, k1, k2>) @i2
+                             & not (#i2 = #i)))
+                | (Ex C #r. LtkReveal(C)@r & HonestReader(C)@i)
+                | (Ex C #r. KmsSignKeyRevealOwner(C)@r & HonestKmsOwner(C)@i)"
+// #region(collapsed) Proof
+simplify
+solve( Commit( 'Client', 'Agent',
+               <AgentId, ClientId, k1, k2>
+       ) @ #i )
+  case Client_RecvHandshakeComplete
+  solve( Client_S6( ~RunId, $ClientId, $KMSId, $AgentId,
+                    $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y, SigY
+         ) ▶₀ #i )
+    case Client_SendSecureSessionResponse
+    solve( In_MGS( $AgentId, $ClientId,
+                   <'HandshakeComplete',
+                    senc(<'HandshakeCompletePayload', msg>, kdf1(z))>
+           ) ▶₁ #i )
+      case ChanIn_MGS
+      solve( In_KMS( $KMSId, $ClientId, ~RunId, 'VerifyResponse'
+             )[+] ▶₁ #vr.4 )
+        case ChanIn_KMS
+        solve( In_KMS( $ClientId, $KMSId, ~RunId,
+                       <'VerifyRequest', $LtkARN.1, payload.1,
+                        sign(<payload.1, $KeyOwnerId>, ~SignKey.1), $KeyOwnerId>
+               )[+] ▶₂ #vr.20 )
+          case ChanIn_KMS
+          solve( In_KMS( $ClientId, $KMSId, ~RunId,
+                         <'SignRequest', $LtkARN.1, payload, ReceiverId>
+                 )[+] ▶₂ #vr.9 )
+            case ChanIn_KMS
+            solve( !KU( sign(<<X, ReaderId>, $ClientId>, ~SignKey)
+                   ) @ #vk.7 )
+              case Agent_SendEncryptedSessionKey
+              solve( In_KMS( $KMSId.1, $ClientId, ~RunId.1, 'VerifyResponse'
+                     )[+] ▶₁ #vr.34 )
+                case ChanIn_KMS
+                solve( In_KMS( $ClientId, $KMSId.1, ~RunId.1,
+                               <'VerifyRequest', $LtkARN.2, payload.1,
+                                sign(<payload.1, $KeyOwnerId>, ~SignKey.3), $KeyOwnerId>
+                       )[+] ▶₂ #vr.53 )
+                  case ChanIn_KMS
+                  solve( In_KMS( $KMSId.1, $ClientId, ~RunId.1,
+                                 <'SignResponse', sign(<payload, ReceiverId>, ~SignKey.2)>
+                         )[+] ▶₁ #vr.43 )
+                    case ChanIn_KMS
+                    solve( In_KMS( $ClientId, $KMSId.1, ~RunId.1,
+                                   <'SignRequest', $LtkARN.1, payload, ReceiverId>
+                           )[+] ▶₂ #vr.63 )
                       case ChanIn_KMS_case_1
-                      by solve( In_KMS( $AgentId, $KMSId.1, ~RunId.1,
-                                        <SignRequest, $LtkARN, Y, $AgentId>
-                                )[+] ▶₂ #vr.53 )
+                      by solve( In_KMS( $ClientId, $KMSId.1, ~RunId.1,
+                                        <'SignRequest', $LtkARN, <X, ReaderId>, $ClientId>
+                                )[+] ▶₂ #vr.39 )
                     next
                       case ChanIn_KMS_case_2
                       by contradiction /* cyclic */
@@ -1076,219 +1888,768 @@ solve( Agent_S8( ~RunId, $AgentId, $KMSId, $ClientId, $ReaderId,
               qed
             next
               case ChanOut_MGS_case_1
-              solve( In_KMS( $KMSId.1, $AgentId, ~RunId.1,
-                             <SignResponse, sign(<Y, $AgentId>, ~SignKey.1)>
-                     )[+] ▶₁ #vr.46 )
+              solve( In_KMS( $KMSId.1, $ClientId, ~RunId.1,
+                             <'SignResponse',
+                              sign(<<X, ReaderId>, $ClientId>, ~SignKey)>
+                     )[+] ▶₁ #vr.32 )
                 case ChanIn_KMS
-                by solve( In_KMS( $AgentId, $KMSId.1, ~RunId.1,
-                                  <SignRequest, $LtkARN, Y, $AgentId>
-                          )[+] ▶₂ #vr.55 )
-              qed
-            next
-              case ChanOut_MGS_case_2
-              solve( In_KMS( $KMSId.1, $AgentId, ~RunId.1, VerifyResponse
-                     )[+] ▶₁ #vr.49 )
-                case ChanIn_KMS
-                solve( In_KMS( $AgentId, $KMSId.1, ~RunId.1,
-                               <VerifyRequest, $LtkARN.1, payload,
-                                sign(<payload, $KeyOwnerId>, ~SignKey.3), $KeyOwnerId>
-                       )[+] ▶₂ #vr.63 )
+                solve( In_KMS( $ClientId, $KMSId.1, ~RunId.1,
+                               <'SignRequest', $LtkARN, <X, ReaderId>, $ClientId>
+                       )[+] ▶₂ #vr.41 )
                   case ChanIn_KMS
-                  solve( In_KMS( $AgentId, $KMSId.1, ~RunId.1,
-                                 <SignRequest, $LtkARN, Y, $AgentId>
-                         )[+] ▶₂ #vr.54 )
-                    case ChanIn_KMS
-                    solve( !KU( sign(<<X, ReaderId.1>, $AgentId>,
-                                     ~SignKey.3)
-                           ) @ #vk.16 )
-                      case Agent_SendEncryptedSessionKey
-                      solve( In_KMS( $KMSId.2, $AgentId, ~RunId.2,
-                                     <SignResponse, sign(<payload, ReceiverId>, ~SignKey.4)
+                  solve( !KU( senc(<'HandshakeCompletePayload', msg>,
+                                   kdf1('g'^(~x*~y)))
+                         ) @ #vk.13 )
+                    case ChanOut_MGS_case_1
+                    solve( In_KMS( $AgentId.1, $KMSId.2, ~RunId.2,
+                                   <'SignRequest', $LtkARN, payload.1, ReceiverId.1>
+                           )[+] ▶₂ #vr.57 )
+                      case ChanIn_KMS_case_1
+                      solve( In_KMS( $KMSId.2, $AgentId.1, ~RunId.2,
+                                     <'SignResponse', sign(<payload, ReceiverId>, ~SignKey.2)
                                      >
-                             )[+] ▶₁ #vr.86 )
+                             )[+] ▶₁ #vr.62 )
                         case ChanIn_KMS
-                        solve( In_KMS( $KMSId.2, $AgentId, ~RunId.2, VerifyResponse
-                               )[+] ▶₁ #vr.77 )
+                        solve( In_KMS( $AgentId.1, $KMSId.2, ~RunId.2,
+                                       <'SignRequest', $LtkARN, payload, ReceiverId>
+                               )[+] ▶₂ #vr.74 )
                           case ChanIn_KMS
-                          solve( In_KMS( $AgentId, $KMSId.2, ~RunId.2,
-                                         <VerifyRequest, $LtkARN.2, payload.1,
-                                          sign(<payload.1, $KeyOwnerId>, ~SignKey.5),
-                                          $KeyOwnerId>
-                                 )[+] ▶₂ #vr.101 )
-                            case ChanIn_KMS
-                            solve( In_KMS( $AgentId, $KMSId.2, ~RunId.2,
-                                           <SignRequest, $LtkARN, payload, ReceiverId>
-                                   )[+] ▶₂ #vr.96 )
-                              case ChanIn_KMS_case_1
-                              by solve( In_KMS( $AgentId, $KMSId.2, ~RunId.2,
-                                                <SignRequest, $LtkARN.1, <X, ReaderId.1>,
-                                                 $AgentId>
-                                        )[+] ▶₂ #vr.82 )
-                            next
-                              case ChanIn_KMS_case_2
-                              by contradiction /* cyclic */
-                            qed
-                          qed
+                          by contradiction /* cyclic */
                         qed
                       qed
                     next
-                      case ChanOut_MGS_case_1
-                      solve( In_KMS( $KMSId.2, $AgentId, ~RunId.2,
-                                     <SignResponse,
-                                      sign(<<X, ReaderId.1>, $AgentId>, ~SignKey.3)>
-                             )[+] ▶₁ #vr.75 )
+                      case ChanIn_KMS_case_2
+                      solve( In_KMS( $KMSId.2, $AgentId.1, ~RunId.2,
+                                     <'SignResponse', sign(<payload, ReceiverId>, ~SignKey.2)
+                                     >
+                             )[+] ▶₁ #vr.62 )
                         case ChanIn_KMS
-                        solve( In_KMS( $AgentId, $KMSId.2, ~RunId.2,
-                                       <SignRequest, $LtkARN, <X, ReaderId.1>, $AgentId>
-                               )[+] ▶₂ #vr.84 )
+                        solve( In_KMS( $AgentId.1, $KMSId.2, ~RunId.2,
+                                       <'SignRequest', $LtkARN, payload, ReceiverId>
+                               )[+] ▶₂ #vr.76 )
                           case ChanIn_KMS
-                          solve( !KU( hash('g'^(~x*~y)) ) @ #vk.14 )
-                            case ChanOut_MGS
-                            solve( In_KMS( $KMSId.3, $ClientId.1, ~RunId.3, VerifyResponse
-                                   )[+] ▶₁ #vr.97 )
+                          solve( In_KMS( $KMSId.2, $AgentId.1, ~RunId.2, 'VerifyResponse'
+                                 )[+] ▶₁ #vr.52 )
+                            case ChanIn_KMS
+                            solve( In_KMS( $AgentId.1, $KMSId.2, ~RunId.2,
+                                           <'VerifyRequest', $LtkARN.1, payload,
+                                            sign(<payload, $KeyOwnerId>, ~SignKey.4),
+                                            $KeyOwnerId>
+                                   )[+] ▶₂ #vr.83 )
                               case ChanIn_KMS
-                              solve( In_KMS( $ClientId.1, $KMSId.3, ~RunId.3,
-                                             <VerifyRequest, $LtkARN.2, payload.1,
-                                              sign(<payload.1, $KeyOwnerId>, ~SignKey.5),
-                                              $KeyOwnerId>
-                                     )[+] ▶₂ #vr.112 )
-                                case ChanIn_KMS
-                                solve( In_KMS( $KeyOwnerId, $KMSId.3, ~RunId.3,
-                                               <SignRequest, $LtkARN.1, payload, ReceiverId>
-                                       )[+] ▶₂ #vr.102 )
-                                  case ChanIn_KMS
-                                  solve( splitEqs(11) )
-                                    case split_case_1
-                                    solve( Agent_S8( ~RunId.2, $AgentId.1, $KMSId.2, $ClientId,
-                                                     $ReaderId.1, $AgentLtKeyId.1, logPk, ~x.1,
-                                                     SigX, ClientLtKeyId.1, 'g'^x.2, SigY,
-                                                     SigSessionKey
-                                           ) ▶₀ #i2 )
-                                      case Agent_RecvSessionKeySignResponse
-                                      solve( In_KMS( $KMSId.1, $AgentId.1, ~RunId.1, VerifyResponse
-                                             )[+] ▶₁ #vr.82 )
+                              solve( splitEqs(9) )
+                                case split_case_1
+                                solve( !KU( sign(<'g'^~y, $ClientId>, ~SignKey.2)
+                                       ) @ #vk.20 )
+                                  case Agent_SendEncryptedSessionKey
+                                  by solve( In_KMS( $ClientId, $KMSId.2, ~RunId.2,
+                                                    <'SignRequest', $LtkARN, 'g'^~y,
+                                                     $ClientId>
+                                            )[+] ▶₂ #vr.89 )
+                                next
+                                  case ChanOut_MGS_case_1
+                                  by solve( In_KMS( $ClientId, $KMSId.2, ~RunId.2,
+                                                    <'SignRequest', $LtkARN, 'g'^~y,
+                                                     $ClientId>
+                                            )[+] ▶₂ #vr.86 )
+                                next
+                                  case ChanOut_MGS_case_2
+                                  solve( In_KMS( $KMSId.2, $ClientId, ~RunId.2, 'VerifyResponse'
+                                         )[+] ▶₁ #vr.85 )
+                                    case ChanIn_KMS
+                                    solve( In_KMS( $ClientId, $KMSId.2, ~RunId.2,
+                                                   <'VerifyRequest', $LtkARN.1, payload,
+                                                    sign(<payload, $KeyOwnerId>, ~SignKey.4),
+                                                    $KeyOwnerId>
+                                           )[+] ▶₂ #vr.99 )
+                                      case ChanIn_KMS
+                                      solve( In_KMS( $ClientId, $KMSId.2, ~RunId.2,
+                                                     <'SignRequest', $LtkARN, 'g'^~y,
+                                                      $ClientId>
+                                             )[+] ▶₂ #vr.90 )
                                         case ChanIn_KMS
-                                        solve( In_KMS( $AgentId.1, $KMSId.1, ~RunId.1,
-                                                       <VerifyRequest, $LtkARN.2, payload.2,
-                                                        sign(<payload.2, $KeyOwnerId>,
-                                                             ~SignKey.5),
-                                                        $KeyOwnerId>
-                                               )[+] ▶₂ #vr.102 )
+                                        solve( In_KMS( $AgentId, $KMSId, ~RunId,
+                                                       <'SignRequest', $ClientLtKeyId,
+                                                        'g'^~y, $AgentId>
+                                               )[+] ▶₂ #vr.80 )
                                           case ChanIn_KMS
-                                          solve( In_KMS( $KMSId.1, $KeyOwnerId, ~RunId.1,
-                                                         <SignResponse,
-                                                          sign(<payload, ReceiverId>,
-                                                               ~SignKey.3)
-                                                         >
-                                                 )[+] ▶₁ #vr.92 )
-                                            case ChanIn_KMS
-                                            solve( splitEqs(15) )
-                                              case split_case_1
-                                              by contradiction /* from formulas */
-                                            next
-                                              case split_case_2
-                                              solve( !KU( 'g'^(~x*~y*inv(~x.1)) ) @ #vk.24 )
-                                                case ChanOut_MGS_case_1
-                                                by solve( !KU( ~y ) @ #vk.29 )
-                                              next
-                                                case ChanOut_MGS_case_2
-                                                by solve( !KU( ~x ) @ #vk.29 )
-                                              next
-                                                case c_exp
-                                                by solve( !KU( ~x ) @ #vk.30 )
+                                          solve( Commit( 'Client', 'Agent',
+                                                         <AgentId2, ClientId2,
+                                                          kdf1('g'^(~x*~y)),
+                                                          kdf2('g'^(~x*~y))>
+                                                 ) @ #i2 )
+                                            case Client_RecvHandshakeComplete
+                                            solve( Client_S6( ~RunId.1, $ClientId, $KMSId.1,
+                                                              $AgentId.1, $ClientLtKeyId.1,
+                                                              AgentLtKeyId.1, 'g'^x.1, SigX,
+                                                              ReaderId.1, ~y.1, SigY
+                                                   ) ▶₀ #i2 )
+                                              case Client_SendSecureSessionResponse
+                                              solve( In_KMS( $ClientId, $KMSId.1, ~RunId.1,
+                                                             <'SignRequest', $LtkARN, payload,
+                                                              ReceiverId>
+                                                     )[+] ▶₂ #vr.88 )
+                                                case ChanIn_KMS
+                                                solve( splitEqs(19) )
+                                                  case split_case_1
+                                                  by contradiction /* from formulas */
+                                                next
+                                                  case split_case_2
+                                                  solve( !KU( 'g'^(~x*~y*inv(~y.1))
+                                                         ) @ #vk.27 )
+                                                    case ChanOut_MGS_case_1
+                                                    by solve( !KU( ~y ) @ #vk.34 )
+                                                  next
+                                                    case ChanOut_MGS_case_2
+                                                    by solve( !KU( ~x ) @ #vk.34 )
+                                                  next
+                                                    case c_exp
+                                                    by solve( !KU( ~x ) @ #vk.35 )
+                                                  qed
+                                                qed
                                               qed
                                             qed
                                           qed
                                         qed
                                       qed
                                     qed
+                                  qed
+                                next
+                                  case c_sign
+                                  solve( !KU( ~SignKey.2 ) @ #vk.25 )
+                                    case Reveal_KmsSignKey
+                                    by contradiction /* from formulas */
+                                  qed
+                                qed
+                              next
+                                case split_case_2
+                                solve( !KU( 'g'^(~x*~y*inv(~x.1)) ) @ #vk.20 )
+                                  case ChanOut_MGS_case_1
+                                  by solve( !KU( ~y ) @ #vk.27 )
+                                next
+                                  case ChanOut_MGS_case_2
+                                  by solve( !KU( ~x ) @ #vk.27 )
+                                next
+                                  case c_exp
+                                  by solve( !KU( ~x ) @ #vk.28 )
+                                qed
+                              qed
+                            qed
+                          qed
+                        qed
+                      qed
+                    qed
+                  next
+                    case ChanOut_MGS_case_2
+                    solve( Agent_S9( ~RunId.2, $AgentId.1, $KMSId.2, $ClientId.1,
+                                     $ReaderId.1, $AgentLtKeyId.1, logPk, ~x.1, SigX.1,
+                                     ClientLtKeyId.1, 'g'^x.2, SigY.1, SigSessionKey.1
+                           ) ▶₀ #j.2 )
+                      case Agent_SendEncryptedSessionKey
+                      solve( In_KMS( $KMSId.2, $AgentId.1, ~RunId.2, 'VerifyResponse'
+                             )[+] ▶₁ #vr.52 )
+                        case ChanIn_KMS
+                        solve( In_KMS( $AgentId.1, $KMSId.2, ~RunId.2,
+                                       <'VerifyRequest', $LtkARN.2, payload.2,
+                                        sign(<payload.2, $KeyOwnerId>, ~SignKey.4),
+                                        $KeyOwnerId>
+                               )[+] ▶₂ #vr.72 )
+                          case ChanIn_KMS
+                          solve( In_KMS( $KeyOwnerId, $KMSId.2, ~RunId.2,
+                                         <'SignRequest', $LtkARN.1, payload, ReceiverId>
+                                 )[+] ▶₂ #vr.66 )
+                            case ChanIn_KMS_case_1
+                            solve( In_KMS( $KMSId.2, $KeyOwnerId, ~RunId.2,
+                                           <'SignResponse',
+                                            sign(<<'g'^~x.1, $ReaderId.1>,
+                                                  $ClientId.1>,
+                                                 ~SignKey.2)
+                                           >
+                                   )[+] ▶₁ #vr.62 )
+                              case ChanIn_KMS
+                              solve( In_KMS( $KeyOwnerId, $KMSId.2, ~RunId.2,
+                                             <'SignRequest', $LtkARN.1, payload, ReceiverId>
+                                     )[+] ▶₂ #vr.57 )
+                                case ChanIn_KMS_case_1
+                                by solve( In_KMS( $KeyOwnerId, $KMSId.2, ~RunId.2,
+                                                  <'SignRequest', $AgentLtKeyId.1,
+                                                   <'g'^~x.1, $ReaderId.1>,
+                                                   $ClientId.1>
+                                          )[+] ▶₂ #vr.80 )
+                              next
+                                case ChanIn_KMS_case_2
+                                solve( In_KMS( $KeyOwnerId, $KMSId.2, ~RunId.2,
+                                               <'SignRequest', $AgentLtKeyId.1,
+                                                <'g'^~x.1, $ReaderId.1>, $ClientId.1
+                                               >
+                                       )[+] ▶₂ #vr.84 )
+                                  case ChanIn_KMS
+                                  solve( splitEqs(5) )
+                                    case split_case_1
+                                    solve( !KU( hash('g'^(~x*~y)) ) @ #vk.26 )
+                                      case ChanOut_MGS
+                                      solve( In_KMS( $KMSId.2, $ClientId.1, ~RunId.2, 'VerifyResponse'
+                                             )[+] ▶₁ #vr.83 )
+                                        case ChanIn_KMS
+                                        solve( In_KMS( $ClientId.1, $KMSId.2, ~RunId.2,
+                                                       <'VerifyRequest', $LtkARN.2, payload.1,
+                                                        sign(<payload.1, $KeyOwnerId>,
+                                                             ~SignKey.5),
+                                                        $KeyOwnerId>
+                                               )[+] ▶₂ #vr.98 )
+                                          case ChanIn_KMS
+                                          solve( In_KMS( $KeyOwnerId, $KMSId.2, ~RunId.2,
+                                                         <'SignRequest', $LtkARN.1, payload,
+                                                          ReceiverId>
+                                                 )[+] ▶₂ #vr.88 )
+                                            case ChanIn_KMS
+                                            solve( splitEqs(15) )
+                                              case split_case_1
+                                              solve( !KU( sign(<'g'^~y, $ClientId>,
+                                                               ~SignKey.2)
+                                                     ) @ #vk.25 )
+                                                case Agent_SendEncryptedSessionKey
+                                                solve( In_KMS( $KMSId.2, $ClientId, ~RunId.2,
+                                                               'VerifyResponse'
+                                                       )[+] ▶₁ #vr.88 )
+                                                  case ChanIn_KMS
+                                                  solve( In_KMS( $ClientId, $KMSId.2, ~RunId.2,
+                                                                 <'VerifyRequest', $LtkARN.2,
+                                                                  payload.1,
+                                                                  sign(<payload.1, $KeyOwnerId
+                                                                       >,
+                                                                       ~SignKey.5),
+                                                                  $KeyOwnerId>
+                                                         )[+] ▶₂ #vr.107 )
+                                                    case ChanIn_KMS
+                                                    solve( In_KMS( $KMSId.2, $ClientId, ~RunId.2,
+                                                                   <'SignResponse',
+                                                                    sign(<payload, ReceiverId
+                                                                         >,
+                                                                         ~SignKey.4)
+                                                                   >
+                                                           )[+] ▶₁ #vr.97 )
+                                                      case ChanIn_KMS
+                                                      solve( In_KMS( $ClientId, $KMSId.2, ~RunId.2,
+                                                                     <'SignRequest', $LtkARN.1,
+                                                                      payload, ReceiverId>
+                                                             )[+] ▶₂ #vr.117 )
+                                                        case ChanIn_KMS_case_1
+                                                        by solve( In_KMS( $ClientId, $KMSId.2,
+                                                                          ~RunId.2,
+                                                                          <'SignRequest', $LtkARN,
+                                                                           'g'^~y, $ClientId
+                                                                          >
+                                                                  )[+] ▶₂ #vr.93 )
+                                                      next
+                                                        case ChanIn_KMS_case_2
+                                                        by contradiction /* cyclic */
+                                                      qed
+                                                    qed
+                                                  qed
+                                                qed
+                                              next
+                                                case ChanOut_MGS_case_1
+                                                solve( In_KMS( $KMSId.2, $ClientId, ~RunId.2,
+                                                               <'SignResponse',
+                                                                sign(<'g'^~y, $ClientId
+                                                                     >,
+                                                                     ~SignKey.2)
+                                                               >
+                                                       )[+] ▶₁ #vr.86 )
+                                                  case ChanIn_KMS
+                                                  by solve( In_KMS( $ClientId, $KMSId.2, ~RunId.2,
+                                                                    <'SignRequest', $LtkARN,
+                                                                     'g'^~y, $ClientId>
+                                                            )[+] ▶₂ #vr.95 )
+                                                qed
+                                              next
+                                                case ChanOut_MGS_case_2
+                                                solve( (∀ #j.
+                                                         (K( <kdf1('g'^(~x*~y)),
+                                                              kdf2('g'^(~x*~y))>
+                                                          ) @ #j)
+                                                        ⇒
+                                                         ⊥) ∥
+                                                       (∃ C #r.
+                                                         (KmsSignKeyRevealOwner( C ) @ #r) ∧
+                                                         (HonestKmsOwner( C ) @ #i)) ∥
+                                                       (∃ C #r.
+                                                         (LtkReveal( C ) @ #r) ∧
+                                                         (HonestReader( C ) @ #i)) )
+                                                  case case_1
+                                                  solve( In_KMS( $KMSId.2, $ClientId, ~RunId.2,
+                                                                 'VerifyResponse'
+                                                         )[+] ▶₁ #vr.89 )
+                                                    case ChanIn_KMS
+                                                    solve( In_KMS( $ClientId, $KMSId.2, ~RunId.2,
+                                                                   <'VerifyRequest', $LtkARN.1,
+                                                                    payload,
+                                                                    sign(<payload, $KeyOwnerId
+                                                                         >,
+                                                                         ~SignKey.4),
+                                                                    $KeyOwnerId>
+                                                           )[+] ▶₂ #vr.103 )
+                                                      case ChanIn_KMS
+                                                      solve( In_KMS( $ClientId, $KMSId.2, ~RunId.2,
+                                                                     <'SignRequest', $LtkARN,
+                                                                      'g'^~y, $ClientId>
+                                                             )[+] ▶₂ #vr.94 )
+                                                        case ChanIn_KMS
+                                                        solve( Commit( 'Client',
+                                                                       'Agent',
+                                                                       <AgentId2, ClientId2,
+                                                                        kdf1('g'^(~x*~y)),
+                                                                        kdf2('g'^(~x*~y))
+                                                                       >
+                                                               ) @ #i2 )
+                                                          case Client_RecvHandshakeComplete
+                                                          solve( In_MGS( $AgentId.1, $ClientId,
+                                                                         <'HandshakeComplete',
+                                                                          senc(<
+                                                                                'HandshakeCompletePayload',
+                                                                                msg.1>,
+                                                                               kdf1('g'^(~x*
+                                                                                                 ~y
+                                                                                                )))
+                                                                         >
+                                                                 ) ▶₁ #i2 )
+                                                            case ChanIn_MGS
+                                                            solve( !KU( senc(<
+                                                                              'HandshakeCompletePayload',
+                                                                              msg.1>,
+                                                                             kdf1('g'^(~x*~y
+                                                                                              )))
+                                                                   ) @ #vk.29 )
+                                                              case ChanOut_MGS_case_1
+                                                              solve( In_KMS( $AgentId.2, $KMSId.3,
+                                                                             ~RunId.3,
+                                                                             <'SignRequest',
+                                                                              $LtkARN, payload.1,
+                                                                              ReceiverId.1>
+                                                                     )[+] ▶₂ #vr.96 )
+                                                                case ChanIn_KMS_case_1
+                                                                solve( Client_S6( ~RunId.1,
+                                                                                  $ClientId,
+                                                                                  $KMSId.1,
+                                                                                  $AgentId.1,
+                                                                                  $ClientLtKeyId.1,
+                                                                                  AgentLtKeyId.1,
+                                                                                  'g'^x.1,
+                                                                                  SigX, ReaderId.1,
+                                                                                  ~y.1, SigY
+                                                                       ) ▶₀ #i2 )
+                                                                  case Client_SendSecureSessionResponse
+                                                                  solve( In_KMS( $KMSId.3,
+                                                                                 $AgentId.2,
+                                                                                 ~RunId.3,
+                                                                                 'VerifyResponse'
+                                                                         )[+] ▶₁ #vr.91 )
+                                                                    case ChanIn_KMS
+                                                                    solve( In_KMS( $KMSId.3,
+                                                                                   $AgentId.2,
+                                                                                   ~RunId.3,
+                                                                                   <
+                                                                                    'SignResponse',
+                                                                                    sign(<
+                                                                                          payload.1,
+                                                                                          ReceiverId.1
+                                                                                         >,
+                                                                                         ~SignKey.4)
+                                                                                   >
+                                                                           )[+] ▶₁ #vr.101 )
+                                                                      case ChanIn_KMS
+                                                                      solve( In_KMS( $KMSId.1,
+                                                                                     $ClientId,
+                                                                                     ~RunId.1,
+                                                                                     'VerifyResponse'
+                                                                             )[+] ▶₁ #vr.114 )
+                                                                        case ChanIn_KMS
+                                                                        solve( In_KMS( $ClientId,
+                                                                                       $KMSId.1,
+                                                                                       ~RunId.1,
+                                                                                       <
+                                                                                        'VerifyRequest',
+                                                                                        $LtkARN.4,
+                                                                                        payload.3,
+                                                                                        sign(<
+                                                                                              payload.3,
+                                                                                              $KeyOwnerId.1
+                                                                                             >,
+                                                                                             ~SignKey.7),
+                                                                                        $KeyOwnerId.1
+                                                                                       >
+                                                                               )[+] ▶₂ #vr.140 )
+                                                                          case ChanIn_KMS
+                                                                          solve( In_KMS( $AgentId.2,
+                                                                                         $KMSId.3,
+                                                                                         ~RunId.3,
+                                                                                         <
+                                                                                          'VerifyRequest',
+                                                                                          $LtkARN.4,
+                                                                                          payload.2,
+                                                                                          sign(<
+                                                                                                payload.2,
+                                                                                                $KeyOwnerId
+                                                                                               >,
+                                                                                               ~SignKey.7),
+                                                                                          $KeyOwnerId
+                                                                                         >
+                                                                                 )[+] ▶₂ #vr.129 )
+                                                                            case ChanIn_KMS
+                                                                            solve( splitEqs(23) )
+                                                                              case split
+                                                                              solve( splitEqs(28) )
+                                                                                case split
+                                                                                solve( !KU( 'g'^(
+                                                                                                         ~x*
+                                                                                                         ~y*
+                                                                                                         inv(~x.1)
+                                                                                                        )
+                                                                                       ) @ #vk.37 )
+                                                                                  case ChanOut_MGS_case_1
+                                                                                  by solve( !KU( ~y
+                                                                                            ) @ #vk.49 )
+                                                                                next
+                                                                                  case ChanOut_MGS_case_2
+                                                                                  by solve( !KU( ~x
+                                                                                            ) @ #vk.49 )
+                                                                                next
+                                                                                  case c_exp
+                                                                                  by solve( !KU( ~x
+                                                                                            ) @ #vk.50 )
+                                                                                qed
+                                                                              qed
+                                                                            qed
+                                                                          qed
+                                                                        qed
+                                                                      qed
+                                                                    qed
+                                                                  qed
+                                                                qed
+                                                              next
+                                                                case ChanIn_KMS_case_2
+                                                                solve( In_KMS( $KMSId.3, $AgentId.2,
+                                                                               ~RunId.3,
+                                                                               <'SignResponse',
+                                                                                sign(<payload,
+                                                                                      ReceiverId
+                                                                                     >,
+                                                                                     ~SignKey.3)
+                                                                               >
+                                                                       )[+] ▶₁ #vr.101 )
+                                                                  case ChanIn_KMS
+                                                                  solve( In_KMS( $KMSId.3,
+                                                                                 $AgentId.2,
+                                                                                 ~RunId.3,
+                                                                                 'VerifyResponse'
+                                                                         )[+] ▶₁ #vr.91 )
+                                                                    case ChanIn_KMS
+                                                                    solve( In_KMS( $AgentId.2,
+                                                                                   $KMSId.3,
+                                                                                   ~RunId.3,
+                                                                                   <
+                                                                                    'VerifyRequest',
+                                                                                    $LtkARN.2,
+                                                                                    payload.1,
+                                                                                    sign(<
+                                                                                          payload.1,
+                                                                                          $KeyOwnerId
+                                                                                         >,
+                                                                                         ~SignKey.5),
+                                                                                    $KeyOwnerId>
+                                                                           )[+] ▶₂ #vr.120 )
+                                                                      case ChanIn_KMS
+                                                                      solve( In_KMS( $KeyOwnerId,
+                                                                                     $KMSId.3,
+                                                                                     ~RunId.3,
+                                                                                     <
+                                                                                      'SignRequest',
+                                                                                      $LtkARN,
+                                                                                      payload,
+                                                                                      ReceiverId>
+                                                                             )[+] ▶₂ #vr.115 )
+                                                                        case ChanIn_KMS
+                                                                        solve( Client_S6( ~RunId.1,
+                                                                                          $ClientId,
+                                                                                          $KMSId.1,
+                                                                                          $AgentId.1,
+                                                                                          $ClientLtKeyId.1,
+                                                                                          AgentLtKeyId.1,
+                                                                                          'g'^x.1,
+                                                                                          SigX,
+                                                                                          ReaderId.1,
+                                                                                          ~y.1, SigY
+                                                                               ) ▶₀ #i2 )
+                                                                          case Client_SendSecureSessionResponse
+                                                                          solve( In_KMS( $KMSId.1,
+                                                                                         $ClientId,
+                                                                                         ~RunId.1,
+                                                                                         'VerifyResponse'
+                                                                                 )[+] ▶₁ #vr.133 )
+                                                                            case ChanIn_KMS
+                                                                            solve( In_KMS( $ClientId,
+                                                                                           $KMSId.1,
+                                                                                           ~RunId.1,
+                                                                                           <
+                                                                                            'VerifyRequest',
+                                                                                            $LtkARN.3,
+                                                                                            payload.1,
+                                                                                            sign(<
+                                                                                                  payload.1,
+                                                                                                  $KeyOwnerId.1
+                                                                                                 >,
+                                                                                                 ~SignKey.7),
+                                                                                            $KeyOwnerId.1
+                                                                                           >
+                                                                                   )[+] ▶₂ #vr.148 )
+                                                                              case ChanIn_KMS
+                                                                              solve( splitEqs(24) )
+                                                                                case split_case_1
+                                                                                solve( splitEqs(23) )
+                                                                                  case split
+                                                                                  solve( !KU( 'g'^(
+                                                                                                           ~x*
+                                                                                                           ~y*
+                                                                                                           inv(~x.1)
+                                                                                                          )
+                                                                                         ) @ #vk.38 )
+                                                                                    case ChanOut_MGS_case_1
+                                                                                    by solve( !KU( ~y
+                                                                                              ) @ #vk.49 )
+                                                                                  next
+                                                                                    case ChanOut_MGS_case_2
+                                                                                    by solve( !KU( ~x
+                                                                                              ) @ #vk.49 )
+                                                                                  next
+                                                                                    case c_exp
+                                                                                    by solve( !KU( ~x
+                                                                                              ) @ #vk.50 )
+                                                                                  qed
+                                                                                qed
+                                                                              next
+                                                                                case split_case_2
+                                                                                solve( splitEqs(23) )
+                                                                                  case split
+                                                                                  solve( !KU( 'g'^(
+                                                                                                           ~x*
+                                                                                                           ~y*
+                                                                                                           inv(~y.1)
+                                                                                                          )
+                                                                                         ) @ #vk.43 )
+                                                                                    case ChanOut_MGS_case_1
+                                                                                    by solve( !KU( ~y
+                                                                                              ) @ #vk.50 )
+                                                                                  next
+                                                                                    case ChanOut_MGS_case_2
+                                                                                    by solve( !KU( ~x
+                                                                                              ) @ #vk.50 )
+                                                                                  next
+                                                                                    case c_exp
+                                                                                    by solve( !KU( ~x
+                                                                                              ) @ #vk.51 )
+                                                                                  qed
+                                                                                qed
+                                                                              qed
+                                                                            qed
+                                                                          qed
+                                                                        qed
+                                                                      qed
+                                                                    qed
+                                                                  qed
+                                                                qed
+                                                              qed
+                                                            next
+                                                              case ChanOut_MGS_case_2
+                                                              solve( Client_S6( ~RunId.1, $ClientId,
+                                                                                $KMSId.1,
+                                                                                $AgentId.1,
+                                                                                $ClientLtKeyId.1,
+                                                                                AgentLtKeyId.1,
+                                                                                'g'^x.1,
+                                                                                SigX, ReaderId.1,
+                                                                                ~y.1, SigY
+                                                                     ) ▶₀ #i2 )
+                                                                case Client_SendSecureSessionResponse
+                                                                solve( splitEqs(23) )
+                                                                  case split_case_1
+                                                                  by contradiction
+                                                                     /* from formulas */
+                                                                next
+                                                                  case split_case_2
+                                                                  solve( !KU( 'g'^(~x*~y*
+                                                                                           inv(~y.1)
+                                                                                          )
+                                                                         ) @ #vk.35 )
+                                                                    case ChanOut_MGS_case_1
+                                                                    by solve( !KU( ~y ) @ #vk.42 )
+                                                                  next
+                                                                    case ChanOut_MGS_case_2
+                                                                    by solve( !KU( ~x ) @ #vk.42 )
+                                                                  next
+                                                                    case c_exp
+                                                                    by solve( !KU( ~x ) @ #vk.43 )
+                                                                  qed
+                                                                qed
+                                                              qed
+                                                            next
+                                                              case c_senc
+                                                              solve( Client_S6( ~RunId.1, $ClientId,
+                                                                                $KMSId.1,
+                                                                                $AgentId.1,
+                                                                                $ClientLtKeyId.1,
+                                                                                AgentLtKeyId.1,
+                                                                                'g'^x.1,
+                                                                                SigX, ReaderId.1,
+                                                                                ~y.1, SigY
+                                                                     ) ▶₀ #i2 )
+                                                                case Client_SendSecureSessionResponse
+                                                                solve( splitEqs(23) )
+                                                                  case split
+                                                                  solve( !KU( 'g'^(~x*~y*
+                                                                                           inv(~y.1)
+                                                                                          )
+                                                                         ) @ #vk.35 )
+                                                                    case ChanOut_MGS_case_1
+                                                                    by solve( !KU( ~y ) @ #vk.42 )
+                                                                  next
+                                                                    case ChanOut_MGS_case_2
+                                                                    by solve( !KU( ~x ) @ #vk.42 )
+                                                                  next
+                                                                    case c_exp
+                                                                    by solve( !KU( ~x ) @ #vk.43 )
+                                                                  qed
+                                                                qed
+                                                              qed
+                                                            qed
+                                                          qed
+                                                        qed
+                                                      qed
+                                                    qed
+                                                  qed
+                                                next
+                                                  case case_2
+                                                  by contradiction /* from formulas */
+                                                next
+                                                  case case_3
+                                                  by contradiction /* from formulas */
+                                                qed
+                                              next
+                                                case c_sign
+                                                solve( !KU( ~SignKey.2 ) @ #vk.28 )
+                                                  case Reveal_KmsSignKey
+                                                  by contradiction /* from formulas */
+                                                qed
+                                              qed
+                                            next
+                                              case split_case_2
+                                              solve( !KU( 'g'^(~x*~y*inv(~y.1)) ) @ #vk.31 )
+                                                case ChanOut_MGS_case_1
+                                                by solve( !KU( ~y ) @ #vk.38 )
+                                              next
+                                                case ChanOut_MGS_case_2
+                                                by solve( !KU( ~x ) @ #vk.38 )
+                                              next
+                                                case c_exp
+                                                by solve( !KU( ~x ) @ #vk.39 )
+                                              qed
+                                            qed
+                                          qed
+                                        qed
+                                      qed
+                                    next
+                                      case c_hash
+                                      solve( !KU( 'g'^(~x*~y) ) @ #vk.27 )
+                                        case ChanOut_MGS_case_1
+                                        by solve( !KU( ~y ) @ #vk.28 )
+                                      next
+                                        case ChanOut_MGS_case_2
+                                        by solve( !KU( ~x ) @ #vk.28 )
+                                      next
+                                        case c_exp
+                                        by solve( !KU( ~x ) @ #vk.30 )
+                                      qed
+                                    qed
                                   next
                                     case split_case_2
-                                    solve( !KU( 'g'^(~x*~y*inv(~y.1)) ) @ #vk.24 )
+                                    solve( !KU( 'g'^(~x*~y*inv(~x.1)) ) @ #vk.23 )
                                       case ChanOut_MGS_case_1
-                                      by solve( !KU( ~y ) @ #vk.31 )
+                                      by solve( !KU( ~y ) @ #vk.30 )
                                     next
                                       case ChanOut_MGS_case_2
-                                      by solve( !KU( ~x ) @ #vk.31 )
+                                      by solve( !KU( ~x ) @ #vk.30 )
                                     next
                                       case c_exp
-                                      by solve( !KU( ~x ) @ #vk.32 )
+                                      by solve( !KU( ~x ) @ #vk.31 )
                                     qed
                                   qed
                                 qed
                               qed
                             qed
                           next
-                            case c_hash
-                            solve( !KU( 'g'^(~x*~y) ) @ #vk.20 )
-                              case ChanOut_MGS_case_1
-                              by solve( !KU( ~y ) @ #vk.21 )
-                            next
-                              case ChanOut_MGS_case_2
-                              by solve( !KU( ~x ) @ #vk.21 )
-                            next
-                              case c_exp
-                              by solve( !KU( ~x ) @ #vk.23 )
-                            qed
+                            case ChanIn_KMS_case_2
+                            by contradiction /* cyclic */
                           qed
                         qed
                       qed
-                    next
-                      case ChanOut_MGS_case_2
-                      solve( In_KMS( $KMSId.2, $AgentId, ~RunId.2, VerifyResponse
-                             )[+] ▶₁ #vr.78 )
-                        case ChanIn_KMS
-                        solve( In_KMS( $AgentId, $KMSId.2, ~RunId.2,
-                                       <VerifyRequest, $LtkARN.1, payload,
-                                        sign(<payload, $KeyOwnerId>, ~SignKey.4), $KeyOwnerId
-                                       >
-                               )[+] ▶₂ #vr.92 )
-                          case ChanIn_KMS
-                          solve( !KU( hash('g'^(~x*~y)) ) @ #vk.13 )
-                            case ChanOut_MGS
-                            solve( In_KMS( $KMSId.3, $ClientId.1, ~RunId.3, VerifyResponse
-                                   )[+] ▶₁ #vr.106 )
-                              case ChanIn_KMS
-                              solve( In_KMS( $ClientId.1, $KMSId.3, ~RunId.3,
-                                             <VerifyRequest, $LtkARN.3, payload.1,
-                                              sign(<payload.1, $KeyOwnerId>, ~SignKey.6),
-                                              $KeyOwnerId>
-                                     )[+] ▶₂ #vr.121 )
-                                case ChanIn_KMS
-                                by solve( In_KMS( $AgentId, $KMSId.2, ~RunId.2,
-                                                  <SignRequest, $LtkARN, <X, ReaderId.1>,
-                                                   $AgentId>
-                                          )[+] ▶₂ #vr.83 )
-                              qed
-                            qed
-                          next
-                            case c_hash
-                            solve( !KU( 'g'^(~x*~y) ) @ #vk.29 )
-                              case ChanOut_MGS_case_1
-                              by solve( !KU( ~y ) @ #vk.30 )
-                            next
-                              case ChanOut_MGS_case_2
-                              by solve( !KU( ~x ) @ #vk.30 )
-                            next
-                              case c_exp
-                              by solve( !KU( ~x ) @ #vk.32 )
-                            qed
-                          qed
+                    qed
+                  next
+                    case c_senc
+                    solve( !KU( kdf1('g'^(~x*~y)) ) @ #vk.15 )
+                      case Agent_SendEncryptedSessionKey
+                      solve( splitEqs(8) )
+                        case split_case_1
+                        solve( !KU( ~ltk ) @ #vk.18 )
+                          case Reveal_ltk
+                          by contradiction /* from formulas */
+                        qed
+                      next
+                        case split_case_2
+                        solve( !KU( 'g'^(~x*~y*inv(~x.1)) ) @ #vk.24 )
+                          case ChanOut_MGS_case_1
+                          by solve( !KU( ~y ) @ #vk.31 )
+                        next
+                          case ChanOut_MGS_case_2
+                          by solve( !KU( ~x ) @ #vk.31 )
+                        next
+                          case c_exp
+                          by solve( !KU( ~x ) @ #vk.32 )
                         qed
                       qed
                     next
-                      case c_sign
-                      solve( !KU( ~SignKey.3 ) @ #vk.22 )
-                        case Reveal_KmsSignKey
-                        by contradiction /* from formulas */
+                      case c_kdf1
+                      solve( !KU( 'g'^(~x*~y) ) @ #vk.18 )
+                        case ChanOut_MGS_case_1
+                        by solve( !KU( ~y ) @ #vk.19 )
+                      next
+                        case ChanOut_MGS_case_2
+                        by solve( !KU( ~x ) @ #vk.19 )
+                      next
+                        case c_exp
+                        by solve( !KU( ~x ) @ #vk.21 )
                       qed
                     qed
                   qed
                 qed
               qed
             next
+              case ChanOut_MGS_case_2
+              solve( In_KMS( $KMSId.1, $ClientId, ~RunId.1, 'VerifyResponse'
+                     )[+] ▶₁ #vr.35 )
+                case ChanIn_KMS
+                solve( In_KMS( $ClientId, $KMSId.1, ~RunId.1,
+                               <'VerifyRequest', $LtkARN.1, payload,
+                                sign(<payload, $KeyOwnerId>, ~SignKey.2), $KeyOwnerId>
+                       )[+] ▶₂ #vr.49 )
+                  case ChanIn_KMS
+                  by solve( In_KMS( $ClientId, $KMSId.1, ~RunId.1,
+                                    <'SignRequest', $LtkARN, <X, ReaderId>, $ClientId>
+                            )[+] ▶₂ #vr.40 )
+                qed
+              qed
+            next
               case c_sign
-              solve( !KU( ~SignKey.1 ) @ #vk.12 )
+              solve( !KU( ~SignKey ) @ #vk.16 )
                 case Reveal_KmsSignKey
                 by contradiction /* from formulas */
               qed
