@@ -3,26 +3,6 @@ begin
 
 builtins: symmetric-encryption, asymmetric-encryption, diffie-hellman, signing
 
-// functions: HandshakeRequest/0
-// functions: SecureSessionRequest/0
-// functions: SecureSessionResponse/0
-// functions: DataKeyRequest/0
-// functions: HandshakeRequestResponse/0
-// functions: HandshakeActionSuccess/0
-// functions: DecryptRequest/0
-// functions: DecryptResponse/0
-// functions: SignRequest/0
-// functions: SignResponse/0
-// functions: VerifyRequest/0
-// functions: VerifyResponse/0
-// functions: VerifyRequest2/0
-// functions: VerifyResponse2/0
-// functions: EncryptedSessionKey/0
-// functions: HandshakeComplete/0
-// functions: HandshakeCompletePayload/0
-// functions: Message/0
-// functions: GetKMSId/0
-// functions: Log/0
 functions: hash/1, kdf1/1, kdf2/1
 
 
@@ -77,41 +57,18 @@ functions: hash/1, kdf1/1, kdf2/1
 // communication channel. This is equivalent to clients and agents communicating via an untrusted network or MGS being a DY
 // attacker.
 // Begin MGS
-#ifdef TRUST_MGS
-rule ChanOut_MGS:
-        [ Out_MGS(A,B,x) ]
-      --[ ChanOut_MGS(A,B,x) ]->
-        [ !Sec_MGS(A,B,x) ]
-
-rule ChanIn_MGS:
-        [ !Sec_MGS(A,B,<x,y>) ]
-      --[ ChanIn_MGS(A,B,<x,y>) /*, NotEqual(x, ExecuteCommand()), NotEqual(x, 'EncryptedSessionKey')*/ ]->
-        [ In_MGS(A,B,<x,y>) ]
-      //   [ !Sec_MGS(A,B,x) ]
-      // --[ ChanIn_MGS(A,B,x) ]->
-      //   [ In_MGS(A,B,x) ]
-
-// rule ChanIn_MGS_EncryptedSessKey:
-//         [ !Sec_MGS(A,B,<'EncryptedSessionKey', args>) ]
-//       --[ ChanIn_MGS(A,B,<'EncryptedSessionKey', args>), IN_ChanIn_MGS_EncryptedSessKey(args) ]->
-//         [ In_MGS(A,B,<'EncryptedSessionKey', args>), Out(<'EncryptedSessionKey', args>) ]
-
-// rule ChanIn_MGS_CMD:
-//         [ !Sec_MGS(A,B,<ExecuteCommand(), encryptedCmd>) ]
-//       --[ ChanIn_MGS(A,B,<ExecuteCommand(), encryptedCmd>), LogCommand(A, B, encryptedCmd) ]->
-//         [ In_MGS(A,B,<ExecuteCommand(), encryptedCmd>), Out(<ExecuteCommand(), encryptedCmd>) ]
-
-// rule ChanOut_MGS_Att:
-//         [ In(<A,B,x>) ]
-//       --[ ChanOut_MGS_Att(A,B,x) ]->
+// #ifdef TRUST_MGS
+// rule ChanOut_MGS:
+//         [ Out_MGS(A,B,x) ]
+//       --[ ChanOut_MGS(A,B,x) ]->
 //         [ !Sec_MGS(A,B,x) ]
 
-// rule ChanIn_MGS_Att:
-//         [ !Sec_MGS(A,B,x) ]
-//       --[ ChanIn_MGS_Att(A,B,x) ]->
-//         [ Out(<A,B,x>) ]
+// rule ChanIn_MGS:
+//         [ !Sec_MGS(A,B,<x,y>) ]
+//       --[ ChanIn_MGS(A,B,<x,y>) ]->
+//         [ In_MGS(A,B,<x,y>) ]
 
-#else
+// #else
 
 rule ChanOut_MGS:
         [ Out_MGS(A,B,x) ]
@@ -125,9 +82,11 @@ rule ChanIn_MGS:
 
 // while Tamarin supports macros, it does not seem to be possible to apply macros facts (such that we could express
 // the 2 rules above as macros).
-#endif
+// #endif
 // End MGS
 
+
+// Begin PKI & KMS infrastructure
 rule Register_pk:
     [ Fr(~ltk) ]
   -->
@@ -143,16 +102,6 @@ rule Reveal_ltk:
   --[ Reveal(A), LtkReveal(A), LtkRevealKey(ltk) ]->
     [ Out(ltk) ]
 
-// rule Register_KmsKey:
-//     [ Fr(~KmsKey) ]
-//   -->
-//     [ !KmsKey($KMSKeyId, ~KmsKey) ]
-
-// rule Reveal_KmsKey:
-//     [ !KmsKey(KMSKeyId, KmsKey) ]
-//   --[ KmsKeyReveal(KMSKeyId) ]->
-//     [ Out(KmsKey) ]
-
 rule Register_KmsSignKey:
     [ Fr(~SignKey) ]
   --[ CreateSignKey($KeyOwnerId, $LtkARN, ~SignKey) ]->
@@ -160,31 +109,14 @@ rule Register_KmsSignKey:
 
 rule Reveal_KmsSignKey:
     [ !KmsSignKey(KeyOwnerId, LtkARN, SignKey) ]
-  --[ KmsSignKeyReveal(LtkARN), KmsSignKeyRevealOwner(KeyOwnerId), KmsSignKeyRevealKey(SignKey), Reveal('GetKMSId') ]->
+  --[ KmsSignKeyReveal(LtkARN), KmsSignKeyRevealOwner(KeyOwnerId) ]->
     [ Out(SignKey) ]
+// End PKI & KMS infrastructure
 
-// rule Register_datakey:
-//     [ Fr(~datakey) ]
-//   -->
-//     [ !DataKey($SessId, ~datakey) ]
 
-// rule Reveal_datakey:
-//     [ !DataKey(SessId, datakey) ]
-//   --[ DataKeyReveal(SessId) ]->
-//     [ Out(datakey) ]
-
-// as soon as an protocol instance obtains the datakey, it creates a (persistent) `DataKeyInMemory` fact.
-// This models the fact that the corresponding datakey is stored in this session's memory.
-// The following rule enables the attacker to obtain the datakey from memory by corrupting the protocol
-// instance's memory:
-// rule Reveal_datakey_in_memory:
-//     [ !DataKeyInMemory(A, SessId, datakey) ]
-//   --[ DataKeyInMemoryReveal(SessId) ]->
-//     [ Out(datakey) ]
-
-// TODO: do we need a secure channel between client <-> agent
-// TODO: there's an SSM service between client and agent (called MGS), which separate connections for each session!
-// KMS checks that a particular client ID is allowed to use a KMSKeyId
+// KMS checks that a particular client ID is allowed to use a KMSKeyId, that's the justification for treating connections to
+// KMS as secure (i.e., authentic & confidential). Note that a hardware secure module (HSM) such as a Yubikey could act as a
+// drop-in replacement for KMS, where a secure channel would be even more justified.
 // Begin secure channel model
 rule ChanOut_KMS:
         [ Out_KMS(A,B,clientRunId,x) ] // here, `clientRunId` is either the RunId of agent or client
@@ -202,127 +134,84 @@ rule ChanIn_KMS:
 rule Agent_Init [color=#177AE8]:
     [ Fr(~RunId), !Pk($ReaderId, logPk) ]
   -->
-    [ Agent_Init(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk) ]
+    [ Setup_Agent(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk) ]
 
 rule Agent_SendSignRequest [color=#177AE8]:
-    [ Agent_Init(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk), Fr(~x) ]
+    [ Setup_Agent(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk), Fr(~x) ]
   --[ AgentStarted() ]->
-    [ Agent_S1(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x), Out_KMS($AgentId, $KMSId, ~RunId, <'SignRequest', $AgentLtKeyId, <'g'^~x, $ReaderId>, $ClientId>)[+] ]
+    [ St_Agent_1(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x), Out_KMS($AgentId, $KMSId, ~RunId, <'SignRequest', $AgentLtKeyId, <'g'^~x, $ReaderId>, $ClientId>)[+] ]
 
 rule Agent_RecvSignResponse [color=#177AE8]:
-    [ Agent_S1(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x), In_KMS($KMSId, $AgentId, ~RunId, <'SignResponse', SigX>)[+] ]
-  --[ Signed(SigX), AgentSignResponse($KMSId, $AgentId, ~RunId, <'SignResponse', SigX>), WasSigned($AgentId, SigX, $AgentLtKeyId, 'g'^~x, $ClientId) ]->
-    [ Agent_S2(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX) ]
+    [ St_Agent_1(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x), In_KMS($KMSId, $AgentId, ~RunId, <'SignResponse', SigX>)[+] ]
+  --[ AgentSignResponse($KMSId, $AgentId, ~RunId, <'SignResponse', SigX>) ]->
+    [ St_Agent_2(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX) ]
 
-// #ifdef TRUST_MGS
 rule Agent_SendSecureSessionRequest [color=#177AE8]:
     let
       X = 'g'^~x
       msg = <'SecureSessionRequest', X, SigX, $AgentLtKeyId, $ReaderId>
     in
-    [ Agent_S2(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX) ]
-  --[ AgentSecureSessionRequest($AgentId, $ClientId, X, SigX, $AgentLtKeyId), SessionRequestSigX(~x, X, SigX, $AgentLtKeyId) ]->
-    [ Agent_S3(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX), Out_MGS($AgentId, $ClientId, msg) ]
-// #else
-// rule Agent_SendSecureSessionRequest [color=#177AE8]:
-//     let
-//       X = 'g'^~x
-//       msg = <'SecureSessionRequest', X, SigX, $AgentLtKeyId>
-//     in
-//     [ Agent_S2(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX) ]
-//   --[ AgentSecureSessionRequest($AgentId, $ClientId, X, SigX, $AgentLtKeyId), SessionRequestSigX(~x, X, SigX, $AgentLtKeyId) ]->
-//     [ Agent_S3(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX), Out(msg) ]
-// #endif
+    [ St_Agent_2(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX) ]
+  --[ AgentSecureSessionRequest($AgentId, $ClientId, X, SigX, $AgentLtKeyId) ]->
+    [ St_Agent_3(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX), Out_MGS($AgentId, $ClientId, msg) ]
 
-// TODO: what should we do with the session ID?
-// #ifdef TRUST_MGS
 rule Agent_RecvSecureSessionResponse [color=#177AE8]:
     let
       Y = 'g' ^ z // think of this as a group element check, i.e., we have to check in the implementation that Y and the shared secret are not 0, 1, or p-1 (see https://www.redhat.com/en/blog/understanding-and-verifying-security-diffie-hellman-parameters)
       msg = <'SecureSessionResponse', Y, SigY, ClientLtKeyId, hash(Y^~x)>
     in
-    [ Agent_S3(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX), In_MGS($ClientId, $AgentId, msg) ]
-  --[ AgentSecureSessionResponse($ClientId, $AgentId, Y, SigY, ClientLtKeyId, hash(Y^~x)), SecSessResp(kdf1(Y^~x)) ]->
-    [ Agent_S4(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY) ]
-// #else
-// rule Agent_RecvSecureSessionResponse [color=#177AE8]:
-//     let
-//       Y = 'g' ^ z // think of this as a group element check, i.e., we have to check in the implementation that Y and the shared secret are not 0, 1, or p-1 (see https://www.redhat.com/en/blog/understanding-and-verifying-security-diffie-hellman-parameters)
-//       msg = <'SecureSessionResponse', Y, SigY, ClientLtKeyId, hash(Y^~x)>
-//     in
-//     [ Agent_S3(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX), In(msg) ]
-//   --[ AgentSecureSessionResponse($ClientId, $AgentId, Y, SigY, ClientLtKeyId, hash(Y^~x)) ]->
-//     [ Agent_S4(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY) ]
-// #endif
+    [ St_Agent_3(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX), In_MGS($ClientId, $AgentId, msg) ]
+  --[ AgentSecureSessionResponse($ClientId, $AgentId, Y, SigY, ClientLtKeyId, hash(Y^~x)) ]->
+    [ St_Agent_4(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY) ]
 
 rule Agent_SendVerifyRequest [color=#177AE8]:
-    [ Agent_S4(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY) ]
+    [ St_Agent_4(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY) ]
   -->
-    [ Agent_S5(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY), Out_KMS($AgentId, $KMSId, ~RunId, <'VerifyRequest', ClientLtKeyId, Y, SigY, $AgentId>)[+] ]
+    [ St_Agent_5(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY), Out_KMS($AgentId, $KMSId, ~RunId, <'VerifyRequest', ClientLtKeyId, Y, SigY, $AgentId>)[+] ]
 
 rule Agent_RecvVerifyResponse [color=#177AE8]:
-    [ Agent_S5(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY), In_KMS($KMSId, $AgentId, ~RunId, 'VerifyResponse')[+] ]
-  --[ Agent_Finish($AgentId), HonestKMS($AgentLtKeyId), HonestKMS(ClientLtKeyId), SecretX(~x), SecretInvX(inv(~x)), Sig_Verified(ClientLtKeyId, Y, SigY), Honest('GetKMSId'), VerifiedClientDHHK(Y), WasVerified($ClientId, SigY, ClientLtKeyId, Y, $AgentId) ]->
-    [ Agent_S6(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY) ]
+    [ St_Agent_5(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY), In_KMS($KMSId, $AgentId, ~RunId, 'VerifyResponse')[+] ]
+  --[ SecretX(~x) ]->
+    [ St_Agent_6(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY) ]
 
 rule Agent_SendSessionKeySignRequest [color=#177AE8]:
-    [ Agent_S6(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY) ]
+    [ St_Agent_6(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY) ]
   -->
-    [ Agent_S7(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY), Out_KMS($AgentId, $KMSId, ~RunId, <'SignRequest', $AgentLtKeyId, aenc(kdf1(Y^~x), logPk), $ClientId>)[+] ]
+    [ St_Agent_7(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY), Out_KMS($AgentId, $KMSId, ~RunId, <'SignRequest', $AgentLtKeyId, aenc(<kdf1(Y^~x), kdf2(Y^~x)>, logPk), $ClientId>)[+] ]
 
 rule Agent_RecvSessionKeySignResponse [color=#177AE8]:
-    [ Agent_S7(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY), In_KMS($KMSId, $AgentId, ~RunId, <'SignResponse', SigSessionKey>)[+] ]
-  --[ WasSigned($AgentId, SigSessionKey, $AgentLtKeyId, aenc(kdf1(Y^~x), logPk), $ClientId) ]->
-    [ Agent_S8(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey) ]
+    [ St_Agent_7(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY), In_KMS($KMSId, $AgentId, ~RunId, <'SignResponse', SigSessionKey>)[+] ]
+  -->
+    [ St_Agent_8(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey) ]
 
 rule Agent_SendEncryptedSessionKey [color=#177AE8]:
-    [ Agent_S8(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey) ]
-  --[ Agent_Finish2($AgentId), EncryptedSessionKeyPayload(aenc(kdf1(Y^~x), logPk), SigSessionKey, $AgentLtKeyId, $ClientId), OUT_EncryptedSessKey(<aenc(<kdf1(Y^~x), kdf2(Y^~x)>, logPk), SigSessionKey, $AgentLtKeyId, $ClientId>), SessionKeySecureUnless(kdf1(Y^~x), $AgentLtKeyId, ClientLtKeyId, logPk) ]->
-    // [ Agent_S9(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), Out_MGS($AgentId, $ReaderId, <'EncryptedSessionKey', aenc(Y^~x, logPk), SigSessionKey, $AgentLtKeyId, $ClientId>) ]
-    [ Agent_S9(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), Out(<'EncryptedSessionKey', aenc(<kdf1(Y^~x), kdf2(Y^~x)>, logPk), SigSessionKey, $AgentLtKeyId, $ClientId>) ]
+    [ St_Agent_8(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey) ]
+  -->
+    [ St_Agent_9(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), Out(<'EncryptedSessionKey', aenc(<kdf1(Y^~x), kdf2(Y^~x)>, logPk), SigSessionKey, $AgentLtKeyId, $ClientId>) ]
 
 rule Agent_SendHandshakeComplete [color=#177AE8]:
-    [ Agent_S9(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), In(msg) ]
-  --[ Agent_Finish3($AgentId), Secret(<kdf1(Y^~x), kdf2(Y^~x)>), Commit('Agent', 'Client', <$AgentId, $ClientId, kdf1(Y^~x), kdf2(Y^~x)>), Running('Agent', 'Client', <$AgentId, $ClientId, kdf1(Y^~x), kdf2(Y^~x)>), HonestReader($ReaderId), HonestKmsOwner($AgentId), HonestKmsOwner($ClientId), AgentSessKey(kdf1(Y^~x)), AgentHandshakeCompleted(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, ClientLtKeyId, Y) ]->
-    [ Agent_S10(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), Out_MGS($AgentId, $ClientId, <'HandshakeComplete', senc(<'HandshakeCompletePayload', msg>, kdf1(Y^~x))>) ]
-// #ifdef TRUST_MGS
+    [ St_Agent_9(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), In(msg) ]
+  --[ 
+      Agent_Finish($AgentId),
+      Secret(<kdf1(Y^~x), kdf2(Y^~x)>),
+      Commit('Agent', 'Client', <$AgentId, $ClientId, kdf1(Y^~x), kdf2(Y^~x)>),
+      Running('Agent', 'Client', <$AgentId, $ClientId, kdf1(Y^~x), kdf2(Y^~x)>),
+      HonestReader($ReaderId),
+      HonestKmsOwner($AgentId),
+      HonestKmsOwner($ClientId),
+      AgentHandshakeCompleted(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, ClientLtKeyId, Y)
+    ]->
+    [ St_Agent_10(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), Out_MGS($AgentId, $ClientId, <'HandshakeComplete', senc(<'HandshakeCompletePayload', msg>, kdf1(Y^~x))>) ]
+
 rule Agent_ReceiveMessages [color=#177AE8]:
-    [ Agent_S10(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), In_MGS($ClientId, $AgentId, <'Message', senc(msg, kdf2(Y^~x))>) ]
-  --[ AgentReceivedMessage(msg), AgentRecvLoop(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, ClientLtKeyId, Y) ]->
-    [ Agent_S10(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey) ]
+    [ St_Agent_10(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), In_MGS($ClientId, $AgentId, <'Message', senc(msg, kdf2(Y^~x))>) ]
+  --[ AgentRecvLoop(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, ClientLtKeyId, Y) ]->
+    [ St_Agent_10(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey) ]
 
 rule Agent_SendMessages [color=#177AE8]:
-    [ Agent_S10(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), In(msg) ]
-  --[ AgentSendMessage(msg), AgentSendLoop(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, ClientLtKeyId, Y) ]->
-    [ Agent_S10(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), Out_MGS($AgentId, $ClientId, <'Message', senc(msg, kdf1(Y^~x))>) ]
-// #else
-// rule Agent_ReceiveCommands [color=#177AE8]:
-//     [ Agent_S9(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), In(<ExecuteCommand(), senc(cmd, kdf1(Y^~x))>) ]
-//   --[ Agent_Finish3($AgentId), ExecuteCommand(cmd) ]->
-//     [ Agent_S9(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), Command(cmd) ]
-// #endif
-
-
-// rule Agent_SendHandshakeRequest [color=#177AE8]:
-//     [ Agent_Init($AgentId, $ClientId, $KMSKeyId, $AgentLtKeyId, SessId), Fr(~x) ]
-//   --[ KMSEncryptionRequest($KMSKeyId, SessId) ]->
-//     [ Agent_S1($AgentId, $ClientId, $KMSKeyId, SessId), Out_MGS($AgentId, $ClientId, SessId, <'HandshakeRequest', $KMSKeyId>) ]
-
-// rule Agent_RecvHandshakeRequestResponse [color=#177AE8]:
-//     [ Agent_S1($AgentId, $ClientId, $KMSKeyId, SessId), In_MGS($ClientId, $AgentId, SessId, <'HandshakeActionSuccess', encrypteddatakey>) ]
-//   -->
-//     [ Agent_S2($AgentId, $ClientId, $KMSKeyId, SessId, encrypteddatakey) ]
-
-// rule Agent_SendKeyDecryptRequest [color=#177AE8]:
-//     [ Agent_S2($AgentId, $ClientId, $KMSKeyId, SessId, encrypteddatakey)]
-//   -->
-//     [ Agent_S3($AgentId, $ClientId, $KMSId, $KMSKeyId, SessId, encrypteddatakey), Out_S($AgentId, $KMSId, <'DecryptRequest', $AgentId, SessId, encrypteddatakey>) ] // `$AgentId` (aka InstanceId) and `SessId` form the encryption context
-
-// rule Agent_RecvKeyDecryptResponse [color=#177AE8]:
-//     [ Agent_S3($AgentId, $ClientId, $KMSId, $KMSKeyId, SessId, encrypteddatakey), In_S($KMSId, $AgentId, <'DecryptResponse', datakey>) ]
-//   --[ AgentDataKeyReceived($AgentId, SessId, datakey), Agent_Finish($AgentId, $ClientId, $KMSId, SessId), Secret(SessId, datakey) ]-> // TODO: add challenge roundtrip and move Finish label!
-//     [ Agent_S4($AgentId, $ClientId, $KMSId, $KMSKeyId, SessId, datakey), !DataKeyInMemory($AgentId, SessId, datakey) ]
-
+    [ St_Agent_10(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), In(msg) ]
+  --[ AgentSendLoop(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, ClientLtKeyId, Y) ]->
+    [ St_Agent_10(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), Out_MGS($AgentId, $ClientId, <'Message', senc(msg, kdf1(Y^~x))>) ]
 // End Agent
 
 
@@ -330,9 +219,8 @@ rule Agent_SendMessages [color=#177AE8]:
 rule Client_Init [color=#E817E3]:
     [ Fr(~RunId) ]
   -->
-    [ Client_Init(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId) ] // in the code, `AgentId` is called `TargetId`. TODO: is `SessId` fresh?
+    [ Client_Init(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId) ] // in the code, `AgentId` is called `TargetId`.
 
-// #ifdef TRUST_MGS
 rule Client_RecvSecureSessionRequest [color=#E817E3]:
     let
       X = 'g' ^ z // think of this as a group element check
@@ -341,16 +229,6 @@ rule Client_RecvSecureSessionRequest [color=#E817E3]:
     [ Client_Init(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId), In_MGS($AgentId, $ClientId, msg) ]
   --[ ClientStarted(), ClientSecureSessionRequest($AgentId, $ClientId, X, SigX, AgentLtKeyId) ]->
     [ Client_S1(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId) ]
-// #else
-// rule Client_RecvSecureSessionRequest [color=#E817E3]:
-//     let
-//       X = 'g' ^ z // think of this as a group element check
-//       msg = <'SecureSessionRequest', X, SigX, AgentLtKeyId>
-//     in
-//     [ Client_Init(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId), In(msg) ]
-//   --[ ClientStarted(), ClientSecureSessionRequest($AgentId, $ClientId, X, SigX, AgentLtKeyId) ]->
-//     [ Client_S1(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX) ]
-// #endif
 
 rule Client_SendVerifyRequest [color=#E817E3]:
     [ Client_S1(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId) ]
@@ -359,7 +237,7 @@ rule Client_SendVerifyRequest [color=#E817E3]:
 
 rule Client_RecvVerifyResponse [color=#E817E3]:
     [ Client_S2(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId), In_KMS($KMSId, $ClientId, ~RunId, 'VerifyResponse')[+] ]
-  --[ Sig_Verified(AgentLtKeyId, X, SigX), WasVerified($AgentId, SigX, AgentLtKeyId, X, $ClientId) ]->
+  -->
     [ Client_S3(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId) ]
 
 rule Client_SendSignRequest [color=#E817E3]:
@@ -369,68 +247,44 @@ rule Client_SendSignRequest [color=#E817E3]:
 
 rule Client_RecvSignResponse [color=#E817E3]:
     [ Client_S4(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y), In_KMS($KMSId, $ClientId, ~RunId, <'SignResponse', SigY>)[+] ]
-  --[ ClientSignResponse($KMSId, $ClientId, ~RunId, <'SignResponse', SigY>), WasSigned($ClientId, SigY, $ClientLtKeyId, 'g'^~y, $AgentId) ]->
+  --[ ClientSignResponse($KMSId, $ClientId, ~RunId, <'SignResponse', SigY>) ]->
     [ Client_S5(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y, SigY) ]
 
-// #ifdef TRUST_MGS
 rule Client_SendSecureSessionResponse [color=#E817E3]:
     let
       msg = <'SecureSessionResponse', 'g'^~y, SigY, $ClientLtKeyId, hash(X^~y)>
     in
     [ Client_S5(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y, SigY) ]
-  --[ /* Commit('Client', 'Agent', <$AgentId, $ClientId, kdf1(X^~y)>), HonestReaders(),*/ HonestKmsOwner($AgentId), HonestKmsOwner($ClientId), HonestReader(ReaderId), SecretY(~y), Client_Finish($ClientId), ClientSecureSessionResponse($ClientId, $AgentId, X, SigX, 'g'^~y, SigY, AgentLtKeyId, $ClientLtKeyId, hash(X^~y)), Running('Client', 'Agent', <$AgentId, $ClientId, kdf1(X^~y), kdf2(X^~y)>), ClientDHHK('g'^~y), ClientSecSessResp(kdf1(X^~y)) ]->
+  --[
+      SecretY(~y),
+      ClientSendSessionResponse($ClientId),
+      ClientSecureSessionResponse($ClientId, $AgentId, X, SigX, 'g'^~y, SigY, AgentLtKeyId, $ClientLtKeyId, hash(X^~y)),
+      Running('Client', 'Agent', <$AgentId, $ClientId, kdf1(X^~y), kdf2(X^~y)>)
+    ]->
     [ Client_S6(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y, SigY), Out_MGS($ClientId, $AgentId, msg) ]
-// #else
-// rule Client_SendSecureSessionResponse [color=#E817E3]:
-//     let
-//       msg = <'SecureSessionResponse', 'g'^~y, SigY, $ClientLtKeyId, hash(X^~y)>
-//     in
-//     [ Client_S5(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ~y, SigY) ]
-//   --[ Secret(kdf1(X^~y)), HonestKMS(AgentLtKeyId), HonestKMS($ClientLtKeyId), SecretY(~y), Client_Finish($ClientId), ClientSecureSessionResponse($ClientId, $AgentId, X, SigX, 'g'^~y, SigY, AgentLtKeyId, $ClientLtKeyId, hash(X^~y)), Running($ClientId, $AgentId, X^~y), ClientDHHK('g'^~y) ]->
-//     [ Client_S6(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ~y, SigY), Out(msg) ]
-// #endif
 
 rule Client_RecvHandshakeComplete [color=#E817E3]:
     [ Client_S6(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y, SigY), In_MGS($AgentId, $ClientId, <'HandshakeComplete', senc(<'HandshakeCompletePayload', msg>, kdf1(X^~y))>) ]
-  --[ Client_Finish3($ClientId), Secret(<kdf1(X^~y), kdf2(X^~y)>), Commit('Client', 'Agent', <$AgentId, $ClientId, kdf1(X^~y), kdf2(X^~y)>), HonestReader(ReaderId), HonestKmsOwner($AgentId), HonestKmsOwner($ClientId), ClientHandshakeCompleted(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, ~y) ]->
+  --[
+      Client_Finish($ClientId),
+      Secret(<kdf1(X^~y), kdf2(X^~y)>),
+      Commit('Client', 'Agent', <$AgentId, $ClientId, kdf1(X^~y), kdf2(X^~y)>),
+      HonestReader(ReaderId),
+      HonestKmsOwner($AgentId),
+      HonestKmsOwner($ClientId),
+      ClientHandshakeCompleted(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, ~y)
+    ]->
     [ Client_S7(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y, SigY) ]
 
-// #ifdef TRUST_MGS
 rule Client_SendMessage [color=#E817E3]:
     [ Client_S7(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y, SigY), In(msg) ] // we treat `msg` to be arbitrary
   --[ ClientSendMessage(msg), ClientSendLoop(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, ~y) ]->
     [ Client_S7(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y, SigY), Out_MGS($ClientId, $AgentId, <'Message', senc(msg, kdf2(X^~y))>) ]
-// #else
-// rule Client_SendCommand [color=#E817E3]:
-//     [ Client_S6(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ~y, SigY), In(cmd) ] // we treat `cmd` to be arbitrary
-//   --[ SendCommand($ClientId, $AgentId, cmd) ]->
-//     [ Client_S6(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ~y, SigY), Out(<ExecuteCommand(), senc(cmd, kdf1(X^~y))>)]
-// #endif
+
 rule Client_RecvMessage [color=#E817E3]:
     [ Client_S7(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y, SigY), In_MGS($AgentId, $ClientId, <'Message', senc(msg, kdf1(X^~y))>) ]
-  --[ ClientRecvMessage(msg), ClientRecvLoop(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, ~y) ]->
+  --[ ClientRecvLoop(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, ~y) ]->
     [ Client_S7(~RunId, $ClientId, $KMSId, $AgentId, $ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, ~y, SigY) ]
-
-// rule Client_RecvHandshakeRequest [color=#E817E3]:
-//     [ !Client_Init($ClientId, $AgentId, SessId), In_MGS($AgentId, $ClientId, SessId, <'HandshakeRequest', KMSKeyId>) ]
-//   --[ ClientStarted() ]->
-//     [ Client_S1($ClientId, $AgentId, SessId, KMSKeyId) ]
-
-// rule Client_SendDataKeyRequest [color=#E817E3]:
-//     [ Client_S1($ClientId, $AgentId, SessId, KMSKeyId) ]
-//   -->
-//     [ Client_S2($ClientId, $AgentId, $KMSId, SessId, KMSKeyId), Out_S($ClientId, $KMSId, <'DataKeyRequest', KMSKeyId, SessId, $AgentId>) ] // `SessId` and `$AgentId` form the encryption context
-
-// rule Client_RecvHandshakeRequestResponse [color=#E817E3]:
-//     [ Client_S2($ClientId, $AgentId, $KMSId, SessId, KMSKeyId), In_S($KMSId, $ClientId, <'HandshakeRequestResponse', datakey, encrypteddatakey>) ]
-//   --[ ClientDataKeyReceived($ClientId, datakey) ]->
-//     [ Client_S3($ClientId, $AgentId, $KMSId, SessId, KMSKeyId, datakey, encrypteddatakey), !DataKeyInMemory($ClientId, SessId, datakey) ]
-    
-// rule Client_SendHandshakeActionSuccess [color=#E817E3]:
-//     [ Client_S3($ClientId, $AgentId, $KMSId, SessId, KMSKeyId, datakey, encrypteddatakey) ]
-//   --[ Secret(SessId, datakey) ]->
-//     [ Client_S4($ClientId, $AgentId, $KMSId, SessId, KMSKeyId, datakey), Out_MGS($ClientId, $AgentId, SessId, <'HandshakeActionSuccess', encrypteddatakey>) ] // Note that `SessId` is not part of the response! (also, we omit `encrypteddatakey` in the state as it's no longer needed)
-
 // End Client
 
 
@@ -441,137 +295,62 @@ rule KMS_Init [color=#E88517]:
     [ !KMS_Init($KMSId) ]
 
 rule KMS_RecvSignRequest [color=#E88517]:
-    // TODO: is it okay to assume that agent key belongs to agent id (from session)?
+    // We assume here that KMS authenticates AgentId and does provides access to signing operations using AgentLtKey only to authenticated clients.
     [ !KMS_Init($KMSId), !KmsSignKey(AgentId, AgentLtKeyId, AgentLtKey), In_KMS(AgentId, $KMSId, AgentRunId, <'SignRequest', AgentLtKeyId, payload, ReceiverId>)[+] ]
   --[ KMSSign(AgentId) ]->
     [ KMS_Sign_S1($KMSId, AgentId, AgentRunId, AgentLtKeyId, AgentLtKey, payload, ReceiverId) ]
   
 rule KMS_SendSignResponse [color=#E88517]:
     [ KMS_Sign_S1($KMSId, AgentId, AgentRunId, AgentLtKeyId, AgentLtKey, payload, ReceiverId) ]
-  --[ Sig_Created(payload, sign(<payload, ReceiverId>, AgentLtKey)), KMSSignResponse($KMSId, AgentId, AgentRunId, <'SignResponse', sign(<payload, ReceiverId>, AgentLtKey)>), KMSSigned(payload) ]->
+  --[ KMSSignResponse($KMSId, AgentId, AgentRunId, <'SignResponse', sign(<payload, ReceiverId>, AgentLtKey)>) ]->
     [ KMS_Sign_S2($KMSId, AgentId, AgentRunId, AgentLtKeyId, AgentLtKey, payload, ReceiverId), Out_KMS($KMSId, AgentId, AgentRunId, <'SignResponse', sign(<payload, ReceiverId>, AgentLtKey)>) ]
 
 rule KMS_RecvVerifyRequest [color=#E88517]:
     [ !KMS_Init($KMSId), !KmsSignKey(AgentId, AgentLtKeyId, AgentLtKey), In_KMS(ClientId, $KMSId, ClientRunId, <'VerifyRequest', AgentLtKeyId, payload, sign(<payload, AgentId>, AgentLtKey), AgentId>)[+] ]
-  --[ KMSVerify(AgentId) ]->
+  -->
     [ KMS_Verify_S1($KMSId, ClientId, ClientRunId, AgentId, AgentLtKeyId, AgentLtKey, payload) ]
   
 rule KMS_SendVerifyResponse [color=#E88517]:
     [ KMS_Verify_S1($KMSId, ClientId, ClientRunId, AgentId, AgentLtKeyId, AgentLtKey, payload) ]
   -->
     [ KMS_Verify_S2($KMSId, ClientId, ClientRunId, AgentId, AgentLtKeyId, AgentLtKey, payload), Out_KMS($KMSId, ClientId, ClientRunId, 'VerifyResponse') ]
-
-// rule KMS_RecvVerifyRequest2 [color=#E88517]:
-//     [ !KMS_Init($KMSId), !KmsSignKey(AgentId, AgentLtKeyId, AgentLtKey), In_KMS(ClientId, $KMSId, ClientRunId, <'VerifyRequest2', AgentLtKeyId, payload, sign(<payload, ReceiverId>, AgentLtKey), ReceiverId>)[+] ]
-//   --[ KMSVerify(AgentId) ]->
-//     [ KMS_Verify_S1($KMSId, ClientId, ClientRunId, AgentId, AgentLtKeyId, AgentLtKey, payload, ReceiverId) ]
-  
-// rule KMS_SendVerifyResponse2 [color=#E88517]:
-//     [ KMS_Verify_S1($KMSId, ClientId, ClientRunId, AgentId, AgentLtKeyId, AgentLtKey, payload, ReceiverId) ]
-//   -->
-//     [ KMS_Verify_S2($KMSId, ClientId, ClientRunId, AgentId, AgentLtKeyId, AgentLtKey, payload, ReceiverId), Out_KMS($KMSId, ClientId, ClientRunId, <'VerifyResponse2', AgentLtKeyId, payload, sign(<payload, ReceiverId>, AgentLtKey), ReceiverId>) ]
-
-// rule KMS_RecvDataKeyRequest [color=#E88517]:
-//     [ !KMS_Init(~RunId, $KMSId), !KmsKey(KMSKeyId, KmsKey), In_KMS($ClientId, $KMSId, <'DataKeyRequest', KMSKeyId, SessId, InstanceId>) ]
-//   --[ KMSStarted() ]->
-//     [ KMS_S1($KMSId, $ClientId, InstanceId, SessId, KMSKeyId, KmsKey) ]
-
-// rule KMS_SendDataKeyResponse [color=#E88517]:
-//     [ KMS_S1($KMSId, $ClientId, InstanceId, SessId, KMSKeyId, KmsKey), Fr(~datakey) ] // we assume here that `datakey` is freshly generated at this point
-//   --[ DataKeyCreated($ClientId, ~datakey) ]->
-//     [ KMS_S2($KMSId, $ClientId, InstanceId, SessId, KMSKeyId, KmsKey, ~datakey), !DataKeyInMemory($KMSId, SessId, ~datakey), Out_S($KMSId, $ClientId, <'HandshakeRequestResponse', ~datakey, senc(~datakey, KmsKey)>) ]
-
-// rule KMS_RecvDecryptRequest [color=#E88517]:
-//     [ KMS_S2($KMSId, $ClientId, InstanceId, SessId, KMSKeyId, KmsKey, ~datakey), In_S($AgentId, $KMSId, <'DecryptRequest', InstanceId, SessId, senc(~datakey, KmsKey)>) ]
-//   -->
-//     [ KMS_S3($KMSId, $ClientId, $AgentId, InstanceId, SessId, KMSKeyId, KmsKey, ~datakey) ]
-
-// rule KMS_SendDecryptResponse [color=#E88517]:
-//     [ KMS_S3($KMSId, $ClientId, $AgentId, InstanceId, SessId, KMSKeyId, KmsKey, ~datakey) ]
-//   --[ KeyDecrypt(InstanceId, SessId, ~datakey), KMS_Finish($KMSId, $ClientId, $AgentId, SessId), Secret(SessId, ~datakey) ]->
-//     [ KMS_S4($KMSId, $ClientId, $AgentId, InstanceId, SessId, KMSKeyId, KmsKey, ~datakey), Out_S($KMSId, $AgentId, <'DecryptResponse', ~datakey>) ]
-
 // End KMS
 
 
 // Begin Log Reader
 rule Reader_Init [color=#17E81C]:
-  [ !Ltk($ReaderId, ~ltk), Fr(~RunId) ]
-    -->
-  [ Reader_Init(~RunId, $ReaderId, $KMSId, ~ltk) ]
+    [ !Ltk($ReaderId, ~ltk), Fr(~RunId) ]
+  -->
+    [ Reader_Init(~RunId, $ReaderId, $KMSId, ~ltk) ]
 
 rule Reader_RecvEncryptedSessionKey [color=#17E81C]:
-  [ Reader_Init(~RunId, $ReaderId, $KMSId, ~ltk), In(<'EncryptedSessionKey', aenc(<sessionKey1, sessionKey2>, pk(~ltk)), SigSessionKey, AgentLtKeyId, ClientId>) ]
-    --[ IN_EncryptedSessKey(<aenc(<sessionKey1, sessionKey2>, pk(~ltk)), SigSessionKey, AgentLtKeyId, ClientId>) ]->
-  [ Reader_S1(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId) ]
+    [ Reader_Init(~RunId, $ReaderId, $KMSId, ~ltk), In(<'EncryptedSessionKey', aenc(<sessionKey1, sessionKey2>, pk(~ltk)), SigSessionKey, AgentLtKeyId, ClientId>) ]
+  -->
+    [ Reader_S1(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId) ]
 
 rule Reader_SendEncryptedSessionKeyVerifyRequest [color=#17E81C]:
-  [ Reader_S1(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId) ]
-    -->
-  [ Reader_S2(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId), Out_KMS($ReaderId, $KMSId, ~RunId, <'VerifyRequest', AgentLtKeyId, aenc(<sessionKey1, sessionKey2>, pk(~ltk)), SigSessionKey, ClientId>) ]
-// rule Reader_SendEncryptedSessionKeyVerifyRequest [color=#17E81C]:
-//   [ Reader_S1(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId) ]
-//     -->
-//   [ Reader_S2(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId), Out_KMS($ReaderId, $KMSId, ~RunId, <'VerifyRequest2', AgentLtKeyId, aenc(<sessionKey1, sessionKey2>, pk(~ltk)), SigSessionKey, ClientId>) ]
+    [ Reader_S1(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId) ]
+  -->
+    [ Reader_S2(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId), Out_KMS($ReaderId, $KMSId, ~RunId, <'VerifyRequest', AgentLtKeyId, aenc(<sessionKey1, sessionKey2>, pk(~ltk)), SigSessionKey, ClientId>) ]
 
 rule Reader_RecvEncryptedSessionKeyVerifyResponse [color=#17E81C]:
-  [ Reader_S2(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId), In_KMS($KMSId, $ReaderId, ~RunId, 'VerifyResponse')[+] ]
-    --[ WasVerified($AgentId, SigSessionKey, AgentLtKeyId, aenc(<sessionKey1, sessionKey2>, pk(~ltk)), ClientId) ]->
-  [ Reader_S3(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId) ]
-// rule Reader_RecvEncryptedSessionKeyVerifyResponse [color=#17E81C]:
-//   [ Reader_S2(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId), In_KMS($KMSId, $ReaderId, ~RunId, <'VerifyResponse2', AgentLtKeyId, aenc(<sessionKey1, sessionKey2>, pk(~ltk)), SigSessionKey, ClientId>)[+] ]
-//     --[ WasVerified($AgentId, SigSessionKey, AgentLtKeyId, aenc(<sessionKey1, sessionKey2>, pk(~ltk)), ClientId) ]->
-//   [ Reader_S3(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId) ]
+    [ Reader_S2(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId), In_KMS($KMSId, $ReaderId, ~RunId, 'VerifyResponse')[+] ]
+  -->
+    [ Reader_S3(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId) ]
 
 rule Reader_DecryptMessage1 [color=#17E81C]:
-  [ Reader_S3(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId), In(<'Log', <'Message', senc(msg, sessionKey1)>>) ]
-    --[ LoggedMessage(msg) ]->
-  [ Reader_S3(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId) ]
+    [ Reader_S3(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId), In(<'Log', <'Message', senc(msg, sessionKey1)>>) ]
+  -->
+    [ Reader_S3(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId) ]
 
 rule Reader_DecryptMessage2 [color=#17E81C]:
-  [ Reader_S3(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId), In(<'Log', <'Message', senc(msg, sessionKey2)>>) ]
-    --[ LoggedMessage(msg) ]->
-  [ Reader_S3(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId) ]
-
+    [ Reader_S3(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId), In(<'Log', <'Message', senc(msg, sessionKey2)>>) ]
+  -->
+    [ Reader_S3(~RunId, $ReaderId, $KMSId, ClientId, ~ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId) ]
 // End Log Reader
-
-// Begin restrictions
-#ifdef TRUST_MGS
-restriction NotEqual:
-  // "All x y #i. neq(x,y) @ i ==> not(x = y)"
-  "not (Ex x #i. NotEqual(x,x) @ i)"
-#endif
-// End restrictions
 
 
 // Begin lemmas
-// // auto-proven!
-// lemma Agent_can_finish_wo_reveal:
-//   exists-trace
-//   " Ex AgentId #i.
-//         Agent_Finish(AgentId) @ #i
-//       & (All #j #k. AgentStarted() @ #j & AgentStarted() @ #k ==> #j = #k)
-//       & (All #j #k. ClientStarted() @ #j & ClientStarted() @ #k ==> #j = #k)
-//       & (All #j #k. KMSStarted() @ #j & KMSStarted() @ #k ==> #j = #k)
-//       & (All id1 id2 #j #k. KMSSign(id1) @ #j & KMSSign(id2) @ #k ==> #j = #k | not(id1 = id2))
-//       & not (Ex keyId #j. KmsSignKeyReveal(keyId)@ #j)
-//       & (All AgentId ClientId X SigX AgentLtKeyId #j. ClientSecureSessionRequest(AgentId, ClientId, X, SigX, AgentLtKeyId) @ #j ==> Ex #k. AgentSecureSessionRequest(AgentId, ClientId, X, SigX, AgentLtKeyId) @ #k)
-//       & (All ClientId AgentId Y SigY ClientLtKeyId sharedSecret #j. AgentSecureSessionResponse(ClientId, AgentId, Y, SigY, ClientLtKeyId, sharedSecret) @ #j ==> Ex X SigX AgentLtKeyId #k. ClientSecureSessionResponse(ClientId, AgentId, X, SigX, Y, SigY, AgentLtKeyId, ClientLtKeyId, sharedSecret) @ #k)
-//   "
-// // auto-proven!
-// lemma Agent_can_finish_wo_reveal2:
-//   exists-trace
-//   " Ex AgentId #i.
-//         Agent_Finish2(AgentId) @ #i
-//       & (All #j #k. AgentStarted() @ #j & AgentStarted() @ #k ==> #j = #k)
-//       & (All #j #k. ClientStarted() @ #j & ClientStarted() @ #k ==> #j = #k)
-//       & (All #j #k. KMSStarted() @ #j & KMSStarted() @ #k ==> #j = #k)
-//       // & (All id1 id2 #j #k. KMSSign(id1) @ #j & KMSSign(id2) @ #k ==> #j = #k | not(id1 = id2))
-//       & not (Ex keyId #j. KmsSignKeyReveal(keyId)@ #j)
-//       & (All AgentId ClientId X SigX AgentLtKeyId #j. ClientSecureSessionRequest(AgentId, ClientId, X, SigX, AgentLtKeyId) @ #j ==> Ex #k. AgentSecureSessionRequest(AgentId, ClientId, X, SigX, AgentLtKeyId) @ #k)
-//       & (All ClientId AgentId Y SigY ClientLtKeyId sharedSecret #j. AgentSecureSessionResponse(ClientId, AgentId, Y, SigY, ClientLtKeyId, sharedSecret) @ #j ==> Ex X SigX AgentLtKeyId #k. ClientSecureSessionResponse(ClientId, AgentId, X, SigX, Y, SigY, AgentLtKeyId, ClientLtKeyId, sharedSecret) @ #k)
-//   "
-
 
 // similar to what `--auto-sources` would generate:
 // auto-proven!
@@ -580,6 +359,7 @@ lemma agent_recv_sign_response_valid [sources]:
       AgentSignResponse(KMSId, AgentId, RunId, <'SignResponse', SigX>)@i ==>
         Ex #j. KMSSignResponse(KMSId, AgentId, RunId, <'SignResponse', SigX>)@j & #j < #i
     "
+
 
 // similar to what `--auto-sources` would generate:
 // auto-proven!
@@ -695,7 +475,7 @@ next
            ⇒
             ¬(#j < #i)) )
     case case_1
-    solve( Agent_S10( ~RunId, $AgentId, $KMSId, $ClientId, $ReaderId,
+    solve( St_Agent_10( ~RunId, $AgentId, $KMSId, $ClientId, $ReaderId,
                       $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY,
                       SigSessionKey
            ) ▶₀ #i )
@@ -710,7 +490,7 @@ next
     qed
   next
     case case_2
-    solve( Agent_S10( ~RunId, $AgentId, $KMSId, $ClientId, $ReaderId,
+    solve( St_Agent_10( ~RunId, $AgentId, $KMSId, $ClientId, $ReaderId,
                       $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY,
                       SigSessionKey
            ) ▶₀ #i )
@@ -732,156 +512,45 @@ qed
 lemma Agent_can_finish_wo_reveal3:
   exists-trace
   " Ex AgentId #i.
-        Agent_Finish3(AgentId) @ #i
+        Agent_Finish(AgentId) @ #i
       & (All #j #k. AgentStarted() @ #j & AgentStarted() @ #k ==> #j = #k)
       & (All #j #k. ClientStarted() @ #j & ClientStarted() @ #k ==> #j = #k)
       & (All #j #k. KMSStarted() @ #j & KMSStarted() @ #k ==> #j = #k)
-      // & (All id1 id2 #j #k. KMSSign(id1) @ #j & KMSSign(id2) @ #k ==> #j = #k | not(id1 = id2))
       & not (Ex keyId #j. KmsSignKeyReveal(keyId)@ #j)
       & not (Ex key #j. LtkRevealKey(key)@ #j)
       & (All AgentId ClientId X SigX AgentLtKeyId #j. ClientSecureSessionRequest(AgentId, ClientId, X, SigX, AgentLtKeyId) @ #j ==> Ex #k. AgentSecureSessionRequest(AgentId, ClientId, X, SigX, AgentLtKeyId) @ #k)
       & (All ClientId AgentId Y SigY ClientLtKeyId sharedSecret #j. AgentSecureSessionResponse(ClientId, AgentId, Y, SigY, ClientLtKeyId, sharedSecret) @ #j ==> Ex X SigX AgentLtKeyId #k. ClientSecureSessionResponse(ClientId, AgentId, X, SigX, Y, SigY, AgentLtKeyId, ClientLtKeyId, sharedSecret) @ #k)
-      & (All AgentId2 #j. Agent_Finish3(AgentId2) @ #j ==> #i = #j)
+      & (All AgentId2 #j. Agent_Finish(AgentId2) @ #j ==> #i = #j)
       & (All msg1 msg2 #j #k. ClientSendMessage(msg1) @ #j & ClientSendMessage(msg2) @ #k ==> #j = #k)
   "
 
-// // does not terminate
-// lemma Agent_can_finish_wo_reveal4:
-//   exists-trace
-//   " Ex AgentId sessionKey #i #j.
-//         Agent_Finish3(AgentId) @ #i &
-//         ReaderGotSessKey(sessionKey) @ #j
-//       & (All #j #k. AgentStarted() @ #j & AgentStarted() @ #k ==> #j = #k)
-//       & (All #j #k. ClientStarted() @ #j & ClientStarted() @ #k ==> #j = #k)
-//       & (All #j #k. KMSStarted() @ #j & KMSStarted() @ #k ==> #j = #k)
-//       // & (All id1 id2 #j #k. KMSSign(id1) @ #j & KMSSign(id2) @ #k ==> #j = #k | not(id1 = id2))
-//       & not (Ex keyId #j. KmsSignKeyReveal(keyId)@ #j)
-//       & not (Ex key #j. LtkRevealKey(key)@ #j)
-//       & (All AgentId ClientId X SigX AgentLtKeyId #j. ClientSecureSessionRequest(AgentId, ClientId, X, SigX, AgentLtKeyId) @ #j ==> Ex #k. AgentSecureSessionRequest(AgentId, ClientId, X, SigX, AgentLtKeyId) @ #k)
-//       & (All ClientId AgentId Y SigY ClientLtKeyId sharedSecret #j. AgentSecureSessionResponse(ClientId, AgentId, Y, SigY, ClientLtKeyId, sharedSecret) @ #j ==> Ex X SigX AgentLtKeyId #k. ClientSecureSessionResponse(ClientId, AgentId, X, SigX, Y, SigY, AgentLtKeyId, ClientLtKeyId, sharedSecret) @ #k)
-//       & (All AgentId2 #j. Agent_Finish3(AgentId2) @ #j ==> #i = #j)
-//       & (All ClientId1 AgentId1 cmd1 ClientId2 AgentId2 cmd2 #j #k. SendCommand(ClientId1, AgentId1, cmd1) @ #j & SendCommand(ClientId2, AgentId2, cmd2) @ #k ==> #j = #k)
-//   "
-
-// // does not terminate
-// lemma Agent_can_finish_wo_reveal5:
-//   exists-trace
-//   " Ex AgentId sessionKey #i #j.
-//         Agent_Finish3(AgentId) @ #i &
-//         AgentSessKey(sessionKey) @ #i &
-//         ReaderVerifiedSessKey(sessionKey) @ #j
-//       & (All #j #k. AgentStarted() @ #j & AgentStarted() @ #k ==> #j = #k)
-//       & (All #j #k. ClientStarted() @ #j & ClientStarted() @ #k ==> #j = #k)
-//       & (All #j #k. KMSStarted() @ #j & KMSStarted() @ #k ==> #j = #k)
-//       // & (All id1 id2 #j #k. KMSSign(id1) @ #j & KMSSign(id2) @ #k ==> #j = #k | not(id1 = id2))
-//       & not (Ex keyId #j. KmsSignKeyReveal(keyId)@ #j)
-//       & not (Ex key #j. LtkRevealKey(key)@ #j)
-//       & (All AgentId ClientId X SigX AgentLtKeyId #j. ClientSecureSessionRequest(AgentId, ClientId, X, SigX, AgentLtKeyId) @ #j ==> Ex #k. AgentSecureSessionRequest(AgentId, ClientId, X, SigX, AgentLtKeyId) @ #k)
-//       & (All ClientId AgentId Y SigY ClientLtKeyId sharedSecret #j. AgentSecureSessionResponse(ClientId, AgentId, Y, SigY, ClientLtKeyId, sharedSecret) @ #j ==> Ex X SigX AgentLtKeyId #k. ClientSecureSessionResponse(ClientId, AgentId, X, SigX, Y, SigY, AgentLtKeyId, ClientLtKeyId, sharedSecret) @ #k)
-//       & (All AgentId2 #j. Agent_Finish3(AgentId2) @ #j ==> #i = #j)
-//       & (All ClientId1 AgentId1 cmd1 ClientId2 AgentId2 cmd2 #j #k. SendCommand(ClientId1, AgentId1, cmd1) @ #j & SendCommand(ClientId2, AgentId2, cmd2) @ #k ==> #j = #k)
-//       & (All ClientId1 ClientId2 #j #k. Client_Finish3(ClientId1) @ #j & Client_Finish3(ClientId2) @ #k ==> #j = #k)
-//   "
-
-// // auto-proven!
-// lemma Client_can_finish_wo_reveal:
-//   exists-trace
-//   " Ex ClientId #i.
-//         Client_Finish(ClientId) @ #i
-//       & (All #j #k. AgentStarted() @ #j & AgentStarted() @ #k ==> #j = #k)
-//       & (All #j #k. ClientStarted() @ #j & ClientStarted() @ #k ==> #j = #k)
-//       & (All #j #k. KMSStarted() @ #j & KMSStarted() @ #k ==> #j = #k)
-//       & (All id1 id2 #j #k. KMSSign(id1) @ #j & KMSSign(id2) @ #k ==> #j = #k | not(id1 = id2))
-//       & (All AgentId ClientId X SigX AgentLtKeyId #j. ClientSecureSessionRequest(AgentId, ClientId, X, SigX, AgentLtKeyId) @ #j ==> Ex #k. AgentSecureSessionRequest(AgentId, ClientId, X, SigX, AgentLtKeyId) @ #k)
-//       & (All ClientId AgentId Y SigY ClientLtKeyId sharedSecret #j. AgentSecureSessionResponse(ClientId, AgentId, Y, SigY, ClientLtKeyId, sharedSecret) @ #j ==> Ex X SigX AgentLtKeyId #k. ClientSecureSessionResponse(ClientId, AgentId, X, SigX, Y, SigY, AgentLtKeyId, ClientLtKeyId, sharedSecret) @ #k)
-//   "
 
 // auto-proven!
-lemma Client_can_finish_wo_reveal3 [heuristic=C]: // [heuristic=O "./executability.oracle"]:
+lemma Client_can_finish_wo_reveal3 [heuristic=C]:
   exists-trace
   " Ex ClientId #i.
-        Client_Finish3(ClientId) @ #i
+        Client_Finish(ClientId) @ #i
       & (All #j #k. AgentStarted() @ #j & AgentStarted() @ #k ==> #j = #k)
       & (All #j #k. ClientStarted() @ #j & ClientStarted() @ #k ==> #j = #k)
       & (All #j #k. KMSStarted() @ #j & KMSStarted() @ #k ==> #j = #k)
-      // & (All id1 id2 #j #k. KMSSign(id1) @ #j & KMSSign(id2) @ #k ==> #j = #k | not(id1 = id2))
       & (All AgentId ClientId X SigX AgentLtKeyId #j. ClientSecureSessionRequest(AgentId, ClientId, X, SigX, AgentLtKeyId) @ #j ==> Ex #k. AgentSecureSessionRequest(AgentId, ClientId, X, SigX, AgentLtKeyId) @ #k)
       & (All ClientId AgentId Y SigY ClientLtKeyId sharedSecret #j. AgentSecureSessionResponse(ClientId, AgentId, Y, SigY, ClientLtKeyId, sharedSecret) @ #j ==> Ex X SigX AgentLtKeyId #k. ClientSecureSessionResponse(ClientId, AgentId, X, SigX, Y, SigY, AgentLtKeyId, ClientLtKeyId, sharedSecret) @ #k)
-      & (All AgentId1 AgentId2 #j #k. Agent_Finish3(AgentId1) @ #j & Agent_Finish3(AgentId2) @ #k ==> #j = #k)
-      & (All ClientId2 #j. Client_Finish3(ClientId2) @ #j ==> #i = #j)
-      & (All ClientId1 ClientId2 #j #k. Client_Finish(ClientId1) @ #j & Client_Finish(ClientId2) @ #k ==> #j = #k)
-      // & (All payload1 payload2 payload3 payload4 #j #k #l #m. KMSSigned(payload1) @ #j & KMSSigned(payload2) @ #k & KMSSigned(payload3) @ #l & KMSSigned(payload4) @ #m ==> (#j = #m | #k = #m | #l = #m)) // 3 sign responses are sufficient
+      & (All AgentId1 AgentId2 #j #k. Agent_Finish(AgentId1) @ #j & Agent_Finish(AgentId2) @ #k ==> #j = #k)
+      & (All ClientId2 #j. Client_Finish(ClientId2) @ #j ==> #i = #j)
+      & (All ClientId1 ClientId2 #j #k. ClientSendSessionResponse(ClientId1) @ #j & ClientSendSessionResponse(ClientId2) @ #k ==> #j = #k)
   "
 
-// // doesn't hold
-// lemma Agent_can_execute_cmd_and_LogReader_can_decrypt_new:
-//   exists-trace
-//   " Ex AgentId cmd #i #j.
-//         Agent_Finish3(AgentId) @ #i &
-//         ExecuteCommand(cmd) @ #i &
-//         LoggedCommand(cmd) @ #j
-//       & (All #j #k. AgentStarted() @ #j & AgentStarted() @ #k ==> #j = #k)
-//       & (All #j #k. ClientStarted() @ #j & ClientStarted() @ #k ==> #j = #k)
-//       & (All #j #k. KMSStarted() @ #j & KMSStarted() @ #k ==> #j = #k)
-//       // & (All id1 id2 #j #k. KMSSign(id1) @ #j & KMSSign(id2) @ #k ==> #j = #k | not(id1 = id2))
-//       & not (Ex keyId #j. KmsSignKeyReveal(keyId)@ #j)
-//       & not (Ex key #j. LtkRevealKey(key)@ #j)
-//       & (All AgentId ClientId X SigX AgentLtKeyId #j. ClientSecureSessionRequest(AgentId, ClientId, X, SigX, AgentLtKeyId) @ #j ==> Ex #k. AgentSecureSessionRequest(AgentId, ClientId, X, SigX, AgentLtKeyId) @ #k)
-//       & (All ClientId AgentId Y SigY ClientLtKeyId sharedSecret #j. AgentSecureSessionResponse(ClientId, AgentId, Y, SigY, ClientLtKeyId, sharedSecret) @ #j ==> Ex X SigX AgentLtKeyId #k. ClientSecureSessionResponse(ClientId, AgentId, X, SigX, Y, SigY, AgentLtKeyId, ClientLtKeyId, sharedSecret) @ #k)
-//       & (All AgentId2 #j. Agent_Finish3(AgentId2) @ #j ==> #i = #j)
-//       & (All ClientId2 #j. Client_Finish3(ClientId2) @ #j ==> #i = #j)
-//       & (All ClientId1 AgentId1 cmd1 ClientId2 AgentId2 cmd2 #j #k. SendCommand(ClientId1, AgentId1, cmd1) @ #j & SendCommand(ClientId2, AgentId2, cmd2) @ #k ==> #j = #k)
-//   "
-
-// #ifdef TRUST_MGS
-// // unclear whether it's provable
-// lemma Agent_can_execute_cmd_and_LogReader_can_decrypt:
-//   exists-trace
-//   " Ex cmd /*sessionKey*/ #i #j /*#k #l*/.
-//         ExecuteCommand(cmd) @ #i &
-//         LoggedCommand(cmd) @ #j 
-//         & (All msg #k. IN_EncryptedSessKey(msg) @ #k ==> Ex #l. OUT_EncryptedSessKey(msg) @ #l)
-//         & (All msg1 msg2 #k #l. OUT_EncryptedSessKey(msg1) @ #k & OUT_EncryptedSessKey(msg2) @ #l ==> #k = #l)
-//         // AgentSessKey(sessionKey)@ #i &
-//         // ReaderSessKey(sessionKey)@ #j &
-//         // SecSessResp(sessionKey)@ #k &
-//         // ClientSecSessResp(sessionKey)@ #l
-//         // & (All #k #l. AgentStarted() @ #k & AgentStarted() @ #l ==> #k = #l)
-//         // & (All #k #l. ClientStarted() @ #k & ClientStarted() @ #l ==> #k = #l)
-//         // // & (All #k #l. KMSStarted() @ #k & KMSStarted() @ #l ==> #k = #l)
-//         // // & (All id1 id2 #j #k. KMSSign(id1) @ #j & KMSSign(id2) @ #k ==> #j = #k | not(id1 = id2))
-//         // & (All sessionKey1 sessionKey2 #k #l. AgentSessKey(sessionKey1)@ #k & AgentSessKey(sessionKey2)@ #l ==> #k = #l)
-//         // & (All sessionKey1 sessionKey2 #k #l. ReaderSessKey(sessionKey1)@ #k & ReaderSessKey(sessionKey2)@ #l ==> #k = #l)
-//         // & (All sessionKey1 sessionKey2 #k #l. SecSessResp(sessionKey1)@ #k & SecSessResp(sessionKey2)@ #l ==> #k = #l)
-//         // & (All sessionKey1 sessionKey2 #k #l. ClientSecSessResp(sessionKey1)@ #k & ClientSecSessResp(sessionKey2)@ #l ==> #k = #l)
-//         // & (All A B x #k. ChanIn_MGS(A,B,x)@ #k ==> Ex #l. ChanOut_MGS(A,B,x)@ #l)
-//         // & (All sessionKey1 sessionKey2 #k #l. AgentSessKey(sessionKey1)@ #k & ReaderSessKey(sessionKey2)@ #l ==> sessionKey1 = sessionKey2)
-//         // & (All AgentId ClientId X SigX AgentLtKeyId #j. ClientSecureSessionRequest(AgentId, ClientId, X, SigX, AgentLtKeyId) @ #j ==> Ex #k. AgentSecureSessionRequest(AgentId, ClientId, X, SigX, AgentLtKeyId) @ #k)
-//         // & (All ClientId AgentId Y SigY ClientLtKeyId sharedSecret #j. AgentSecureSessionResponse(ClientId, AgentId, Y, SigY, ClientLtKeyId, sharedSecret) @ #j ==> Ex X SigX AgentLtKeyId #k. ClientSecureSessionResponse(ClientId, AgentId, X, SigX, Y, SigY, AgentLtKeyId, ClientLtKeyId, sharedSecret) @ #k)
-//   "
-
-// // unclear whether it's provable
-// lemma Reader_can_finish_wo_reveal:
-//   exists-trace
-//   " Ex sessionKey #i.
-//         ReaderVerifiedSessKey(sessionKey) @ #i
-//       & not (Ex #j. LtkRevealKey(sessionKey)@ #j)
-//       & (All msg #k. IN_EncryptedSessKey(msg) @ #k ==> Ex #l. OUT_EncryptedSessKey(msg) @ #l)
-//       & (All msg1 msg2 #k #l. OUT_EncryptedSessKey(msg1) @ #k & OUT_EncryptedSessKey(msg2) @ #l ==> #k = #l)
-//   "
 
 // auto-proven!
 lemma x_is_secret [reuse, heuristic=S]:
     "All x #i.
       SecretX(x) @i ==>
       not (Ex #j. K(x)@j)
-        // | (Ex keyId #r. KmsSignKeyReveal(keyId)@r & HonestKMS(keyId) @i)
-        // | (Ex keyId #r. KmsSignKeyReveal(keyId)@r)
     "
 // #region(collapsed) Proof
 // this is a more minimal proof than what is derived automatically:
 simplify
-solve( Agent_S5( ~RunId, $AgentId, $KMSId, $ClientId, $ReaderId,
+solve( St_Agent_5( ~RunId, $AgentId, $KMSId, $ClientId, $ReaderId,
                  $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY
        ) ▶₀ #i )
   case Agent_SendVerifyRequest
@@ -889,13 +558,12 @@ solve( Agent_S5( ~RunId, $AgentId, $KMSId, $ClientId, $ReaderId,
 qed
 // #endregion
 
+
 // auto-proven!
 lemma y_is_secret [reuse, heuristic=S]:
     "All y #i.
       SecretY(y) @i ==>
       not (Ex #j. K(y)@j)
-        // | (Ex keyId #r. KmsSignKeyReveal(keyId)@r & HonestKMS(keyId) @i)
-        // | (Ex keyId #r. KmsSignKeyReveal(keyId)@r)
     "
 // #region(collapsed) Proof
 // this is a more minimal proof than what is derived automatically:
@@ -908,20 +576,19 @@ solve( Client_S5( ~RunId, $ClientId, $KMSId, $AgentId,
 qed
 // #endregion
 
+
 lemma SharedSecret_is_secret[reuse]:
     "All x #i.
       Secret(x) @i ==>
       not (Ex #j. K(x)@j)
         | (Ex C #r. KmsSignKeyRevealOwner(C)@r & HonestKmsOwner(C)@i)
-        // | (Ex keyId #r. KmsSignKeyReveal(keyId)@r)
-        // | (Ex ReaderId #r. LtkReveal(ReaderId)@r)
         | (Ex C #r. LtkReveal(C)@r & HonestReader(C)@i)
     "
 // #region(collapsed) Proof
 simplify
 solve( Secret( x ) @ #i )
   case Agent_SendHandshakeComplete
-  solve( Agent_S9( ~RunId, $AgentId, $KMSId, $ClientId, $ReaderId,
+  solve( St_Agent_9( ~RunId, $AgentId, $KMSId, $ClientId, $ReaderId,
                    $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY,
                    SigSessionKey
          ) ▶₀ #i )
@@ -1502,6 +1169,7 @@ next
 qed
 // #endregion
 
+
 lemma injectiveagreement_agent:
     "All AgentId ClientId k1 k2 #i.
       Commit('Agent', 'Client', <AgentId, ClientId, k1, k2>) @i
@@ -1516,7 +1184,7 @@ solve( Commit( 'Agent', 'Client',
                <AgentId, ClientId, k1, k2>
        ) @ #i )
   case Agent_SendHandshakeComplete
-  solve( Agent_S9( ~RunId, $AgentId, $KMSId, $ClientId, $ReaderId,
+  solve( St_Agent_9( ~RunId, $AgentId, $KMSId, $ClientId, $ReaderId,
                    $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY,
                    SigSessionKey
          ) ▶₀ #i )
@@ -1676,7 +1344,7 @@ solve( Commit( 'Agent', 'Client',
                                                       kdf2('g'^(~x*~y))>
                                              ) @ #i2 )
                                         case Agent_SendHandshakeComplete
-                                        solve( Agent_S9( ~RunId.1, $AgentId.1, $KMSId.1, $ClientId,
+                                        solve( St_Agent_9( ~RunId.1, $AgentId.1, $KMSId.1, $ClientId,
                                                          $ReaderId.1, $AgentLtKeyId.1, logPk, ~x.1,
                                                          SigX, ClientLtKeyId.1, 'g'^x.2,
                                                          SigY, SigSessionKey
@@ -1821,6 +1489,7 @@ solve( Commit( 'Agent', 'Client',
   qed
 qed
 // #endregion
+
 
 lemma injectiveagreement_client:
     "All AgentId ClientId k1 k2 #i.
@@ -2041,7 +1710,7 @@ solve( Commit( 'Client', 'Agent',
                     qed
                   next
                     case ChanOut_MGS_case_2
-                    solve( Agent_S9( ~RunId.2, $AgentId.1, $KMSId.2, $ClientId.1,
+                    solve( St_Agent_9( ~RunId.2, $AgentId.1, $KMSId.2, $ClientId.1,
                                      $ReaderId.1, $AgentLtKeyId.1, logPk, ~x.1, SigX.1,
                                      ClientLtKeyId.1, 'g'^x.2, SigY.1, SigSessionKey.1
                            ) ▶₀ #j.2 )
@@ -2661,5 +2330,6 @@ solve( Commit( 'Client', 'Agent',
   qed
 qed
 // #endregion
+// End lemmas
 
 end
