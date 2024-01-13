@@ -1,0 +1,167 @@
+package iospec
+
+
+
+import . "github.com/aws/amazon-ssm-agent/agent/iospecs/claim"
+import . "github.com/aws/amazon-ssm-agent/agent/iospecs/fact"
+import . "github.com/aws/amazon-ssm-agent/agent/iospecs/term"
+import . "github.com/aws/amazon-ssm-agent/agent/iospecs/place"
+import . "github.com/aws/amazon-ssm-agent/agent/iospecs/pub"
+import . "github.com/aws/amazon-ssm-agent/agent/iospecs/fresh"
+
+
+// permission e_Agent_SendSignRequest
+pred e_Agent_SendSignRequest(ghost tami_p Place, ghost RunId Term, ghost AgentId Term, ghost KMSId Term, ghost ClientId Term, ghost ReaderId Term, ghost AgentLtKeyId Term, ghost logPk Term, ghost x Term, ghost tami_lp mset[Fact], ghost tami_ap mset[Claim], ghost tami_rp mset[Fact])
+
+ghost
+requires e_Agent_SendSignRequest(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, tami_lp, tami_ap, tami_rp)
+pure func get_e_Agent_SendSignRequest_placeDst(tami_p Place, RunId Term, AgentId Term, KMSId Term, ClientId Term, ReaderId Term, AgentLtKeyId Term, logPk Term, x Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (placeDst Place)
+
+ghost
+requires token(tami_p) && e_Agent_SendSignRequest(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, tami_lp, tami_ap, tami_rp)
+ensures token(tami_pp) && tami_pp == old(get_e_Agent_SendSignRequest_placeDst(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, tami_lp, tami_ap, tami_rp))
+func internBIO_e_Agent_SendSignRequest(tami_p Place, RunId Term, AgentId Term, KMSId Term, ClientId Term, ReaderId Term, AgentLtKeyId Term, logPk Term, x Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (tami_pp Place)
+
+
+// permission e_Agent_RecvSignResponse
+pred e_Agent_RecvSignResponse(ghost tami_p Place, ghost RunId Term, ghost AgentId Term, ghost KMSId Term, ghost ClientId Term, ghost ReaderId Term, ghost AgentLtKeyId Term, ghost logPk Term, ghost x Term, ghost SigX Term, ghost tami_lp mset[Fact], ghost tami_ap mset[Claim], ghost tami_rp mset[Fact])
+
+ghost
+requires e_Agent_RecvSignResponse(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, tami_lp, tami_ap, tami_rp)
+pure func get_e_Agent_RecvSignResponse_placeDst(tami_p Place, RunId Term, AgentId Term, KMSId Term, ClientId Term, ReaderId Term, AgentLtKeyId Term, logPk Term, x Term, SigX Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (placeDst Place)
+
+ghost
+requires token(tami_p) && e_Agent_RecvSignResponse(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, tami_lp, tami_ap, tami_rp)
+ensures token(tami_pp) && tami_pp == old(get_e_Agent_RecvSignResponse_placeDst(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, tami_lp, tami_ap, tami_rp))
+func internBIO_e_Agent_RecvSignResponse(tami_p Place, RunId Term, AgentId Term, KMSId Term, ClientId Term, ReaderId Term, AgentLtKeyId Term, logPk Term, x Term, SigX Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (tami_pp Place)
+
+
+// permission e_Agent_SendSecureSessionRequest
+pred e_Agent_SendSecureSessionRequest(ghost tami_p Place, ghost RunId Term, ghost AgentId Term, ghost KMSId Term, ghost ClientId Term, ghost ReaderId Term, ghost AgentLtKeyId Term, ghost logPk Term, ghost x Term, ghost SigX Term, ghost tami_lp mset[Fact], ghost tami_ap mset[Claim], ghost tami_rp mset[Fact])
+
+ghost
+requires e_Agent_SendSecureSessionRequest(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, tami_lp, tami_ap, tami_rp)
+pure func get_e_Agent_SendSecureSessionRequest_placeDst(tami_p Place, RunId Term, AgentId Term, KMSId Term, ClientId Term, ReaderId Term, AgentLtKeyId Term, logPk Term, x Term, SigX Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (placeDst Place)
+
+ghost
+requires token(tami_p) && e_Agent_SendSecureSessionRequest(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, tami_lp, tami_ap, tami_rp)
+ensures token(tami_pp) && tami_pp == old(get_e_Agent_SendSecureSessionRequest_placeDst(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, tami_lp, tami_ap, tami_rp))
+func internBIO_e_Agent_SendSecureSessionRequest(tami_p Place, RunId Term, AgentId Term, KMSId Term, ClientId Term, ReaderId Term, AgentLtKeyId Term, logPk Term, x Term, SigX Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (tami_pp Place)
+
+
+// permission e_Agent_RecvSecureSessionResponse
+pred e_Agent_RecvSecureSessionResponse(ghost tami_p Place, ghost RunId Term, ghost AgentId Term, ghost KMSId Term, ghost ClientId Term, ghost ReaderId Term, ghost AgentLtKeyId Term, ghost logPk Term, ghost x Term, ghost SigX Term, ghost z Term, ghost SigY Term, ghost ClientLtKeyId Term, ghost tami_lp mset[Fact], ghost tami_ap mset[Claim], ghost tami_rp mset[Fact])
+
+ghost
+requires e_Agent_RecvSecureSessionResponse(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, z, SigY, ClientLtKeyId, tami_lp, tami_ap, tami_rp)
+pure func get_e_Agent_RecvSecureSessionResponse_placeDst(tami_p Place, RunId Term, AgentId Term, KMSId Term, ClientId Term, ReaderId Term, AgentLtKeyId Term, logPk Term, x Term, SigX Term, z Term, SigY Term, ClientLtKeyId Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (placeDst Place)
+
+ghost
+requires token(tami_p) && e_Agent_RecvSecureSessionResponse(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, z, SigY, ClientLtKeyId, tami_lp, tami_ap, tami_rp)
+ensures token(tami_pp) && tami_pp == old(get_e_Agent_RecvSecureSessionResponse_placeDst(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, z, SigY, ClientLtKeyId, tami_lp, tami_ap, tami_rp))
+func internBIO_e_Agent_RecvSecureSessionResponse(tami_p Place, RunId Term, AgentId Term, KMSId Term, ClientId Term, ReaderId Term, AgentLtKeyId Term, logPk Term, x Term, SigX Term, z Term, SigY Term, ClientLtKeyId Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (tami_pp Place)
+
+
+// permission e_Agent_SendVerifyRequest
+pred e_Agent_SendVerifyRequest(ghost tami_p Place, ghost RunId Term, ghost AgentId Term, ghost KMSId Term, ghost ClientId Term, ghost ReaderId Term, ghost AgentLtKeyId Term, ghost logPk Term, ghost x Term, ghost SigX Term, ghost ClientLtKeyId Term, ghost Y Term, ghost SigY Term, ghost tami_lp mset[Fact], ghost tami_ap mset[Claim], ghost tami_rp mset[Fact])
+
+ghost
+requires e_Agent_SendVerifyRequest(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, tami_lp, tami_ap, tami_rp)
+pure func get_e_Agent_SendVerifyRequest_placeDst(tami_p Place, RunId Term, AgentId Term, KMSId Term, ClientId Term, ReaderId Term, AgentLtKeyId Term, logPk Term, x Term, SigX Term, ClientLtKeyId Term, Y Term, SigY Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (placeDst Place)
+
+ghost
+requires token(tami_p) && e_Agent_SendVerifyRequest(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, tami_lp, tami_ap, tami_rp)
+ensures token(tami_pp) && tami_pp == old(get_e_Agent_SendVerifyRequest_placeDst(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, tami_lp, tami_ap, tami_rp))
+func internBIO_e_Agent_SendVerifyRequest(tami_p Place, RunId Term, AgentId Term, KMSId Term, ClientId Term, ReaderId Term, AgentLtKeyId Term, logPk Term, x Term, SigX Term, ClientLtKeyId Term, Y Term, SigY Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (tami_pp Place)
+
+
+// permission e_Agent_RecvVerifyResponse
+pred e_Agent_RecvVerifyResponse(ghost tami_p Place, ghost RunId Term, ghost AgentId Term, ghost KMSId Term, ghost ClientId Term, ghost ReaderId Term, ghost AgentLtKeyId Term, ghost logPk Term, ghost x Term, ghost SigX Term, ghost ClientLtKeyId Term, ghost Y Term, ghost SigY Term, ghost tami_lp mset[Fact], ghost tami_ap mset[Claim], ghost tami_rp mset[Fact])
+
+ghost
+requires e_Agent_RecvVerifyResponse(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, tami_lp, tami_ap, tami_rp)
+pure func get_e_Agent_RecvVerifyResponse_placeDst(tami_p Place, RunId Term, AgentId Term, KMSId Term, ClientId Term, ReaderId Term, AgentLtKeyId Term, logPk Term, x Term, SigX Term, ClientLtKeyId Term, Y Term, SigY Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (placeDst Place)
+
+ghost
+requires token(tami_p) && e_Agent_RecvVerifyResponse(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, tami_lp, tami_ap, tami_rp)
+ensures token(tami_pp) && tami_pp == old(get_e_Agent_RecvVerifyResponse_placeDst(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, tami_lp, tami_ap, tami_rp))
+func internBIO_e_Agent_RecvVerifyResponse(tami_p Place, RunId Term, AgentId Term, KMSId Term, ClientId Term, ReaderId Term, AgentLtKeyId Term, logPk Term, x Term, SigX Term, ClientLtKeyId Term, Y Term, SigY Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (tami_pp Place)
+
+
+// permission e_Agent_SendSessionKeySignRequest
+pred e_Agent_SendSessionKeySignRequest(ghost tami_p Place, ghost RunId Term, ghost AgentId Term, ghost KMSId Term, ghost ClientId Term, ghost ReaderId Term, ghost AgentLtKeyId Term, ghost logPk Term, ghost x Term, ghost SigX Term, ghost ClientLtKeyId Term, ghost Y Term, ghost SigY Term, ghost tami_lp mset[Fact], ghost tami_ap mset[Claim], ghost tami_rp mset[Fact])
+
+ghost
+requires e_Agent_SendSessionKeySignRequest(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, tami_lp, tami_ap, tami_rp)
+pure func get_e_Agent_SendSessionKeySignRequest_placeDst(tami_p Place, RunId Term, AgentId Term, KMSId Term, ClientId Term, ReaderId Term, AgentLtKeyId Term, logPk Term, x Term, SigX Term, ClientLtKeyId Term, Y Term, SigY Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (placeDst Place)
+
+ghost
+requires token(tami_p) && e_Agent_SendSessionKeySignRequest(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, tami_lp, tami_ap, tami_rp)
+ensures token(tami_pp) && tami_pp == old(get_e_Agent_SendSessionKeySignRequest_placeDst(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, tami_lp, tami_ap, tami_rp))
+func internBIO_e_Agent_SendSessionKeySignRequest(tami_p Place, RunId Term, AgentId Term, KMSId Term, ClientId Term, ReaderId Term, AgentLtKeyId Term, logPk Term, x Term, SigX Term, ClientLtKeyId Term, Y Term, SigY Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (tami_pp Place)
+
+
+// permission e_Agent_RecvSessionKeySignResponse
+pred e_Agent_RecvSessionKeySignResponse(ghost tami_p Place, ghost RunId Term, ghost AgentId Term, ghost KMSId Term, ghost ClientId Term, ghost ReaderId Term, ghost AgentLtKeyId Term, ghost logPk Term, ghost x Term, ghost SigX Term, ghost ClientLtKeyId Term, ghost Y Term, ghost SigY Term, ghost SigSessionKey Term, ghost tami_lp mset[Fact], ghost tami_ap mset[Claim], ghost tami_rp mset[Fact])
+
+ghost
+requires e_Agent_RecvSessionKeySignResponse(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey, tami_lp, tami_ap, tami_rp)
+pure func get_e_Agent_RecvSessionKeySignResponse_placeDst(tami_p Place, RunId Term, AgentId Term, KMSId Term, ClientId Term, ReaderId Term, AgentLtKeyId Term, logPk Term, x Term, SigX Term, ClientLtKeyId Term, Y Term, SigY Term, SigSessionKey Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (placeDst Place)
+
+ghost
+requires token(tami_p) && e_Agent_RecvSessionKeySignResponse(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey, tami_lp, tami_ap, tami_rp)
+ensures token(tami_pp) && tami_pp == old(get_e_Agent_RecvSessionKeySignResponse_placeDst(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey, tami_lp, tami_ap, tami_rp))
+func internBIO_e_Agent_RecvSessionKeySignResponse(tami_p Place, RunId Term, AgentId Term, KMSId Term, ClientId Term, ReaderId Term, AgentLtKeyId Term, logPk Term, x Term, SigX Term, ClientLtKeyId Term, Y Term, SigY Term, SigSessionKey Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (tami_pp Place)
+
+
+// permission e_Agent_SendEncryptedSessionKey
+pred e_Agent_SendEncryptedSessionKey(ghost tami_p Place, ghost RunId Term, ghost AgentId Term, ghost KMSId Term, ghost ClientId Term, ghost ReaderId Term, ghost AgentLtKeyId Term, ghost logPk Term, ghost x Term, ghost SigX Term, ghost ClientLtKeyId Term, ghost Y Term, ghost SigY Term, ghost SigSessionKey Term, ghost tami_lp mset[Fact], ghost tami_ap mset[Claim], ghost tami_rp mset[Fact])
+
+ghost
+requires e_Agent_SendEncryptedSessionKey(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey, tami_lp, tami_ap, tami_rp)
+pure func get_e_Agent_SendEncryptedSessionKey_placeDst(tami_p Place, RunId Term, AgentId Term, KMSId Term, ClientId Term, ReaderId Term, AgentLtKeyId Term, logPk Term, x Term, SigX Term, ClientLtKeyId Term, Y Term, SigY Term, SigSessionKey Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (placeDst Place)
+
+ghost
+requires token(tami_p) && e_Agent_SendEncryptedSessionKey(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey, tami_lp, tami_ap, tami_rp)
+ensures token(tami_pp) && tami_pp == old(get_e_Agent_SendEncryptedSessionKey_placeDst(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey, tami_lp, tami_ap, tami_rp))
+func internBIO_e_Agent_SendEncryptedSessionKey(tami_p Place, RunId Term, AgentId Term, KMSId Term, ClientId Term, ReaderId Term, AgentLtKeyId Term, logPk Term, x Term, SigX Term, ClientLtKeyId Term, Y Term, SigY Term, SigSessionKey Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (tami_pp Place)
+
+
+// permission e_Agent_SendHandshakeComplete
+pred e_Agent_SendHandshakeComplete(ghost tami_p Place, ghost RunId Term, ghost AgentId Term, ghost KMSId Term, ghost ClientId Term, ghost ReaderId Term, ghost AgentLtKeyId Term, ghost logPk Term, ghost x Term, ghost SigX Term, ghost ClientLtKeyId Term, ghost Y Term, ghost SigY Term, ghost SigSessionKey Term, ghost payload Term, ghost tami_lp mset[Fact], ghost tami_ap mset[Claim], ghost tami_rp mset[Fact])
+
+ghost
+requires e_Agent_SendHandshakeComplete(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey, payload, tami_lp, tami_ap, tami_rp)
+pure func get_e_Agent_SendHandshakeComplete_placeDst(tami_p Place, RunId Term, AgentId Term, KMSId Term, ClientId Term, ReaderId Term, AgentLtKeyId Term, logPk Term, x Term, SigX Term, ClientLtKeyId Term, Y Term, SigY Term, SigSessionKey Term, payload Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (placeDst Place)
+
+ghost
+requires token(tami_p) && e_Agent_SendHandshakeComplete(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey, payload, tami_lp, tami_ap, tami_rp)
+ensures token(tami_pp) && tami_pp == old(get_e_Agent_SendHandshakeComplete_placeDst(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey, payload, tami_lp, tami_ap, tami_rp))
+func internBIO_e_Agent_SendHandshakeComplete(tami_p Place, RunId Term, AgentId Term, KMSId Term, ClientId Term, ReaderId Term, AgentLtKeyId Term, logPk Term, x Term, SigX Term, ClientLtKeyId Term, Y Term, SigY Term, SigSessionKey Term, payload Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (tami_pp Place)
+
+
+// permission e_Agent_ReceiveMessages
+pred e_Agent_ReceiveMessages(ghost tami_p Place, ghost RunId Term, ghost AgentId Term, ghost KMSId Term, ghost ClientId Term, ghost ReaderId Term, ghost AgentLtKeyId Term, ghost logPk Term, ghost x Term, ghost SigX Term, ghost ClientLtKeyId Term, ghost Y Term, ghost SigY Term, ghost SigSessionKey Term, ghost payload Term, ghost tami_lp mset[Fact], ghost tami_ap mset[Claim], ghost tami_rp mset[Fact])
+
+ghost
+requires e_Agent_ReceiveMessages(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey, payload, tami_lp, tami_ap, tami_rp)
+pure func get_e_Agent_ReceiveMessages_placeDst(tami_p Place, RunId Term, AgentId Term, KMSId Term, ClientId Term, ReaderId Term, AgentLtKeyId Term, logPk Term, x Term, SigX Term, ClientLtKeyId Term, Y Term, SigY Term, SigSessionKey Term, payload Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (placeDst Place)
+
+ghost
+requires token(tami_p) && e_Agent_ReceiveMessages(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey, payload, tami_lp, tami_ap, tami_rp)
+ensures token(tami_pp) && tami_pp == old(get_e_Agent_ReceiveMessages_placeDst(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey, payload, tami_lp, tami_ap, tami_rp))
+func internBIO_e_Agent_ReceiveMessages(tami_p Place, RunId Term, AgentId Term, KMSId Term, ClientId Term, ReaderId Term, AgentLtKeyId Term, logPk Term, x Term, SigX Term, ClientLtKeyId Term, Y Term, SigY Term, SigSessionKey Term, payload Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (tami_pp Place)
+
+
+// permission e_Agent_SendMessages
+pred e_Agent_SendMessages(ghost tami_p Place, ghost RunId Term, ghost AgentId Term, ghost KMSId Term, ghost ClientId Term, ghost ReaderId Term, ghost AgentLtKeyId Term, ghost logPk Term, ghost x Term, ghost SigX Term, ghost ClientLtKeyId Term, ghost Y Term, ghost SigY Term, ghost SigSessionKey Term, ghost payload Term, ghost tami_lp mset[Fact], ghost tami_ap mset[Claim], ghost tami_rp mset[Fact])
+
+ghost
+requires e_Agent_SendMessages(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey, payload, tami_lp, tami_ap, tami_rp)
+pure func get_e_Agent_SendMessages_placeDst(tami_p Place, RunId Term, AgentId Term, KMSId Term, ClientId Term, ReaderId Term, AgentLtKeyId Term, logPk Term, x Term, SigX Term, ClientLtKeyId Term, Y Term, SigY Term, SigSessionKey Term, payload Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (placeDst Place)
+
+ghost
+requires token(tami_p) && e_Agent_SendMessages(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey, payload, tami_lp, tami_ap, tami_rp)
+ensures token(tami_pp) && tami_pp == old(get_e_Agent_SendMessages_placeDst(tami_p, RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey, payload, tami_lp, tami_ap, tami_rp))
+func internBIO_e_Agent_SendMessages(tami_p Place, RunId Term, AgentId Term, KMSId Term, ClientId Term, ReaderId Term, AgentLtKeyId Term, logPk Term, x Term, SigX Term, ClientLtKeyId Term, Y Term, SigY Term, SigSessionKey Term, payload Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (tami_pp Place)
+

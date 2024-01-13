@@ -1,0 +1,156 @@
+package term
+
+
+
+import . "github.com/aws/amazon-ssm-agent/agent/iospecs/pub"
+import . "github.com/aws/amazon-ssm-agent/agent/iospecs/fresh"
+
+
+type Term domain {
+    func freshTerm(f Fresh) Term
+    func getFreshTerm(t Term) Fresh
+    axiom  {
+        forall f Fresh :: 
+            { freshTerm(f) } (
+                getFreshTerm(freshTerm(f)) == f)
+    }
+    func pubTerm(p Pub) Term
+    func getPubTerm(t Term) Pub
+    axiom  {
+        forall p Pub :: 
+            { pubTerm(p) } (
+                getPubTerm(pubTerm(p)) == p)
+    }
+
+    func adec(t1 Term, t2 Term) Term
+    func aenc(t1 Term, t2 Term) Term
+    func exp(t1 Term, t2 Term) Term
+    func fst(t1 Term) Term
+    func hash(t1 Term) Term
+    func inv(t1 Term) Term
+    func kdf1(t1 Term) Term
+    func kdf2(t1 Term) Term
+    func one() Term
+    func pair(t1 Term, t2 Term) Term
+    func pk(t1 Term) Term
+    func sdec(t1 Term, t2 Term) Term
+    func senc(t1 Term, t2 Term) Term
+    func sign(t1 Term, t2 Term) Term
+    func snd(t1 Term) Term
+    func ok() Term
+    func verify(t1 Term, t2 Term, t3 Term) Term
+    func Mult(x Term, y Term) Term
+    // associativity
+    axiom  {
+        forall x_1, x_2, x_3 Term :: 
+            { Mult(x_1, Mult(x_2, x_3)) } (
+                Mult(x_1, Mult(x_2, x_3)) == Mult(Mult(x_1, x_2), x_3))
+    }
+    // commutativity
+    axiom  {
+        forall x_1, x_2 Term :: 
+            { Mult(x_1, x_2) } (
+                Mult(x_1, x_2) == Mult(x_2, x_1))
+    }
+    
+
+    axiom  {
+        forall x_1, x_2 Term :: 
+            { adec(aenc(x_1, pk(x_2)), x_2) } (
+                adec(aenc(x_1, pk(x_2)), x_2) == x_1)
+    }
+
+    axiom  {
+        forall x_1 Term :: 
+            { exp(x_1, one()) } (
+                exp(x_1, one()) == x_1)
+    }
+
+    axiom  {
+        forall x_1, x_2, x_3 Term :: 
+            { exp(exp(x_1, x_2), x_3) } (
+                exp(exp(x_1, x_2), x_3) == exp(x_1, Mult(x_2, x_3)))
+    }
+
+    axiom  {
+        forall x_1, x_2 Term :: 
+            { fst(pair(x_1, x_2)) } (
+                fst(pair(x_1, x_2)) == x_1)
+    }
+
+    axiom  {
+        forall x_1 Term :: 
+            { inv(inv(x_1)) } (
+                inv(inv(x_1)) == x_1)
+    }
+
+    axiom  {
+        inv(one()) == one()
+    }
+
+    axiom  {
+        forall x_1, x_2 Term :: 
+            { inv(Mult(x_2, inv(x_1))) } (
+                inv(Mult(x_2, inv(x_1))) == Mult(x_1, inv(x_2)))
+    }
+
+    axiom  {
+        forall x_1, x_2 Term :: 
+            { sdec(senc(x_1, x_2), x_2) } (
+                sdec(senc(x_1, x_2), x_2) == x_1)
+    }
+
+    axiom  {
+        forall x_1, x_2 Term :: 
+            { snd(pair(x_1, x_2)) } (
+                snd(pair(x_1, x_2)) == x_2)
+    }
+
+    axiom  {
+        forall x_1, x_2 Term :: 
+            { verify(sign(x_1, x_2), x_1, pk(x_2)) } (
+                verify(sign(x_1, x_2), x_1, pk(x_2)) == ok())
+    }
+
+    axiom  {
+        forall x_1, x_2 Term :: 
+            { Mult(x_1, Mult(x_2, inv(x_1))) } (
+                Mult(x_1, Mult(x_2, inv(x_1))) == x_2)
+    }
+
+    axiom  {
+        forall x_1 Term :: 
+            { Mult(x_1, inv(x_1)) } (
+                Mult(x_1, inv(x_1)) == one())
+    }
+
+    axiom  {
+        forall x_1 Term :: 
+            { Mult(x_1, one()) } (
+                Mult(x_1, one()) == x_1)
+    }
+
+    axiom  {
+        forall x_1, x_2, x_3 Term :: 
+            { Mult(x_2, Mult(x_3, inv(Mult(x_1, x_2)))) } (
+                Mult(x_2, Mult(x_3, inv(Mult(x_1, x_2)))) == Mult(x_3, inv(x_1)))
+    }
+
+    axiom  {
+        forall x_1, x_2 Term :: 
+            { Mult(x_2, inv(Mult(x_1, x_2))) } (
+                Mult(x_2, inv(Mult(x_1, x_2))) == inv(x_1))
+    }
+
+    axiom  {
+        forall x_1, x_2, x_3 Term :: 
+            { Mult(x_3, Mult(inv(x_1), inv(x_2))) } (
+                Mult(x_3, Mult(inv(x_1), inv(x_2))) == Mult(x_3, inv(Mult(x_1, x_2))))
+    }
+
+    axiom  {
+        forall x_1, x_2 Term :: 
+            { Mult(inv(x_1), inv(x_2)) } (
+                Mult(inv(x_1), inv(x_2)) == inv(Mult(x_1, x_2)))
+    }
+}

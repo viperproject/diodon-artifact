@@ -1,0 +1,27 @@
+package iospec
+
+
+
+import . "github.com/aws/amazon-ssm-agent/agent/iospecs/claim"
+import . "github.com/aws/amazon-ssm-agent/agent/iospecs/fact"
+import . "github.com/aws/amazon-ssm-agent/agent/iospecs/term"
+import . "github.com/aws/amazon-ssm-agent/agent/iospecs/place"
+import . "github.com/aws/amazon-ssm-agent/agent/iospecs/pub"
+import . "github.com/aws/amazon-ssm-agent/agent/iospecs/fresh"
+
+
+// permission e_Out_KMS
+pred e_Out_KMS(ghost tami_p Place, ghost tami_rid Term, ghost new_x Term, ghost new_x_1 Term, ghost new_x_2 Term, ghost new_x_3 Term)
+
+ghost
+requires e_Out_KMS(tami_p, tami_rid, new_x, new_x_1, new_x_2, new_x_3)
+pure func get_e_Out_KMS_placeDst(tami_p Place, tami_rid Term, new_x Term, new_x_1 Term, new_x_2 Term, new_x_3 Term) (placeDst Place)
+
+
+// permission e_OutFact
+pred e_OutFact(ghost tami_p Place, ghost tami_rid Term, ghost new_x Term)
+
+ghost
+requires e_OutFact(tami_p, tami_rid, new_x)
+pure func get_e_OutFact_placeDst(tami_p Place, tami_rid Term, new_x Term) (placeDst Place)
+

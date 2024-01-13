@@ -1,0 +1,42 @@
+package pub
+
+
+
+
+
+// pub encoding ---------------
+type Pub domain {
+    func const_SignRequest_pub() Pub
+
+    func const_g_pub() Pub
+
+    func const_SignResponse_pub() Pub
+
+    func const_SecureSessionRequest_pub() Pub
+
+    func const_Log_pub() Pub
+
+    func const_SecureSessionResponse_pub() Pub
+
+    func const_VerifyRequest_pub() Pub
+
+    func const_VerifyResponse_pub() Pub
+
+    func const_EncryptedSessionKey_pub() Pub
+
+    func const_Agent_pub() Pub
+
+    func const_Client_pub() Pub
+
+    func const_HandshakeComplete_pub() Pub
+
+    func const_HandshakeCompletePayload_pub() Pub
+
+    func const_Message_pub() Pub
+
+    // TODO!: Add base constructors as uninterpreted functions
+    // Example:
+    func pub_msg(string) Pub
+    func pub_integer64(uint64) Pub
+}
+

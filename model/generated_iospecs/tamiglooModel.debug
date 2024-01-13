@@ -1,0 +1,2479 @@
+SSM Signature {_sigMaudeInfo = MaudeSig {enableDH = True, enableBP = False, enableMSet = False, enableXor = False, enableDiff = False, stFunSyms = fromList [("adec",(2,Public)),("aenc",(2,Public)),("fst",(1,Public)),("hash",(1,Public)),("kdf1",(1,Public)),("kdf2",(1,Public)),("pair",(2,Public)),("pk",(1,Public)),("sdec",(2,Public)),("senc",(2,Public)),("sign",(2,Public)),("snd",(1,Public)),("true",(0,Public)),("verify",(3,Public))], stRules = fromList [CtxtStRule adec(aenc(x.1,pk(x.2)),x.2) (StRhs [[0,0]] x.1),CtxtStRule fst(pair(x.1,x.2)) (StRhs [[0,0]] x.1),CtxtStRule sdec(senc(x.1,x.2),x.2) (StRhs [[0,0]] x.1),CtxtStRule snd(pair(x.1,x.2)) (StRhs [[0,1]] x.2),CtxtStRule verify(sign(x.1,x.2),x.1,pk(x.2)) (StRhs [[0,0]] true)], funSyms = fromList [NoEq ("adec",(2,Public)),NoEq ("aenc",(2,Public)),NoEq ("exp",(2,Public)),NoEq ("fst",(1,Public)),NoEq ("hash",(1,Public)),NoEq ("inv",(1,Public)),NoEq ("kdf1",(1,Public)),NoEq ("kdf2",(1,Public)),NoEq ("one",(0,Public)),NoEq ("pair",(2,Public)),NoEq ("pk",(1,Public)),NoEq ("sdec",(2,Public)),NoEq ("senc",(2,Public)),NoEq ("sign",(2,Public)),NoEq ("snd",(1,Public)),NoEq ("true",(0,Public)),NoEq ("verify",(3,Public)),AC Mult], irreducibleFunSyms = fromList [NoEq ("aenc",(2,Public)),NoEq ("hash",(1,Public)),NoEq ("kdf1",(1,Public)),NoEq ("kdf2",(1,Public)),NoEq ("one",(0,Public)),NoEq ("pair",(2,Public)),NoEq ("pk",(1,Public)),NoEq ("senc",(2,Public)),NoEq ("sign",(2,Public)),NoEq ("true",(0,Public)),AC Mult], reducibleFunSyms = fromList [NoEq ("adec",(2,Public)),NoEq ("exp",(2,Public)),NoEq ("fst",(1,Public)),NoEq ("inv",(1,Public)),NoEq ("sdec",(2,Public)),NoEq ("snd",(1,Public)),NoEq ("verify",(3,Public)),AC Mult]}}
+
+    rule Register_pk EnvRule:
+        Pr: Fr/1
+            |  (ltk)
+            |  EnvGroup EnvIn
+        Ac:
+        Cncl:
+            !(Proto)_Ltk/2
+            |  (A, ltk)
+            |  EnvGroup Env
+            !(Proto)_Pk/2
+            |  (A, pk(ltk))
+            |  EnvGroup Env
+    
+
+
+    rule Get_pk EnvRule:
+        Pr: !(Proto)_Pk/2
+            |  (A, pubkey)
+            |  EnvGroup Env
+        Ac:
+        Cncl:
+            Out/1
+            |  (pubkey)
+            |  EnvGroup EnvOut
+    
+
+
+    rule Reveal_ltk EnvRule:
+        Pr: !(Proto)_Ltk/2
+            |  (A, ltk)
+            |  EnvGroup Env
+        Ac: (Proto)_Reveal/1
+            |  (A)
+            |  ActionGroup
+            (Proto)_LtkReveal/1
+            |  (A)
+            |  ActionGroup
+            (Proto)_LtkRevealKey/1
+            |  (ltk)
+            |  ActionGroup
+        Cncl:
+            Out/1
+            |  (ltk)
+            |  EnvGroup EnvOut
+    
+
+
+    rule Register_KmsSignKey EnvRule:
+        Pr: Fr/1
+            |  (SignKey)
+            |  EnvGroup EnvIn
+        Ac: (Proto)_CreateSignKey/3
+            |  (KeyOwnerId, LtkARN, SignKey)
+            |  ActionGroup
+        Cncl:
+            !(Proto)_KmsSignKey/3
+            |  (KeyOwnerId, LtkARN, SignKey)
+            |  EnvGroup Env
+    
+
+
+    rule Reveal_KmsSignKey EnvRule:
+        Pr: !(Proto)_KmsSignKey/3
+            |  (KeyOwnerId, LtkARN, SignKey)
+            |  EnvGroup Env
+        Ac: (Proto)_KmsSignKeyReveal/1
+            |  (LtkARN)
+            |  ActionGroup
+            (Proto)_KmsSignKeyRevealOwner/1
+            |  (KeyOwnerId)
+            |  ActionGroup
+        Cncl:
+            Out/1
+            |  (SignKey)
+            |  EnvGroup EnvOut
+    
+
+
+    rule ChanOut_KMS EnvRule:
+        Pr: (Proto)_Out_KMS/4
+            |  (A, B, clientRunId, x)
+            |  EnvGroup EnvOut
+        Ac: (Proto)_ChanOut_KMS/4
+            |  (A, B, clientRunId, x)
+            |  ActionGroup
+        Cncl:
+            (Proto)_Sec/4
+            |  (A, B, clientRunId, x)
+            |  EnvGroup Env
+    
+
+
+    rule ChanIn_KMS EnvRule:
+        Pr: (Proto)_Sec/4
+            |  (A, B, clientRunId, x)
+            |  EnvGroup Env
+        Ac: (Proto)_ChanIn_KMS/4
+            |  (A, B, clientRunId, x)
+            |  ActionGroup
+        Cncl:
+            (Proto)_In_KMS/4
+            |  (A, B, clientRunId, x)
+            |  EnvGroup EnvIn
+    
+
+
+    rule Agent_Init EnvRule:
+        Pr: Fr/1
+            |  (RunId)
+            |  EnvGroup EnvIn
+            !(Proto)_Pk/2
+            |  (ReaderId, logPk)
+            |  EnvGroup Env
+        Ac:
+        Cncl:
+            (Setup)_Agent/7
+            |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk)
+            |  EnvGroup EnvIn
+    
+
+
+    rule Agent_SendSignRequest StateRule "Agent":
+        Pr: (Setup)_Agent/7
+            |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk)
+            |  EnvGroup EnvIn
+            Fr/1
+            |  (x)
+            |  EnvGroup EnvIn
+        Ac: (Proto)_AgentStarted/0
+            |  ()
+            |  ActionGroup
+        Cncl:
+            (St)_Agent_1/8
+            |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x)
+            |  StateGroup
+            (Proto)_Out_KMS/4
+            |  (AgentId, KMSId, RunId, pair(pubTerm(const_SignRequest_pub()), pair(AgentLtKeyId, pair(exp(pubTerm(const_g_pub()), x), pair(ReaderId, ClientId)))))
+            |  EnvGroup EnvOut
+    
+
+
+    rule Agent_RecvSignResponse StateRule "Agent":
+        Pr: (St)_Agent_1/8
+            |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x)
+            |  StateGroup
+            (Proto)_In_KMS/4
+            |  (KMSId, AgentId, RunId, pair(pubTerm(const_SignResponse_pub()), SigX))
+            |  EnvGroup EnvIn
+        Ac: (Proto)_AgentSignResponse/4
+            |  (KMSId, AgentId, RunId, pair(pubTerm(const_SignResponse_pub()), SigX))
+            |  ActionGroup
+        Cncl:
+            (St)_Agent_2/9
+            |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX)
+            |  StateGroup
+    
+
+
+    rule Agent_SendSecureSessionRequest StateRule "Agent":
+        Pr: (St)_Agent_2/9
+            |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX)
+            |  StateGroup
+        Ac: (Proto)_AgentSecureSessionRequest/5
+            |  (AgentId, ClientId, exp(pubTerm(const_g_pub()), x), SigX, AgentLtKeyId)
+            |  ActionGroup
+        Cncl:
+            (St)_Agent_3/9
+            |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX)
+            |  StateGroup
+            Out/1
+            |  (pair(pubTerm(const_SecureSessionRequest_pub()), pair(exp(pubTerm(const_g_pub()), x), pair(SigX, pair(AgentLtKeyId, ReaderId)))))
+            |  EnvGroup EnvOut
+            Out/1
+            |  (pair(pubTerm(const_Log_pub()), pair(pubTerm(const_SecureSessionRequest_pub()), pair(exp(pubTerm(const_g_pub()), x), pair(SigX, pair(AgentLtKeyId, ReaderId))))))
+            |  EnvGroup EnvOut
+    
+
+
+    rule Agent_RecvSecureSessionResponse StateRule "Agent":
+        Pr: (St)_Agent_3/9
+            |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX)
+            |  StateGroup
+            In/1
+            |  (pair(pubTerm(const_SecureSessionResponse_pub()), pair(exp(pubTerm(const_g_pub()), z), pair(SigY, pair(ClientLtKeyId, hash(exp(exp(pubTerm(const_g_pub()), z), x)))))))
+            |  EnvGroup EnvIn
+        Ac: (Proto)_AgentSecureSessionResponse/6
+            |  (ClientId, AgentId, exp(pubTerm(const_g_pub()), z), SigY, ClientLtKeyId, hash(exp(exp(pubTerm(const_g_pub()), z), x)))
+            |  ActionGroup
+        Cncl:
+            (St)_Agent_4/12
+            |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, exp(pubTerm(const_g_pub()), z), SigY)
+            |  StateGroup
+    
+
+
+    rule Agent_SendVerifyRequest StateRule "Agent":
+        Pr: (St)_Agent_4/12
+            |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY)
+            |  StateGroup
+        Ac:
+        Cncl:
+            (St)_Agent_5/12
+            |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY)
+            |  StateGroup
+            (Proto)_Out_KMS/4
+            |  (AgentId, KMSId, RunId, pair(pubTerm(const_VerifyRequest_pub()), pair(ClientId, pair(ClientLtKeyId, pair(pair(Y, AgentId), SigY)))))
+            |  EnvGroup EnvOut
+    
+
+
+    rule Agent_RecvVerifyResponse StateRule "Agent":
+        Pr: (St)_Agent_5/12
+            |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY)
+            |  StateGroup
+            (Proto)_In_KMS/4
+            |  (KMSId, AgentId, RunId, pubTerm(const_VerifyResponse_pub()))
+            |  EnvGroup EnvIn
+        Ac: (Proto)_SecretX/1
+            |  (x)
+            |  ActionGroup
+        Cncl:
+            (St)_Agent_6/12
+            |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY)
+            |  StateGroup
+    
+
+
+    rule Agent_SendSessionKeySignRequest StateRule "Agent":
+        Pr: (St)_Agent_6/12
+            |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY)
+            |  StateGroup
+        Ac:
+        Cncl:
+            (St)_Agent_7/12
+            |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY)
+            |  StateGroup
+            (Proto)_Out_KMS/4
+            |  (AgentId, KMSId, RunId, pair(pubTerm(const_SignRequest_pub()), pair(AgentLtKeyId, pair(aenc(pair(kdf1(exp(Y, x)), kdf2(exp(Y, x))), logPk), ClientId))))
+            |  EnvGroup EnvOut
+    
+
+
+    rule Agent_RecvSessionKeySignResponse StateRule "Agent":
+        Pr: (St)_Agent_7/12
+            |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY)
+            |  StateGroup
+            (Proto)_In_KMS/4
+            |  (KMSId, AgentId, RunId, pair(pubTerm(const_SignResponse_pub()), SigSessionKey))
+            |  EnvGroup EnvIn
+        Ac:
+        Cncl:
+            (St)_Agent_8/13
+            |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey)
+            |  StateGroup
+    
+
+
+    rule Agent_SendEncryptedSessionKey StateRule "Agent":
+        Pr: (St)_Agent_8/13
+            |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey)
+            |  StateGroup
+        Ac: (Proto)_AgentSendEncryptedSessionKey/1
+            |  (x)
+            |  ActionGroup
+        Cncl:
+            (St)_Agent_9/13
+            |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey)
+            |  StateGroup
+            Out/1
+            |  (pair(pubTerm(const_EncryptedSessionKey_pub()), pair(aenc(pair(kdf1(exp(Y, x)), kdf2(exp(Y, x))), logPk), pair(SigSessionKey, pair(AgentId, pair(AgentLtKeyId, ClientId))))))
+            |  EnvGroup EnvOut
+    
+
+
+    rule Agent_SendHandshakeComplete StateRule "Agent":
+        Pr: (St)_Agent_9/13
+            |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey)
+            |  StateGroup
+            In/1
+            |  (payload)
+            |  EnvGroup EnvIn
+        Ac: (Proto)_Agent_Finish/1
+            |  (AgentId)
+            |  ActionGroup
+            (Proto)_Secret/1
+            |  (pair(kdf1(exp(Y, x)), kdf2(exp(Y, x))))
+            |  ActionGroup
+            (Proto)_Commit/3
+            |  (pubTerm(const_Agent_pub()), pubTerm(const_Client_pub()), pair(AgentId, pair(ClientId, pair(kdf1(exp(Y, x)), kdf2(exp(Y, x))))))
+            |  ActionGroup
+            (Proto)_Running/3
+            |  (pubTerm(const_Agent_pub()), pubTerm(const_Client_pub()), pair(AgentId, pair(ClientId, pair(kdf1(exp(Y, x)), kdf2(exp(Y, x))))))
+            |  ActionGroup
+            (Proto)_HonestReader/1
+            |  (ReaderId)
+            |  ActionGroup
+            (Proto)_HonestKmsOwner/1
+            |  (AgentId)
+            |  ActionGroup
+            (Proto)_HonestKmsOwner/1
+            |  (ClientId)
+            |  ActionGroup
+            (Proto)_AgentHandshakeCompleted/10
+            |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, ClientLtKeyId, Y)
+            |  ActionGroup
+        Cncl:
+            (St)_Agent_10/13
+            |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey)
+            |  StateGroup
+            Out/1
+            |  (pair(pubTerm(const_HandshakeComplete_pub()), senc(pair(pubTerm(const_HandshakeCompletePayload_pub()), payload), kdf1(exp(Y, x)))))
+            |  EnvGroup EnvOut
+            Out/1
+            |  (pair(pubTerm(const_Log_pub()), pair(pubTerm(const_HandshakeComplete_pub()), senc(pair(pubTerm(const_HandshakeCompletePayload_pub()), payload), kdf1(exp(Y, x))))))
+            |  EnvGroup EnvOut
+    
+
+
+    rule Agent_ReceiveMessages StateRule "Agent":
+        Pr: (St)_Agent_10/13
+            |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey)
+            |  StateGroup
+            In/1
+            |  (pair(pubTerm(const_Message_pub()), senc(payload, kdf2(exp(Y, x)))))
+            |  EnvGroup EnvIn
+        Ac: (Proto)_AgentRecvLoop/10
+            |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, ClientLtKeyId, Y)
+            |  ActionGroup
+        Cncl:
+            (St)_Agent_10/13
+            |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey)
+            |  StateGroup
+    
+
+
+    rule Agent_SendMessages StateRule "Agent":
+        Pr: (St)_Agent_10/13
+            |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey)
+            |  StateGroup
+            In/1
+            |  (payload)
+            |  EnvGroup EnvIn
+        Ac: (Proto)_AgentSendLoop/10
+            |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, ClientLtKeyId, Y)
+            |  ActionGroup
+        Cncl:
+            (St)_Agent_10/13
+            |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey)
+            |  StateGroup
+            Out/1
+            |  (pair(pubTerm(const_Message_pub()), senc(payload, kdf1(exp(Y, x)))))
+            |  EnvGroup EnvOut
+            Out/1
+            |  (pair(pubTerm(const_Log_pub()), pair(pubTerm(const_Message_pub()), senc(payload, kdf1(exp(Y, x))))))
+            |  EnvGroup EnvOut
+    
+
+
+    rule Client_Init EnvRule:
+        Pr: Fr/1
+            |  (RunId)
+            |  EnvGroup EnvIn
+        Ac:
+        Cncl:
+            (Proto)_Client_Init/5
+            |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId)
+            |  EnvGroup Env
+    
+
+
+    rule Client_RecvSecureSessionRequest EnvRule:
+        Pr: (Proto)_Client_Init/5
+            |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId)
+            |  EnvGroup Env
+            In/1
+            |  (pair(pubTerm(const_SecureSessionRequest_pub()), pair(exp(pubTerm(const_g_pub()), z), pair(SigX, pair(AgentLtKeyId, ReaderId)))))
+            |  EnvGroup EnvIn
+        Ac: (Proto)_ClientStarted/0
+            |  ()
+            |  ActionGroup
+            (Proto)_ClientSecureSessionRequest/5
+            |  (AgentId, ClientId, exp(pubTerm(const_g_pub()), z), SigX, AgentLtKeyId)
+            |  ActionGroup
+        Cncl:
+            (Proto)_Client_S1/9
+            |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, exp(pubTerm(const_g_pub()), z), SigX, ReaderId)
+            |  EnvGroup Env
+    
+
+
+    rule Client_SendVerifyRequest EnvRule:
+        Pr: (Proto)_Client_S1/9
+            |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId)
+            |  EnvGroup Env
+        Ac:
+        Cncl:
+            (Proto)_Client_S2/9
+            |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId)
+            |  EnvGroup Env
+            (Proto)_Out_KMS/4
+            |  (ClientId, KMSId, RunId, pair(pubTerm(const_VerifyRequest_pub()), pair(AgentId, pair(AgentLtKeyId, pair(pair(X, pair(ReaderId, ClientId)), SigX)))))
+            |  EnvGroup EnvOut
+    
+
+
+    rule Client_RecvVerifyResponse EnvRule:
+        Pr: (Proto)_Client_S2/9
+            |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId)
+            |  EnvGroup Env
+            (Proto)_In_KMS/4
+            |  (KMSId, ClientId, RunId, pubTerm(const_VerifyResponse_pub()))
+            |  EnvGroup EnvIn
+        Ac:
+        Cncl:
+            (Proto)_Client_S3/9
+            |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId)
+            |  EnvGroup Env
+    
+
+
+    rule Client_SendSignRequest EnvRule:
+        Pr: (Proto)_Client_S3/9
+            |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId)
+            |  EnvGroup Env
+            Fr/1
+            |  (y)
+            |  EnvGroup EnvIn
+        Ac:
+        Cncl:
+            (Proto)_Client_S4/10
+            |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y)
+            |  EnvGroup Env
+            (Proto)_Out_KMS/4
+            |  (ClientId, KMSId, RunId, pair(pubTerm(const_SignRequest_pub()), pair(ClientLtKeyId, pair(exp(pubTerm(const_g_pub()), y), AgentId))))
+            |  EnvGroup EnvOut
+    
+
+
+    rule Client_RecvSignResponse EnvRule:
+        Pr: (Proto)_Client_S4/10
+            |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y)
+            |  EnvGroup Env
+            (Proto)_In_KMS/4
+            |  (KMSId, ClientId, RunId, pair(pubTerm(const_SignResponse_pub()), SigY))
+            |  EnvGroup EnvIn
+        Ac: (Proto)_ClientSignResponse/4
+            |  (KMSId, ClientId, RunId, pair(pubTerm(const_SignResponse_pub()), SigY))
+            |  ActionGroup
+        Cncl:
+            (Proto)_Client_S5/11
+            |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y, SigY)
+            |  EnvGroup Env
+    
+
+
+    rule Client_SendSecureSessionResponse EnvRule:
+        Pr: (Proto)_Client_S5/11
+            |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y, SigY)
+            |  EnvGroup Env
+        Ac: (Proto)_SecretY/1
+            |  (y)
+            |  ActionGroup
+            (Proto)_ClientSendSessionResponse/1
+            |  (ClientId)
+            |  ActionGroup
+            (Proto)_ClientSecureSessionResponse/9
+            |  (ClientId, AgentId, X, SigX, exp(pubTerm(const_g_pub()), y), SigY, AgentLtKeyId, ClientLtKeyId, hash(exp(X, y)))
+            |  ActionGroup
+            (Proto)_Running/3
+            |  (pubTerm(const_Client_pub()), pubTerm(const_Agent_pub()), pair(AgentId, pair(ClientId, pair(kdf1(exp(X, y)), kdf2(exp(X, y))))))
+            |  ActionGroup
+        Cncl:
+            (Proto)_Client_S6/11
+            |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y, SigY)
+            |  EnvGroup Env
+            Out/1
+            |  (pair(pubTerm(const_SecureSessionResponse_pub()), pair(exp(pubTerm(const_g_pub()), y), pair(SigY, pair(ClientLtKeyId, hash(exp(X, y)))))))
+            |  EnvGroup EnvOut
+            Out/1
+            |  (pair(pubTerm(const_Log_pub()), pair(pubTerm(const_SecureSessionResponse_pub()), pair(exp(pubTerm(const_g_pub()), y), pair(SigY, pair(ClientLtKeyId, hash(exp(X, y))))))))
+            |  EnvGroup EnvOut
+    
+
+
+    rule Client_RecvHandshakeComplete EnvRule:
+        Pr: (Proto)_Client_S6/11
+            |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y, SigY)
+            |  EnvGroup Env
+            In/1
+            |  (pair(pubTerm(const_HandshakeComplete_pub()), senc(pair(pubTerm(const_HandshakeCompletePayload_pub()), payload), kdf1(exp(X, y)))))
+            |  EnvGroup EnvIn
+        Ac: (Proto)_Client_Finish/1
+            |  (ClientId)
+            |  ActionGroup
+            (Proto)_Secret/1
+            |  (pair(kdf1(exp(X, y)), kdf2(exp(X, y))))
+            |  ActionGroup
+            (Proto)_Commit/3
+            |  (pubTerm(const_Client_pub()), pubTerm(const_Agent_pub()), pair(AgentId, pair(ClientId, pair(kdf1(exp(X, y)), kdf2(exp(X, y))))))
+            |  ActionGroup
+            (Proto)_HonestReader/1
+            |  (ReaderId)
+            |  ActionGroup
+            (Proto)_HonestKmsOwner/1
+            |  (AgentId)
+            |  ActionGroup
+            (Proto)_HonestKmsOwner/1
+            |  (ClientId)
+            |  ActionGroup
+            (Proto)_ClientHandshakeCompleted/8
+            |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, y)
+            |  ActionGroup
+        Cncl:
+            (Proto)_Client_S7/11
+            |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y, SigY)
+            |  EnvGroup Env
+    
+
+
+    rule Client_SendMessage EnvRule:
+        Pr: (Proto)_Client_S7/11
+            |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y, SigY)
+            |  EnvGroup Env
+            In/1
+            |  (payload)
+            |  EnvGroup EnvIn
+        Ac: (Proto)_ClientSendMessage/1
+            |  (pair(pubTerm(const_Message_pub()), senc(payload, kdf2(exp(X, y)))))
+            |  ActionGroup
+            (Proto)_ClientSendLoop/8
+            |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, y)
+            |  ActionGroup
+        Cncl:
+            (Proto)_Client_S7/11
+            |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y, SigY)
+            |  EnvGroup Env
+            Out/1
+            |  (pair(pubTerm(const_Message_pub()), senc(payload, kdf2(exp(X, y)))))
+            |  EnvGroup EnvOut
+            Out/1
+            |  (pair(pubTerm(const_Log_pub()), pair(pubTerm(const_Message_pub()), senc(payload, kdf2(exp(X, y))))))
+            |  EnvGroup EnvOut
+    
+
+
+    rule Client_RecvMessage EnvRule:
+        Pr: (Proto)_Client_S7/11
+            |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y, SigY)
+            |  EnvGroup Env
+            In/1
+            |  (pair(pubTerm(const_Message_pub()), senc(msg, kdf1(exp(X, y)))))
+            |  EnvGroup EnvIn
+        Ac: (Proto)_ClientRecvLoop/8
+            |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, y)
+            |  ActionGroup
+        Cncl:
+            (Proto)_Client_S7/11
+            |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y, SigY)
+            |  EnvGroup Env
+    
+
+
+    rule KMS_Init EnvRule:
+        Pr:
+        Ac: (Proto)_KMSStarted/0
+            |  ()
+            |  ActionGroup
+        Cncl:
+            !(Proto)_KMS_Init/1
+            |  (KMSId)
+            |  EnvGroup Env
+    
+
+
+    rule KMS_RecvSignRequest EnvRule:
+        Pr: !(Proto)_KMS_Init/1
+            |  (KMSId)
+            |  EnvGroup Env
+            !(Proto)_KmsSignKey/3
+            |  (AgentId, AgentLtKeyId, AgentLtKey)
+            |  EnvGroup Env
+            (Proto)_In_KMS/4
+            |  (AgentId, KMSId, AgentRunId, pair(pubTerm(const_SignRequest_pub()), pair(AgentLtKeyId, payload)))
+            |  EnvGroup EnvIn
+        Ac: (Proto)_KMSSign/1
+            |  (AgentId)
+            |  ActionGroup
+        Cncl:
+            (Proto)_KMS_Sign_S1/6
+            |  (KMSId, AgentId, AgentRunId, AgentLtKeyId, AgentLtKey, payload)
+            |  EnvGroup Env
+    
+
+
+    rule KMS_SendSignResponse EnvRule:
+        Pr: (Proto)_KMS_Sign_S1/6
+            |  (KMSId, AgentId, AgentRunId, AgentLtKeyId, AgentLtKey, payload)
+            |  EnvGroup Env
+        Ac: (Proto)_KMSSignResponse/4
+            |  (KMSId, AgentId, AgentRunId, pair(pubTerm(const_SignResponse_pub()), sign(payload, AgentLtKey)))
+            |  ActionGroup
+        Cncl:
+            (Proto)_KMS_Sign_S2/6
+            |  (KMSId, AgentId, AgentRunId, AgentLtKeyId, AgentLtKey, payload)
+            |  EnvGroup Env
+            (Proto)_Out_KMS/4
+            |  (KMSId, AgentId, AgentRunId, pair(pubTerm(const_SignResponse_pub()), sign(payload, AgentLtKey)))
+            |  EnvGroup EnvOut
+    
+
+
+    rule KMS_RecvVerifyRequest EnvRule:
+        Pr: !(Proto)_KMS_Init/1
+            |  (KMSId)
+            |  EnvGroup Env
+            !(Proto)_KmsSignKey/3
+            |  (AgentId, AgentLtKeyId, AgentLtKey)
+            |  EnvGroup Env
+            (Proto)_In_KMS/4
+            |  (ClientId, KMSId, ClientRunId, pair(pubTerm(const_VerifyRequest_pub()), pair(AgentId, pair(AgentLtKeyId, pair(payload, sign(payload, AgentLtKey))))))
+            |  EnvGroup EnvIn
+        Ac:
+        Cncl:
+            (Proto)_KMS_Verify_S1/7
+            |  (KMSId, ClientId, ClientRunId, AgentId, AgentLtKeyId, AgentLtKey, payload)
+            |  EnvGroup Env
+    
+
+
+    rule KMS_SendVerifyResponse EnvRule:
+        Pr: (Proto)_KMS_Verify_S1/7
+            |  (KMSId, ClientId, ClientRunId, AgentId, AgentLtKeyId, AgentLtKey, payload)
+            |  EnvGroup Env
+        Ac:
+        Cncl:
+            (Proto)_KMS_Verify_S2/7
+            |  (KMSId, ClientId, ClientRunId, AgentId, AgentLtKeyId, AgentLtKey, payload)
+            |  EnvGroup Env
+            (Proto)_Out_KMS/4
+            |  (KMSId, ClientId, ClientRunId, pubTerm(const_VerifyResponse_pub()))
+            |  EnvGroup EnvOut
+    
+
+
+    rule Reader_Init EnvRule:
+        Pr: !(Proto)_Ltk/2
+            |  (ReaderId, ltk)
+            |  EnvGroup Env
+            Fr/1
+            |  (RunId)
+            |  EnvGroup EnvIn
+        Ac:
+        Cncl:
+            (Proto)_Reader_Init/4
+            |  (RunId, ReaderId, KMSId, ltk)
+            |  EnvGroup Env
+    
+
+
+    rule Reader_RecvEncryptedSessionKey EnvRule:
+        Pr: (Proto)_Reader_Init/4
+            |  (RunId, ReaderId, KMSId, ltk)
+            |  EnvGroup Env
+            In/1
+            |  (pair(pubTerm(const_EncryptedSessionKey_pub()), pair(aenc(pair(sessionKey1, sessionKey2), pk(ltk)), pair(SigSessionKey, pair(AgentId, pair(AgentLtKeyId, ClientId))))))
+            |  EnvGroup EnvIn
+        Ac:
+        Cncl:
+            (Proto)_Reader_S1/10
+            |  (RunId, ReaderId, KMSId, AgentId, ClientId, ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId)
+            |  EnvGroup Env
+    
+
+
+    rule Reader_SendEncryptedSessionKeyVerifyRequest EnvRule:
+        Pr: (Proto)_Reader_S1/10
+            |  (RunId, ReaderId, KMSId, AgentId, ClientId, ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId)
+            |  EnvGroup Env
+        Ac:
+        Cncl:
+            (Proto)_Reader_S2/10
+            |  (RunId, ReaderId, KMSId, AgentId, ClientId, ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId)
+            |  EnvGroup Env
+            (Proto)_Out_KMS/4
+            |  (ReaderId, KMSId, RunId, pair(pubTerm(const_VerifyRequest_pub()), pair(AgentId, pair(AgentLtKeyId, pair(pair(aenc(pair(sessionKey1, sessionKey2), pk(ltk)), ClientId), SigSessionKey)))))
+            |  EnvGroup EnvOut
+    
+
+
+    rule Reader_RecvEncryptedSessionKeyVerifyResponse EnvRule:
+        Pr: (Proto)_Reader_S2/10
+            |  (RunId, ReaderId, KMSId, AgentId, ClientId, ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId)
+            |  EnvGroup Env
+            (Proto)_In_KMS/4
+            |  (KMSId, ReaderId, RunId, pubTerm(const_VerifyResponse_pub()))
+            |  EnvGroup EnvIn
+        Ac:
+        Cncl:
+            (Proto)_Reader_S3/10
+            |  (RunId, ReaderId, KMSId, AgentId, ClientId, ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId)
+            |  EnvGroup Env
+    
+
+
+    rule Reader_DecryptMessage1 EnvRule:
+        Pr: (Proto)_Reader_S3/10
+            |  (RunId, ReaderId, KMSId, AgentId, ClientId, ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId)
+            |  EnvGroup Env
+            In/1
+            |  (pair(pubTerm(const_Log_pub()), pair(pubTerm(const_Message_pub()), senc(msg, sessionKey1))))
+            |  EnvGroup EnvIn
+        Ac:
+        Cncl:
+            (Proto)_Reader_S3/10
+            |  (RunId, ReaderId, KMSId, AgentId, ClientId, ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId)
+            |  EnvGroup Env
+    
+
+
+    rule Reader_DecryptMessage2 EnvRule:
+        Pr: (Proto)_Reader_S3/10
+            |  (RunId, ReaderId, KMSId, AgentId, ClientId, ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId)
+            |  EnvGroup Env
+            In/1
+            |  (pair(pubTerm(const_Log_pub()), pair(pubTerm(const_Message_pub()), senc(msg, sessionKey2))))
+            |  EnvGroup EnvIn
+        Ac:
+        Cncl:
+            (Proto)_Reader_S3/10
+            |  (RunId, ReaderId, KMSId, AgentId, ClientId, ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId)
+            |  EnvGroup Env
+    
+
+==== Protocol Format ==========
+
+    Fact signature Environment
+        Fr/1
+        !(Proto)_Ltk/2
+        !(Proto)_Pk/2
+        Out/1
+        !(Proto)_KmsSignKey/3
+        (Proto)_Out_KMS/4
+        (Proto)_Sec/4
+        (Proto)_In_KMS/4
+        (Setup)_Agent/7
+        In/1
+        (Proto)_Client_Init/5
+        (Proto)_Client_S1/9
+        (Proto)_Client_S2/9
+        (Proto)_Client_S3/9
+        (Proto)_Client_S4/10
+        (Proto)_Client_S5/11
+        (Proto)_Client_S6/11
+        (Proto)_Client_S7/11
+        !(Proto)_KMS_Init/1
+        (Proto)_KMS_Sign_S1/6
+        (Proto)_KMS_Sign_S2/6
+        (Proto)_KMS_Verify_S1/7
+        (Proto)_KMS_Verify_S2/7
+        (Proto)_Reader_Init/4
+        (Proto)_Reader_S1/10
+        (Proto)_Reader_S2/10
+        (Proto)_Reader_S3/10
+    
+
+    Fact signature Action
+        (Proto)_Reveal/1
+        (Proto)_LtkReveal/1
+        (Proto)_LtkRevealKey/1
+        (Proto)_CreateSignKey/3
+        (Proto)_KmsSignKeyReveal/1
+        (Proto)_KmsSignKeyRevealOwner/1
+        (Proto)_ChanOut_KMS/4
+        (Proto)_ChanIn_KMS/4
+        (Proto)_AgentStarted/0
+        (Proto)_AgentSignResponse/4
+        (Proto)_AgentSecureSessionRequest/5
+        (Proto)_AgentSecureSessionResponse/6
+        (Proto)_SecretX/1
+        (Proto)_AgentSendEncryptedSessionKey/1
+        (Proto)_Agent_Finish/1
+        (Proto)_Secret/1
+        (Proto)_Commit/3
+        (Proto)_Running/3
+        (Proto)_HonestReader/1
+        (Proto)_HonestKmsOwner/1
+        (Proto)_AgentHandshakeCompleted/10
+        (Proto)_AgentRecvLoop/10
+        (Proto)_AgentSendLoop/10
+        (Proto)_ClientStarted/0
+        (Proto)_ClientSecureSessionRequest/5
+        (Proto)_ClientSignResponse/4
+        (Proto)_SecretY/1
+        (Proto)_ClientSendSessionResponse/1
+        (Proto)_ClientSecureSessionResponse/9
+        (Proto)_Client_Finish/1
+        (Proto)_ClientHandshakeCompleted/8
+        (Proto)_ClientSendMessage/1
+        (Proto)_ClientSendLoop/8
+        (Proto)_ClientRecvLoop/8
+        (Proto)_KMSStarted/0
+        (Proto)_KMSSign/1
+        (Proto)_KMSSignResponse/4
+    
+
+    Fact signature State
+        Agent:
+            (St)_Agent_1/8
+            (St)_Agent_2/9
+            (St)_Agent_3/9
+            (St)_Agent_4/12
+            (St)_Agent_5/12
+            (St)_Agent_6/12
+            (St)_Agent_7/12
+            (St)_Agent_8/13
+            (St)_Agent_9/13
+            (St)_Agent_10/13
+    
+
+    Environment Rules
+        rule Register_pk EnvRule:
+            Pr: Fr/1
+                |  (ltk)
+                |  EnvGroup EnvIn
+            Ac:
+            Cncl:
+                !(Proto)_Ltk/2
+                |  (A, ltk)
+                |  EnvGroup Env
+                !(Proto)_Pk/2
+                |  (A, pk(ltk))
+                |  EnvGroup Env
+        
+
+        rule Get_pk EnvRule:
+            Pr: !(Proto)_Pk/2
+                |  (A, pubkey)
+                |  EnvGroup Env
+            Ac:
+            Cncl:
+                Out/1
+                |  (pubkey)
+                |  EnvGroup EnvOut
+        
+
+        rule Reveal_ltk EnvRule:
+            Pr: !(Proto)_Ltk/2
+                |  (A, ltk)
+                |  EnvGroup Env
+            Ac: (Proto)_Reveal/1
+                |  (A)
+                |  ActionGroup
+                (Proto)_LtkReveal/1
+                |  (A)
+                |  ActionGroup
+                (Proto)_LtkRevealKey/1
+                |  (ltk)
+                |  ActionGroup
+            Cncl:
+                Out/1
+                |  (ltk)
+                |  EnvGroup EnvOut
+        
+
+        rule Register_KmsSignKey EnvRule:
+            Pr: Fr/1
+                |  (SignKey)
+                |  EnvGroup EnvIn
+            Ac: (Proto)_CreateSignKey/3
+                |  (KeyOwnerId, LtkARN, SignKey)
+                |  ActionGroup
+            Cncl:
+                !(Proto)_KmsSignKey/3
+                |  (KeyOwnerId, LtkARN, SignKey)
+                |  EnvGroup Env
+        
+
+        rule Reveal_KmsSignKey EnvRule:
+            Pr: !(Proto)_KmsSignKey/3
+                |  (KeyOwnerId, LtkARN, SignKey)
+                |  EnvGroup Env
+            Ac: (Proto)_KmsSignKeyReveal/1
+                |  (LtkARN)
+                |  ActionGroup
+                (Proto)_KmsSignKeyRevealOwner/1
+                |  (KeyOwnerId)
+                |  ActionGroup
+            Cncl:
+                Out/1
+                |  (SignKey)
+                |  EnvGroup EnvOut
+        
+
+        rule ChanOut_KMS EnvRule:
+            Pr: (Proto)_Out_KMS/4
+                |  (A, B, clientRunId, x)
+                |  EnvGroup EnvOut
+            Ac: (Proto)_ChanOut_KMS/4
+                |  (A, B, clientRunId, x)
+                |  ActionGroup
+            Cncl:
+                (Proto)_Sec/4
+                |  (A, B, clientRunId, x)
+                |  EnvGroup Env
+        
+
+        rule ChanIn_KMS EnvRule:
+            Pr: (Proto)_Sec/4
+                |  (A, B, clientRunId, x)
+                |  EnvGroup Env
+            Ac: (Proto)_ChanIn_KMS/4
+                |  (A, B, clientRunId, x)
+                |  ActionGroup
+            Cncl:
+                (Proto)_In_KMS/4
+                |  (A, B, clientRunId, x)
+                |  EnvGroup EnvIn
+        
+
+        rule Agent_Init EnvRule:
+            Pr: Fr/1
+                |  (RunId)
+                |  EnvGroup EnvIn
+                !(Proto)_Pk/2
+                |  (ReaderId, logPk)
+                |  EnvGroup Env
+            Ac:
+            Cncl:
+                (Setup)_Agent/7
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk)
+                |  EnvGroup EnvIn
+        
+
+        rule Client_Init EnvRule:
+            Pr: Fr/1
+                |  (RunId)
+                |  EnvGroup EnvIn
+            Ac:
+            Cncl:
+                (Proto)_Client_Init/5
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId)
+                |  EnvGroup Env
+        
+
+        rule Client_RecvSecureSessionRequest EnvRule:
+            Pr: (Proto)_Client_Init/5
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId)
+                |  EnvGroup Env
+                In/1
+                |  (pair(pubTerm(const_SecureSessionRequest_pub()), pair(exp(pubTerm(const_g_pub()), z), pair(SigX, pair(AgentLtKeyId, ReaderId)))))
+                |  EnvGroup EnvIn
+            Ac: (Proto)_ClientStarted/0
+                |  ()
+                |  ActionGroup
+                (Proto)_ClientSecureSessionRequest/5
+                |  (AgentId, ClientId, exp(pubTerm(const_g_pub()), z), SigX, AgentLtKeyId)
+                |  ActionGroup
+            Cncl:
+                (Proto)_Client_S1/9
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, exp(pubTerm(const_g_pub()), z), SigX, ReaderId)
+                |  EnvGroup Env
+        
+
+        rule Client_SendVerifyRequest EnvRule:
+            Pr: (Proto)_Client_S1/9
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId)
+                |  EnvGroup Env
+            Ac:
+            Cncl:
+                (Proto)_Client_S2/9
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId)
+                |  EnvGroup Env
+                (Proto)_Out_KMS/4
+                |  (ClientId, KMSId, RunId, pair(pubTerm(const_VerifyRequest_pub()), pair(AgentId, pair(AgentLtKeyId, pair(pair(X, pair(ReaderId, ClientId)), SigX)))))
+                |  EnvGroup EnvOut
+        
+
+        rule Client_RecvVerifyResponse EnvRule:
+            Pr: (Proto)_Client_S2/9
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId)
+                |  EnvGroup Env
+                (Proto)_In_KMS/4
+                |  (KMSId, ClientId, RunId, pubTerm(const_VerifyResponse_pub()))
+                |  EnvGroup EnvIn
+            Ac:
+            Cncl:
+                (Proto)_Client_S3/9
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId)
+                |  EnvGroup Env
+        
+
+        rule Client_SendSignRequest EnvRule:
+            Pr: (Proto)_Client_S3/9
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId)
+                |  EnvGroup Env
+                Fr/1
+                |  (y)
+                |  EnvGroup EnvIn
+            Ac:
+            Cncl:
+                (Proto)_Client_S4/10
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y)
+                |  EnvGroup Env
+                (Proto)_Out_KMS/4
+                |  (ClientId, KMSId, RunId, pair(pubTerm(const_SignRequest_pub()), pair(ClientLtKeyId, pair(exp(pubTerm(const_g_pub()), y), AgentId))))
+                |  EnvGroup EnvOut
+        
+
+        rule Client_RecvSignResponse EnvRule:
+            Pr: (Proto)_Client_S4/10
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y)
+                |  EnvGroup Env
+                (Proto)_In_KMS/4
+                |  (KMSId, ClientId, RunId, pair(pubTerm(const_SignResponse_pub()), SigY))
+                |  EnvGroup EnvIn
+            Ac: (Proto)_ClientSignResponse/4
+                |  (KMSId, ClientId, RunId, pair(pubTerm(const_SignResponse_pub()), SigY))
+                |  ActionGroup
+            Cncl:
+                (Proto)_Client_S5/11
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y, SigY)
+                |  EnvGroup Env
+        
+
+        rule Client_SendSecureSessionResponse EnvRule:
+            Pr: (Proto)_Client_S5/11
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y, SigY)
+                |  EnvGroup Env
+            Ac: (Proto)_SecretY/1
+                |  (y)
+                |  ActionGroup
+                (Proto)_ClientSendSessionResponse/1
+                |  (ClientId)
+                |  ActionGroup
+                (Proto)_ClientSecureSessionResponse/9
+                |  (ClientId, AgentId, X, SigX, exp(pubTerm(const_g_pub()), y), SigY, AgentLtKeyId, ClientLtKeyId, hash(exp(X, y)))
+                |  ActionGroup
+                (Proto)_Running/3
+                |  (pubTerm(const_Client_pub()), pubTerm(const_Agent_pub()), pair(AgentId, pair(ClientId, pair(kdf1(exp(X, y)), kdf2(exp(X, y))))))
+                |  ActionGroup
+            Cncl:
+                (Proto)_Client_S6/11
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y, SigY)
+                |  EnvGroup Env
+                Out/1
+                |  (pair(pubTerm(const_SecureSessionResponse_pub()), pair(exp(pubTerm(const_g_pub()), y), pair(SigY, pair(ClientLtKeyId, hash(exp(X, y)))))))
+                |  EnvGroup EnvOut
+                Out/1
+                |  (pair(pubTerm(const_Log_pub()), pair(pubTerm(const_SecureSessionResponse_pub()), pair(exp(pubTerm(const_g_pub()), y), pair(SigY, pair(ClientLtKeyId, hash(exp(X, y))))))))
+                |  EnvGroup EnvOut
+        
+
+        rule Client_RecvHandshakeComplete EnvRule:
+            Pr: (Proto)_Client_S6/11
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y, SigY)
+                |  EnvGroup Env
+                In/1
+                |  (pair(pubTerm(const_HandshakeComplete_pub()), senc(pair(pubTerm(const_HandshakeCompletePayload_pub()), payload), kdf1(exp(X, y)))))
+                |  EnvGroup EnvIn
+            Ac: (Proto)_Client_Finish/1
+                |  (ClientId)
+                |  ActionGroup
+                (Proto)_Secret/1
+                |  (pair(kdf1(exp(X, y)), kdf2(exp(X, y))))
+                |  ActionGroup
+                (Proto)_Commit/3
+                |  (pubTerm(const_Client_pub()), pubTerm(const_Agent_pub()), pair(AgentId, pair(ClientId, pair(kdf1(exp(X, y)), kdf2(exp(X, y))))))
+                |  ActionGroup
+                (Proto)_HonestReader/1
+                |  (ReaderId)
+                |  ActionGroup
+                (Proto)_HonestKmsOwner/1
+                |  (AgentId)
+                |  ActionGroup
+                (Proto)_HonestKmsOwner/1
+                |  (ClientId)
+                |  ActionGroup
+                (Proto)_ClientHandshakeCompleted/8
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, y)
+                |  ActionGroup
+            Cncl:
+                (Proto)_Client_S7/11
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y, SigY)
+                |  EnvGroup Env
+        
+
+        rule Client_SendMessage EnvRule:
+            Pr: (Proto)_Client_S7/11
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y, SigY)
+                |  EnvGroup Env
+                In/1
+                |  (payload)
+                |  EnvGroup EnvIn
+            Ac: (Proto)_ClientSendMessage/1
+                |  (pair(pubTerm(const_Message_pub()), senc(payload, kdf2(exp(X, y)))))
+                |  ActionGroup
+                (Proto)_ClientSendLoop/8
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, y)
+                |  ActionGroup
+            Cncl:
+                (Proto)_Client_S7/11
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y, SigY)
+                |  EnvGroup Env
+                Out/1
+                |  (pair(pubTerm(const_Message_pub()), senc(payload, kdf2(exp(X, y)))))
+                |  EnvGroup EnvOut
+                Out/1
+                |  (pair(pubTerm(const_Log_pub()), pair(pubTerm(const_Message_pub()), senc(payload, kdf2(exp(X, y))))))
+                |  EnvGroup EnvOut
+        
+
+        rule Client_RecvMessage EnvRule:
+            Pr: (Proto)_Client_S7/11
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y, SigY)
+                |  EnvGroup Env
+                In/1
+                |  (pair(pubTerm(const_Message_pub()), senc(msg, kdf1(exp(X, y)))))
+                |  EnvGroup EnvIn
+            Ac: (Proto)_ClientRecvLoop/8
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, y)
+                |  ActionGroup
+            Cncl:
+                (Proto)_Client_S7/11
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y, SigY)
+                |  EnvGroup Env
+        
+
+        rule KMS_Init EnvRule:
+            Pr:
+            Ac: (Proto)_KMSStarted/0
+                |  ()
+                |  ActionGroup
+            Cncl:
+                !(Proto)_KMS_Init/1
+                |  (KMSId)
+                |  EnvGroup Env
+        
+
+        rule KMS_RecvSignRequest EnvRule:
+            Pr: !(Proto)_KMS_Init/1
+                |  (KMSId)
+                |  EnvGroup Env
+                !(Proto)_KmsSignKey/3
+                |  (AgentId, AgentLtKeyId, AgentLtKey)
+                |  EnvGroup Env
+                (Proto)_In_KMS/4
+                |  (AgentId, KMSId, AgentRunId, pair(pubTerm(const_SignRequest_pub()), pair(AgentLtKeyId, payload)))
+                |  EnvGroup EnvIn
+            Ac: (Proto)_KMSSign/1
+                |  (AgentId)
+                |  ActionGroup
+            Cncl:
+                (Proto)_KMS_Sign_S1/6
+                |  (KMSId, AgentId, AgentRunId, AgentLtKeyId, AgentLtKey, payload)
+                |  EnvGroup Env
+        
+
+        rule KMS_SendSignResponse EnvRule:
+            Pr: (Proto)_KMS_Sign_S1/6
+                |  (KMSId, AgentId, AgentRunId, AgentLtKeyId, AgentLtKey, payload)
+                |  EnvGroup Env
+            Ac: (Proto)_KMSSignResponse/4
+                |  (KMSId, AgentId, AgentRunId, pair(pubTerm(const_SignResponse_pub()), sign(payload, AgentLtKey)))
+                |  ActionGroup
+            Cncl:
+                (Proto)_KMS_Sign_S2/6
+                |  (KMSId, AgentId, AgentRunId, AgentLtKeyId, AgentLtKey, payload)
+                |  EnvGroup Env
+                (Proto)_Out_KMS/4
+                |  (KMSId, AgentId, AgentRunId, pair(pubTerm(const_SignResponse_pub()), sign(payload, AgentLtKey)))
+                |  EnvGroup EnvOut
+        
+
+        rule KMS_RecvVerifyRequest EnvRule:
+            Pr: !(Proto)_KMS_Init/1
+                |  (KMSId)
+                |  EnvGroup Env
+                !(Proto)_KmsSignKey/3
+                |  (AgentId, AgentLtKeyId, AgentLtKey)
+                |  EnvGroup Env
+                (Proto)_In_KMS/4
+                |  (ClientId, KMSId, ClientRunId, pair(pubTerm(const_VerifyRequest_pub()), pair(AgentId, pair(AgentLtKeyId, pair(payload, sign(payload, AgentLtKey))))))
+                |  EnvGroup EnvIn
+            Ac:
+            Cncl:
+                (Proto)_KMS_Verify_S1/7
+                |  (KMSId, ClientId, ClientRunId, AgentId, AgentLtKeyId, AgentLtKey, payload)
+                |  EnvGroup Env
+        
+
+        rule KMS_SendVerifyResponse EnvRule:
+            Pr: (Proto)_KMS_Verify_S1/7
+                |  (KMSId, ClientId, ClientRunId, AgentId, AgentLtKeyId, AgentLtKey, payload)
+                |  EnvGroup Env
+            Ac:
+            Cncl:
+                (Proto)_KMS_Verify_S2/7
+                |  (KMSId, ClientId, ClientRunId, AgentId, AgentLtKeyId, AgentLtKey, payload)
+                |  EnvGroup Env
+                (Proto)_Out_KMS/4
+                |  (KMSId, ClientId, ClientRunId, pubTerm(const_VerifyResponse_pub()))
+                |  EnvGroup EnvOut
+        
+
+        rule Reader_Init EnvRule:
+            Pr: !(Proto)_Ltk/2
+                |  (ReaderId, ltk)
+                |  EnvGroup Env
+                Fr/1
+                |  (RunId)
+                |  EnvGroup EnvIn
+            Ac:
+            Cncl:
+                (Proto)_Reader_Init/4
+                |  (RunId, ReaderId, KMSId, ltk)
+                |  EnvGroup Env
+        
+
+        rule Reader_RecvEncryptedSessionKey EnvRule:
+            Pr: (Proto)_Reader_Init/4
+                |  (RunId, ReaderId, KMSId, ltk)
+                |  EnvGroup Env
+                In/1
+                |  (pair(pubTerm(const_EncryptedSessionKey_pub()), pair(aenc(pair(sessionKey1, sessionKey2), pk(ltk)), pair(SigSessionKey, pair(AgentId, pair(AgentLtKeyId, ClientId))))))
+                |  EnvGroup EnvIn
+            Ac:
+            Cncl:
+                (Proto)_Reader_S1/10
+                |  (RunId, ReaderId, KMSId, AgentId, ClientId, ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId)
+                |  EnvGroup Env
+        
+
+        rule Reader_SendEncryptedSessionKeyVerifyRequest EnvRule:
+            Pr: (Proto)_Reader_S1/10
+                |  (RunId, ReaderId, KMSId, AgentId, ClientId, ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId)
+                |  EnvGroup Env
+            Ac:
+            Cncl:
+                (Proto)_Reader_S2/10
+                |  (RunId, ReaderId, KMSId, AgentId, ClientId, ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId)
+                |  EnvGroup Env
+                (Proto)_Out_KMS/4
+                |  (ReaderId, KMSId, RunId, pair(pubTerm(const_VerifyRequest_pub()), pair(AgentId, pair(AgentLtKeyId, pair(pair(aenc(pair(sessionKey1, sessionKey2), pk(ltk)), ClientId), SigSessionKey)))))
+                |  EnvGroup EnvOut
+        
+
+        rule Reader_RecvEncryptedSessionKeyVerifyResponse EnvRule:
+            Pr: (Proto)_Reader_S2/10
+                |  (RunId, ReaderId, KMSId, AgentId, ClientId, ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId)
+                |  EnvGroup Env
+                (Proto)_In_KMS/4
+                |  (KMSId, ReaderId, RunId, pubTerm(const_VerifyResponse_pub()))
+                |  EnvGroup EnvIn
+            Ac:
+            Cncl:
+                (Proto)_Reader_S3/10
+                |  (RunId, ReaderId, KMSId, AgentId, ClientId, ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId)
+                |  EnvGroup Env
+        
+
+        rule Reader_DecryptMessage1 EnvRule:
+            Pr: (Proto)_Reader_S3/10
+                |  (RunId, ReaderId, KMSId, AgentId, ClientId, ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId)
+                |  EnvGroup Env
+                In/1
+                |  (pair(pubTerm(const_Log_pub()), pair(pubTerm(const_Message_pub()), senc(msg, sessionKey1))))
+                |  EnvGroup EnvIn
+            Ac:
+            Cncl:
+                (Proto)_Reader_S3/10
+                |  (RunId, ReaderId, KMSId, AgentId, ClientId, ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId)
+                |  EnvGroup Env
+        
+
+        rule Reader_DecryptMessage2 EnvRule:
+            Pr: (Proto)_Reader_S3/10
+                |  (RunId, ReaderId, KMSId, AgentId, ClientId, ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId)
+                |  EnvGroup Env
+                In/1
+                |  (pair(pubTerm(const_Log_pub()), pair(pubTerm(const_Message_pub()), senc(msg, sessionKey2))))
+                |  EnvGroup EnvIn
+            Ac:
+            Cncl:
+                (Proto)_Reader_S3/10
+                |  (RunId, ReaderId, KMSId, AgentId, ClientId, ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId)
+                |  EnvGroup Env
+        
+
+    Protocol Rules
+        "Agent"
+        rule Agent_SendSignRequest StateRule "Agent":
+            Pr: (Setup)_Agent/7
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk)
+                |  EnvGroup EnvIn
+                Fr/1
+                |  (x)
+                |  EnvGroup EnvIn
+            Ac: (Proto)_AgentStarted/0
+                |  ()
+                |  ActionGroup
+            Cncl:
+                (St)_Agent_1/8
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x)
+                |  StateGroup
+                (Proto)_Out_KMS/4
+                |  (AgentId, KMSId, RunId, pair(pubTerm(const_SignRequest_pub()), pair(AgentLtKeyId, pair(exp(pubTerm(const_g_pub()), x), pair(ReaderId, ClientId)))))
+                |  EnvGroup EnvOut
+        
+
+        "Agent"
+        rule Agent_RecvSignResponse StateRule "Agent":
+            Pr: (St)_Agent_1/8
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x)
+                |  StateGroup
+                (Proto)_In_KMS/4
+                |  (KMSId, AgentId, RunId, pair(pubTerm(const_SignResponse_pub()), SigX))
+                |  EnvGroup EnvIn
+            Ac: (Proto)_AgentSignResponse/4
+                |  (KMSId, AgentId, RunId, pair(pubTerm(const_SignResponse_pub()), SigX))
+                |  ActionGroup
+            Cncl:
+                (St)_Agent_2/9
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX)
+                |  StateGroup
+        
+
+        "Agent"
+        rule Agent_SendSecureSessionRequest StateRule "Agent":
+            Pr: (St)_Agent_2/9
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX)
+                |  StateGroup
+            Ac: (Proto)_AgentSecureSessionRequest/5
+                |  (AgentId, ClientId, exp(pubTerm(const_g_pub()), x), SigX, AgentLtKeyId)
+                |  ActionGroup
+            Cncl:
+                (St)_Agent_3/9
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX)
+                |  StateGroup
+                Out/1
+                |  (pair(pubTerm(const_SecureSessionRequest_pub()), pair(exp(pubTerm(const_g_pub()), x), pair(SigX, pair(AgentLtKeyId, ReaderId)))))
+                |  EnvGroup EnvOut
+                Out/1
+                |  (pair(pubTerm(const_Log_pub()), pair(pubTerm(const_SecureSessionRequest_pub()), pair(exp(pubTerm(const_g_pub()), x), pair(SigX, pair(AgentLtKeyId, ReaderId))))))
+                |  EnvGroup EnvOut
+        
+
+        "Agent"
+        rule Agent_RecvSecureSessionResponse StateRule "Agent":
+            Pr: (St)_Agent_3/9
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX)
+                |  StateGroup
+                In/1
+                |  (pair(pubTerm(const_SecureSessionResponse_pub()), pair(exp(pubTerm(const_g_pub()), z), pair(SigY, pair(ClientLtKeyId, hash(exp(exp(pubTerm(const_g_pub()), z), x)))))))
+                |  EnvGroup EnvIn
+            Ac: (Proto)_AgentSecureSessionResponse/6
+                |  (ClientId, AgentId, exp(pubTerm(const_g_pub()), z), SigY, ClientLtKeyId, hash(exp(exp(pubTerm(const_g_pub()), z), x)))
+                |  ActionGroup
+            Cncl:
+                (St)_Agent_4/12
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, exp(pubTerm(const_g_pub()), z), SigY)
+                |  StateGroup
+        
+
+        "Agent"
+        rule Agent_SendVerifyRequest StateRule "Agent":
+            Pr: (St)_Agent_4/12
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY)
+                |  StateGroup
+            Ac:
+            Cncl:
+                (St)_Agent_5/12
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY)
+                |  StateGroup
+                (Proto)_Out_KMS/4
+                |  (AgentId, KMSId, RunId, pair(pubTerm(const_VerifyRequest_pub()), pair(ClientId, pair(ClientLtKeyId, pair(pair(Y, AgentId), SigY)))))
+                |  EnvGroup EnvOut
+        
+
+        "Agent"
+        rule Agent_RecvVerifyResponse StateRule "Agent":
+            Pr: (St)_Agent_5/12
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY)
+                |  StateGroup
+                (Proto)_In_KMS/4
+                |  (KMSId, AgentId, RunId, pubTerm(const_VerifyResponse_pub()))
+                |  EnvGroup EnvIn
+            Ac: (Proto)_SecretX/1
+                |  (x)
+                |  ActionGroup
+            Cncl:
+                (St)_Agent_6/12
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY)
+                |  StateGroup
+        
+
+        "Agent"
+        rule Agent_SendSessionKeySignRequest StateRule "Agent":
+            Pr: (St)_Agent_6/12
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY)
+                |  StateGroup
+            Ac:
+            Cncl:
+                (St)_Agent_7/12
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY)
+                |  StateGroup
+                (Proto)_Out_KMS/4
+                |  (AgentId, KMSId, RunId, pair(pubTerm(const_SignRequest_pub()), pair(AgentLtKeyId, pair(aenc(pair(kdf1(exp(Y, x)), kdf2(exp(Y, x))), logPk), ClientId))))
+                |  EnvGroup EnvOut
+        
+
+        "Agent"
+        rule Agent_RecvSessionKeySignResponse StateRule "Agent":
+            Pr: (St)_Agent_7/12
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY)
+                |  StateGroup
+                (Proto)_In_KMS/4
+                |  (KMSId, AgentId, RunId, pair(pubTerm(const_SignResponse_pub()), SigSessionKey))
+                |  EnvGroup EnvIn
+            Ac:
+            Cncl:
+                (St)_Agent_8/13
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey)
+                |  StateGroup
+        
+
+        "Agent"
+        rule Agent_SendEncryptedSessionKey StateRule "Agent":
+            Pr: (St)_Agent_8/13
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey)
+                |  StateGroup
+            Ac: (Proto)_AgentSendEncryptedSessionKey/1
+                |  (x)
+                |  ActionGroup
+            Cncl:
+                (St)_Agent_9/13
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey)
+                |  StateGroup
+                Out/1
+                |  (pair(pubTerm(const_EncryptedSessionKey_pub()), pair(aenc(pair(kdf1(exp(Y, x)), kdf2(exp(Y, x))), logPk), pair(SigSessionKey, pair(AgentId, pair(AgentLtKeyId, ClientId))))))
+                |  EnvGroup EnvOut
+        
+
+        "Agent"
+        rule Agent_SendHandshakeComplete StateRule "Agent":
+            Pr: (St)_Agent_9/13
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey)
+                |  StateGroup
+                In/1
+                |  (payload)
+                |  EnvGroup EnvIn
+            Ac: (Proto)_Agent_Finish/1
+                |  (AgentId)
+                |  ActionGroup
+                (Proto)_Secret/1
+                |  (pair(kdf1(exp(Y, x)), kdf2(exp(Y, x))))
+                |  ActionGroup
+                (Proto)_Commit/3
+                |  (pubTerm(const_Agent_pub()), pubTerm(const_Client_pub()), pair(AgentId, pair(ClientId, pair(kdf1(exp(Y, x)), kdf2(exp(Y, x))))))
+                |  ActionGroup
+                (Proto)_Running/3
+                |  (pubTerm(const_Agent_pub()), pubTerm(const_Client_pub()), pair(AgentId, pair(ClientId, pair(kdf1(exp(Y, x)), kdf2(exp(Y, x))))))
+                |  ActionGroup
+                (Proto)_HonestReader/1
+                |  (ReaderId)
+                |  ActionGroup
+                (Proto)_HonestKmsOwner/1
+                |  (AgentId)
+                |  ActionGroup
+                (Proto)_HonestKmsOwner/1
+                |  (ClientId)
+                |  ActionGroup
+                (Proto)_AgentHandshakeCompleted/10
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, ClientLtKeyId, Y)
+                |  ActionGroup
+            Cncl:
+                (St)_Agent_10/13
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey)
+                |  StateGroup
+                Out/1
+                |  (pair(pubTerm(const_HandshakeComplete_pub()), senc(pair(pubTerm(const_HandshakeCompletePayload_pub()), payload), kdf1(exp(Y, x)))))
+                |  EnvGroup EnvOut
+                Out/1
+                |  (pair(pubTerm(const_Log_pub()), pair(pubTerm(const_HandshakeComplete_pub()), senc(pair(pubTerm(const_HandshakeCompletePayload_pub()), payload), kdf1(exp(Y, x))))))
+                |  EnvGroup EnvOut
+        
+
+        "Agent"
+        rule Agent_ReceiveMessages StateRule "Agent":
+            Pr: (St)_Agent_10/13
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey)
+                |  StateGroup
+                In/1
+                |  (pair(pubTerm(const_Message_pub()), senc(payload, kdf2(exp(Y, x)))))
+                |  EnvGroup EnvIn
+            Ac: (Proto)_AgentRecvLoop/10
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, ClientLtKeyId, Y)
+                |  ActionGroup
+            Cncl:
+                (St)_Agent_10/13
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey)
+                |  StateGroup
+        
+
+        "Agent"
+        rule Agent_SendMessages StateRule "Agent":
+            Pr: (St)_Agent_10/13
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey)
+                |  StateGroup
+                In/1
+                |  (payload)
+                |  EnvGroup EnvIn
+            Ac: (Proto)_AgentSendLoop/10
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, ClientLtKeyId, Y)
+                |  ActionGroup
+            Cncl:
+                (St)_Agent_10/13
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey)
+                |  StateGroup
+                Out/1
+                |  (pair(pubTerm(const_Message_pub()), senc(payload, kdf1(exp(Y, x)))))
+                |  EnvGroup EnvOut
+                Out/1
+                |  (pair(pubTerm(const_Log_pub()), pair(pubTerm(const_Message_pub()), senc(payload, kdf1(exp(Y, x))))))
+                |  EnvGroup EnvOut
+        
+
+==== Interface Model ==========
+
+    Fact signature Buffer
+        Agent:
+            (Proto)_FrFact_Agent/2
+            |  (added_rid, new_x)
+            |  EnvGroup EnvIn
+            (Proto)_In_KMS_Agent/5
+            |  (added_rid, new_x, new_x_1, new_x_2, new_x_3)
+            |  EnvGroup EnvIn
+            (Proto)_InFact_Agent/2
+            |  (added_rid, new_x)
+            |  EnvGroup EnvIn
+            (Proto)_Out_KMS_Agent/5
+            |  (added_rid, new_x, new_x_1, new_x_2, new_x_3)
+            |  EnvGroup EnvOut
+            (Proto)_OutFact_Agent/2
+            |  (added_rid, new_x)
+            |  EnvGroup EnvOut
+    
+
+    Environment Rules minus Setup Rules
+        rule Register_pk EnvRule:
+            Pr: Fr/1
+                |  (ltk)
+                |  EnvGroup EnvIn
+            Ac:
+            Cncl:
+                !(Proto)_Ltk/2
+                |  (A, ltk)
+                |  EnvGroup Env
+                !(Proto)_Pk/2
+                |  (A, pk(ltk))
+                |  EnvGroup Env
+        
+
+        rule Get_pk EnvRule:
+            Pr: !(Proto)_Pk/2
+                |  (A, pubkey)
+                |  EnvGroup Env
+            Ac:
+            Cncl:
+                Out/1
+                |  (pubkey)
+                |  EnvGroup EnvOut
+        
+
+        rule Reveal_ltk EnvRule:
+            Pr: !(Proto)_Ltk/2
+                |  (A, ltk)
+                |  EnvGroup Env
+            Ac: (Proto)_Reveal/1
+                |  (A)
+                |  ActionGroup
+                (Proto)_LtkReveal/1
+                |  (A)
+                |  ActionGroup
+                (Proto)_LtkRevealKey/1
+                |  (ltk)
+                |  ActionGroup
+            Cncl:
+                Out/1
+                |  (ltk)
+                |  EnvGroup EnvOut
+        
+
+        rule Register_KmsSignKey EnvRule:
+            Pr: Fr/1
+                |  (SignKey)
+                |  EnvGroup EnvIn
+            Ac: (Proto)_CreateSignKey/3
+                |  (KeyOwnerId, LtkARN, SignKey)
+                |  ActionGroup
+            Cncl:
+                !(Proto)_KmsSignKey/3
+                |  (KeyOwnerId, LtkARN, SignKey)
+                |  EnvGroup Env
+        
+
+        rule Reveal_KmsSignKey EnvRule:
+            Pr: !(Proto)_KmsSignKey/3
+                |  (KeyOwnerId, LtkARN, SignKey)
+                |  EnvGroup Env
+            Ac: (Proto)_KmsSignKeyReveal/1
+                |  (LtkARN)
+                |  ActionGroup
+                (Proto)_KmsSignKeyRevealOwner/1
+                |  (KeyOwnerId)
+                |  ActionGroup
+            Cncl:
+                Out/1
+                |  (SignKey)
+                |  EnvGroup EnvOut
+        
+
+        rule ChanOut_KMS EnvRule:
+            Pr: (Proto)_Out_KMS/4
+                |  (A, B, clientRunId, x)
+                |  EnvGroup EnvOut
+            Ac: (Proto)_ChanOut_KMS/4
+                |  (A, B, clientRunId, x)
+                |  ActionGroup
+            Cncl:
+                (Proto)_Sec/4
+                |  (A, B, clientRunId, x)
+                |  EnvGroup Env
+        
+
+        rule ChanIn_KMS EnvRule:
+            Pr: (Proto)_Sec/4
+                |  (A, B, clientRunId, x)
+                |  EnvGroup Env
+            Ac: (Proto)_ChanIn_KMS/4
+                |  (A, B, clientRunId, x)
+                |  ActionGroup
+            Cncl:
+                (Proto)_In_KMS/4
+                |  (A, B, clientRunId, x)
+                |  EnvGroup EnvIn
+        
+
+        rule Client_Init EnvRule:
+            Pr: Fr/1
+                |  (RunId)
+                |  EnvGroup EnvIn
+            Ac:
+            Cncl:
+                (Proto)_Client_Init/5
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId)
+                |  EnvGroup Env
+        
+
+        rule Client_RecvSecureSessionRequest EnvRule:
+            Pr: (Proto)_Client_Init/5
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId)
+                |  EnvGroup Env
+                In/1
+                |  (pair(pubTerm(const_SecureSessionRequest_pub()), pair(exp(pubTerm(const_g_pub()), z), pair(SigX, pair(AgentLtKeyId, ReaderId)))))
+                |  EnvGroup EnvIn
+            Ac: (Proto)_ClientStarted/0
+                |  ()
+                |  ActionGroup
+                (Proto)_ClientSecureSessionRequest/5
+                |  (AgentId, ClientId, exp(pubTerm(const_g_pub()), z), SigX, AgentLtKeyId)
+                |  ActionGroup
+            Cncl:
+                (Proto)_Client_S1/9
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, exp(pubTerm(const_g_pub()), z), SigX, ReaderId)
+                |  EnvGroup Env
+        
+
+        rule Client_SendVerifyRequest EnvRule:
+            Pr: (Proto)_Client_S1/9
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId)
+                |  EnvGroup Env
+            Ac:
+            Cncl:
+                (Proto)_Client_S2/9
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId)
+                |  EnvGroup Env
+                (Proto)_Out_KMS/4
+                |  (ClientId, KMSId, RunId, pair(pubTerm(const_VerifyRequest_pub()), pair(AgentId, pair(AgentLtKeyId, pair(pair(X, pair(ReaderId, ClientId)), SigX)))))
+                |  EnvGroup EnvOut
+        
+
+        rule Client_RecvVerifyResponse EnvRule:
+            Pr: (Proto)_Client_S2/9
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId)
+                |  EnvGroup Env
+                (Proto)_In_KMS/4
+                |  (KMSId, ClientId, RunId, pubTerm(const_VerifyResponse_pub()))
+                |  EnvGroup EnvIn
+            Ac:
+            Cncl:
+                (Proto)_Client_S3/9
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId)
+                |  EnvGroup Env
+        
+
+        rule Client_SendSignRequest EnvRule:
+            Pr: (Proto)_Client_S3/9
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId)
+                |  EnvGroup Env
+                Fr/1
+                |  (y)
+                |  EnvGroup EnvIn
+            Ac:
+            Cncl:
+                (Proto)_Client_S4/10
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y)
+                |  EnvGroup Env
+                (Proto)_Out_KMS/4
+                |  (ClientId, KMSId, RunId, pair(pubTerm(const_SignRequest_pub()), pair(ClientLtKeyId, pair(exp(pubTerm(const_g_pub()), y), AgentId))))
+                |  EnvGroup EnvOut
+        
+
+        rule Client_RecvSignResponse EnvRule:
+            Pr: (Proto)_Client_S4/10
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y)
+                |  EnvGroup Env
+                (Proto)_In_KMS/4
+                |  (KMSId, ClientId, RunId, pair(pubTerm(const_SignResponse_pub()), SigY))
+                |  EnvGroup EnvIn
+            Ac: (Proto)_ClientSignResponse/4
+                |  (KMSId, ClientId, RunId, pair(pubTerm(const_SignResponse_pub()), SigY))
+                |  ActionGroup
+            Cncl:
+                (Proto)_Client_S5/11
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y, SigY)
+                |  EnvGroup Env
+        
+
+        rule Client_SendSecureSessionResponse EnvRule:
+            Pr: (Proto)_Client_S5/11
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y, SigY)
+                |  EnvGroup Env
+            Ac: (Proto)_SecretY/1
+                |  (y)
+                |  ActionGroup
+                (Proto)_ClientSendSessionResponse/1
+                |  (ClientId)
+                |  ActionGroup
+                (Proto)_ClientSecureSessionResponse/9
+                |  (ClientId, AgentId, X, SigX, exp(pubTerm(const_g_pub()), y), SigY, AgentLtKeyId, ClientLtKeyId, hash(exp(X, y)))
+                |  ActionGroup
+                (Proto)_Running/3
+                |  (pubTerm(const_Client_pub()), pubTerm(const_Agent_pub()), pair(AgentId, pair(ClientId, pair(kdf1(exp(X, y)), kdf2(exp(X, y))))))
+                |  ActionGroup
+            Cncl:
+                (Proto)_Client_S6/11
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y, SigY)
+                |  EnvGroup Env
+                Out/1
+                |  (pair(pubTerm(const_SecureSessionResponse_pub()), pair(exp(pubTerm(const_g_pub()), y), pair(SigY, pair(ClientLtKeyId, hash(exp(X, y)))))))
+                |  EnvGroup EnvOut
+                Out/1
+                |  (pair(pubTerm(const_Log_pub()), pair(pubTerm(const_SecureSessionResponse_pub()), pair(exp(pubTerm(const_g_pub()), y), pair(SigY, pair(ClientLtKeyId, hash(exp(X, y))))))))
+                |  EnvGroup EnvOut
+        
+
+        rule Client_RecvHandshakeComplete EnvRule:
+            Pr: (Proto)_Client_S6/11
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y, SigY)
+                |  EnvGroup Env
+                In/1
+                |  (pair(pubTerm(const_HandshakeComplete_pub()), senc(pair(pubTerm(const_HandshakeCompletePayload_pub()), payload), kdf1(exp(X, y)))))
+                |  EnvGroup EnvIn
+            Ac: (Proto)_Client_Finish/1
+                |  (ClientId)
+                |  ActionGroup
+                (Proto)_Secret/1
+                |  (pair(kdf1(exp(X, y)), kdf2(exp(X, y))))
+                |  ActionGroup
+                (Proto)_Commit/3
+                |  (pubTerm(const_Client_pub()), pubTerm(const_Agent_pub()), pair(AgentId, pair(ClientId, pair(kdf1(exp(X, y)), kdf2(exp(X, y))))))
+                |  ActionGroup
+                (Proto)_HonestReader/1
+                |  (ReaderId)
+                |  ActionGroup
+                (Proto)_HonestKmsOwner/1
+                |  (AgentId)
+                |  ActionGroup
+                (Proto)_HonestKmsOwner/1
+                |  (ClientId)
+                |  ActionGroup
+                (Proto)_ClientHandshakeCompleted/8
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, y)
+                |  ActionGroup
+            Cncl:
+                (Proto)_Client_S7/11
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y, SigY)
+                |  EnvGroup Env
+        
+
+        rule Client_SendMessage EnvRule:
+            Pr: (Proto)_Client_S7/11
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y, SigY)
+                |  EnvGroup Env
+                In/1
+                |  (payload)
+                |  EnvGroup EnvIn
+            Ac: (Proto)_ClientSendMessage/1
+                |  (pair(pubTerm(const_Message_pub()), senc(payload, kdf2(exp(X, y)))))
+                |  ActionGroup
+                (Proto)_ClientSendLoop/8
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, y)
+                |  ActionGroup
+            Cncl:
+                (Proto)_Client_S7/11
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y, SigY)
+                |  EnvGroup Env
+                Out/1
+                |  (pair(pubTerm(const_Message_pub()), senc(payload, kdf2(exp(X, y)))))
+                |  EnvGroup EnvOut
+                Out/1
+                |  (pair(pubTerm(const_Log_pub()), pair(pubTerm(const_Message_pub()), senc(payload, kdf2(exp(X, y))))))
+                |  EnvGroup EnvOut
+        
+
+        rule Client_RecvMessage EnvRule:
+            Pr: (Proto)_Client_S7/11
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y, SigY)
+                |  EnvGroup Env
+                In/1
+                |  (pair(pubTerm(const_Message_pub()), senc(msg, kdf1(exp(X, y)))))
+                |  EnvGroup EnvIn
+            Ac: (Proto)_ClientRecvLoop/8
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, y)
+                |  ActionGroup
+            Cncl:
+                (Proto)_Client_S7/11
+                |  (RunId, ClientId, KMSId, AgentId, ClientLtKeyId, AgentLtKeyId, X, SigX, ReaderId, y, SigY)
+                |  EnvGroup Env
+        
+
+        rule KMS_Init EnvRule:
+            Pr:
+            Ac: (Proto)_KMSStarted/0
+                |  ()
+                |  ActionGroup
+            Cncl:
+                !(Proto)_KMS_Init/1
+                |  (KMSId)
+                |  EnvGroup Env
+        
+
+        rule KMS_RecvSignRequest EnvRule:
+            Pr: !(Proto)_KMS_Init/1
+                |  (KMSId)
+                |  EnvGroup Env
+                !(Proto)_KmsSignKey/3
+                |  (AgentId, AgentLtKeyId, AgentLtKey)
+                |  EnvGroup Env
+                (Proto)_In_KMS/4
+                |  (AgentId, KMSId, AgentRunId, pair(pubTerm(const_SignRequest_pub()), pair(AgentLtKeyId, payload)))
+                |  EnvGroup EnvIn
+            Ac: (Proto)_KMSSign/1
+                |  (AgentId)
+                |  ActionGroup
+            Cncl:
+                (Proto)_KMS_Sign_S1/6
+                |  (KMSId, AgentId, AgentRunId, AgentLtKeyId, AgentLtKey, payload)
+                |  EnvGroup Env
+        
+
+        rule KMS_SendSignResponse EnvRule:
+            Pr: (Proto)_KMS_Sign_S1/6
+                |  (KMSId, AgentId, AgentRunId, AgentLtKeyId, AgentLtKey, payload)
+                |  EnvGroup Env
+            Ac: (Proto)_KMSSignResponse/4
+                |  (KMSId, AgentId, AgentRunId, pair(pubTerm(const_SignResponse_pub()), sign(payload, AgentLtKey)))
+                |  ActionGroup
+            Cncl:
+                (Proto)_KMS_Sign_S2/6
+                |  (KMSId, AgentId, AgentRunId, AgentLtKeyId, AgentLtKey, payload)
+                |  EnvGroup Env
+                (Proto)_Out_KMS/4
+                |  (KMSId, AgentId, AgentRunId, pair(pubTerm(const_SignResponse_pub()), sign(payload, AgentLtKey)))
+                |  EnvGroup EnvOut
+        
+
+        rule KMS_RecvVerifyRequest EnvRule:
+            Pr: !(Proto)_KMS_Init/1
+                |  (KMSId)
+                |  EnvGroup Env
+                !(Proto)_KmsSignKey/3
+                |  (AgentId, AgentLtKeyId, AgentLtKey)
+                |  EnvGroup Env
+                (Proto)_In_KMS/4
+                |  (ClientId, KMSId, ClientRunId, pair(pubTerm(const_VerifyRequest_pub()), pair(AgentId, pair(AgentLtKeyId, pair(payload, sign(payload, AgentLtKey))))))
+                |  EnvGroup EnvIn
+            Ac:
+            Cncl:
+                (Proto)_KMS_Verify_S1/7
+                |  (KMSId, ClientId, ClientRunId, AgentId, AgentLtKeyId, AgentLtKey, payload)
+                |  EnvGroup Env
+        
+
+        rule KMS_SendVerifyResponse EnvRule:
+            Pr: (Proto)_KMS_Verify_S1/7
+                |  (KMSId, ClientId, ClientRunId, AgentId, AgentLtKeyId, AgentLtKey, payload)
+                |  EnvGroup Env
+            Ac:
+            Cncl:
+                (Proto)_KMS_Verify_S2/7
+                |  (KMSId, ClientId, ClientRunId, AgentId, AgentLtKeyId, AgentLtKey, payload)
+                |  EnvGroup Env
+                (Proto)_Out_KMS/4
+                |  (KMSId, ClientId, ClientRunId, pubTerm(const_VerifyResponse_pub()))
+                |  EnvGroup EnvOut
+        
+
+        rule Reader_Init EnvRule:
+            Pr: !(Proto)_Ltk/2
+                |  (ReaderId, ltk)
+                |  EnvGroup Env
+                Fr/1
+                |  (RunId)
+                |  EnvGroup EnvIn
+            Ac:
+            Cncl:
+                (Proto)_Reader_Init/4
+                |  (RunId, ReaderId, KMSId, ltk)
+                |  EnvGroup Env
+        
+
+        rule Reader_RecvEncryptedSessionKey EnvRule:
+            Pr: (Proto)_Reader_Init/4
+                |  (RunId, ReaderId, KMSId, ltk)
+                |  EnvGroup Env
+                In/1
+                |  (pair(pubTerm(const_EncryptedSessionKey_pub()), pair(aenc(pair(sessionKey1, sessionKey2), pk(ltk)), pair(SigSessionKey, pair(AgentId, pair(AgentLtKeyId, ClientId))))))
+                |  EnvGroup EnvIn
+            Ac:
+            Cncl:
+                (Proto)_Reader_S1/10
+                |  (RunId, ReaderId, KMSId, AgentId, ClientId, ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId)
+                |  EnvGroup Env
+        
+
+        rule Reader_SendEncryptedSessionKeyVerifyRequest EnvRule:
+            Pr: (Proto)_Reader_S1/10
+                |  (RunId, ReaderId, KMSId, AgentId, ClientId, ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId)
+                |  EnvGroup Env
+            Ac:
+            Cncl:
+                (Proto)_Reader_S2/10
+                |  (RunId, ReaderId, KMSId, AgentId, ClientId, ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId)
+                |  EnvGroup Env
+                (Proto)_Out_KMS/4
+                |  (ReaderId, KMSId, RunId, pair(pubTerm(const_VerifyRequest_pub()), pair(AgentId, pair(AgentLtKeyId, pair(pair(aenc(pair(sessionKey1, sessionKey2), pk(ltk)), ClientId), SigSessionKey)))))
+                |  EnvGroup EnvOut
+        
+
+        rule Reader_RecvEncryptedSessionKeyVerifyResponse EnvRule:
+            Pr: (Proto)_Reader_S2/10
+                |  (RunId, ReaderId, KMSId, AgentId, ClientId, ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId)
+                |  EnvGroup Env
+                (Proto)_In_KMS/4
+                |  (KMSId, ReaderId, RunId, pubTerm(const_VerifyResponse_pub()))
+                |  EnvGroup EnvIn
+            Ac:
+            Cncl:
+                (Proto)_Reader_S3/10
+                |  (RunId, ReaderId, KMSId, AgentId, ClientId, ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId)
+                |  EnvGroup Env
+        
+
+        rule Reader_DecryptMessage1 EnvRule:
+            Pr: (Proto)_Reader_S3/10
+                |  (RunId, ReaderId, KMSId, AgentId, ClientId, ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId)
+                |  EnvGroup Env
+                In/1
+                |  (pair(pubTerm(const_Log_pub()), pair(pubTerm(const_Message_pub()), senc(msg, sessionKey1))))
+                |  EnvGroup EnvIn
+            Ac:
+            Cncl:
+                (Proto)_Reader_S3/10
+                |  (RunId, ReaderId, KMSId, AgentId, ClientId, ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId)
+                |  EnvGroup Env
+        
+
+        rule Reader_DecryptMessage2 EnvRule:
+            Pr: (Proto)_Reader_S3/10
+                |  (RunId, ReaderId, KMSId, AgentId, ClientId, ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId)
+                |  EnvGroup Env
+                In/1
+                |  (pair(pubTerm(const_Log_pub()), pair(pubTerm(const_Message_pub()), senc(msg, sessionKey2))))
+                |  EnvGroup EnvIn
+            Ac:
+            Cncl:
+                (Proto)_Reader_S3/10
+                |  (RunId, ReaderId, KMSId, AgentId, ClientId, ltk, sessionKey1, sessionKey2, SigSessionKey, AgentLtKeyId)
+                |  EnvGroup Env
+        
+
+    IO Rules
+        "Agent"
+        rule InIntf_FrFact_Agent EnvRule:
+            Pr: Fr/1
+                |  (new_x)
+                |  EnvGroup EnvIn
+            Ac:
+            Cncl:
+                (Proto)_FrFact_Agent/2
+                |  (added_rid, new_x)
+                |  EnvGroup EnvIn
+        
+
+        "Agent"
+        rule InIntf_In_KMS_Agent EnvRule:
+            Pr: (Proto)_In_KMS/4
+                |  (new_x, new_x_1, new_x_2, new_x_3)
+                |  EnvGroup EnvIn
+            Ac:
+            Cncl:
+                (Proto)_In_KMS_Agent/5
+                |  (added_rid, new_x, new_x_1, new_x_2, new_x_3)
+                |  EnvGroup EnvIn
+        
+
+        "Agent"
+        rule InIntf_InFact_Agent EnvRule:
+            Pr: In/1
+                |  (new_x)
+                |  EnvGroup EnvIn
+            Ac:
+            Cncl:
+                (Proto)_InFact_Agent/2
+                |  (added_rid, new_x)
+                |  EnvGroup EnvIn
+        
+
+        "Agent"
+        rule OutIntf_Out_KMS_Agent EnvRule:
+            Pr: (Proto)_Out_KMS_Agent/5
+                |  (added_rid, new_x, new_x_1, new_x_2, new_x_3)
+                |  EnvGroup EnvOut
+            Ac:
+            Cncl:
+                (Proto)_Out_KMS/4
+                |  (new_x, new_x_1, new_x_2, new_x_3)
+                |  EnvGroup EnvOut
+        
+
+        "Agent"
+        rule OutIntf_OutFact_Agent EnvRule:
+            Pr: (Proto)_OutFact_Agent/2
+                |  (added_rid, new_x)
+                |  EnvGroup EnvOut
+            Ac:
+            Cncl:
+                Out/1
+                |  (new_x)
+                |  EnvGroup EnvOut
+        
+
+        "Agent"
+        rule IoInIntf_Agent_Init EnvRule:
+            Pr: Fr/1
+                |  (RunId)
+                |  EnvGroup EnvIn
+                !(Proto)_Pk/2
+                |  (ReaderId, logPk)
+                |  EnvGroup Env
+            Ac:
+            Cncl:
+                (Setup)_Agent/7
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk)
+                |  EnvGroup EnvIn
+        
+
+    Protocol Rules with rid
+        "Agent"
+        rule Agent_SendSignRequest StateRule "Agent":
+            Pr: (Setup)_Agent/7
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk)
+                |  EnvGroup EnvIn
+                (Proto)_FrFact_Agent/2
+                |  (RunId, x)
+                |  EnvGroup EnvIn
+            Ac: (Proto)_AgentStarted/0
+                |  ()
+                |  ActionGroup
+            Cncl:
+                (St)_Agent_1/8
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x)
+                |  StateGroup
+                (Proto)_Out_KMS_Agent/5
+                |  (RunId, AgentId, KMSId, RunId, pair(pubTerm(const_SignRequest_pub()), pair(AgentLtKeyId, pair(exp(pubTerm(const_g_pub()), x), pair(ReaderId, ClientId)))))
+                |  EnvGroup EnvOut
+        
+
+        "Agent"
+        rule Agent_RecvSignResponse StateRule "Agent":
+            Pr: (St)_Agent_1/8
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x)
+                |  StateGroup
+                (Proto)_In_KMS_Agent/5
+                |  (RunId, KMSId, AgentId, RunId, pair(pubTerm(const_SignResponse_pub()), SigX))
+                |  EnvGroup EnvIn
+            Ac: (Proto)_AgentSignResponse/4
+                |  (KMSId, AgentId, RunId, pair(pubTerm(const_SignResponse_pub()), SigX))
+                |  ActionGroup
+            Cncl:
+                (St)_Agent_2/9
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX)
+                |  StateGroup
+        
+
+        "Agent"
+        rule Agent_SendSecureSessionRequest StateRule "Agent":
+            Pr: (St)_Agent_2/9
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX)
+                |  StateGroup
+            Ac: (Proto)_AgentSecureSessionRequest/5
+                |  (AgentId, ClientId, exp(pubTerm(const_g_pub()), x), SigX, AgentLtKeyId)
+                |  ActionGroup
+            Cncl:
+                (St)_Agent_3/9
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX)
+                |  StateGroup
+                (Proto)_OutFact_Agent/2
+                |  (RunId, pair(pubTerm(const_SecureSessionRequest_pub()), pair(exp(pubTerm(const_g_pub()), x), pair(SigX, pair(AgentLtKeyId, ReaderId)))))
+                |  EnvGroup EnvOut
+                (Proto)_OutFact_Agent/2
+                |  (RunId, pair(pubTerm(const_Log_pub()), pair(pubTerm(const_SecureSessionRequest_pub()), pair(exp(pubTerm(const_g_pub()), x), pair(SigX, pair(AgentLtKeyId, ReaderId))))))
+                |  EnvGroup EnvOut
+        
+
+        "Agent"
+        rule Agent_RecvSecureSessionResponse StateRule "Agent":
+            Pr: (St)_Agent_3/9
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX)
+                |  StateGroup
+                (Proto)_InFact_Agent/2
+                |  (RunId, pair(pubTerm(const_SecureSessionResponse_pub()), pair(exp(pubTerm(const_g_pub()), z), pair(SigY, pair(ClientLtKeyId, hash(exp(exp(pubTerm(const_g_pub()), z), x)))))))
+                |  EnvGroup EnvIn
+            Ac: (Proto)_AgentSecureSessionResponse/6
+                |  (ClientId, AgentId, exp(pubTerm(const_g_pub()), z), SigY, ClientLtKeyId, hash(exp(exp(pubTerm(const_g_pub()), z), x)))
+                |  ActionGroup
+            Cncl:
+                (St)_Agent_4/12
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, exp(pubTerm(const_g_pub()), z), SigY)
+                |  StateGroup
+        
+
+        "Agent"
+        rule Agent_SendVerifyRequest StateRule "Agent":
+            Pr: (St)_Agent_4/12
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY)
+                |  StateGroup
+            Ac:
+            Cncl:
+                (St)_Agent_5/12
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY)
+                |  StateGroup
+                (Proto)_Out_KMS_Agent/5
+                |  (RunId, AgentId, KMSId, RunId, pair(pubTerm(const_VerifyRequest_pub()), pair(ClientId, pair(ClientLtKeyId, pair(pair(Y, AgentId), SigY)))))
+                |  EnvGroup EnvOut
+        
+
+        "Agent"
+        rule Agent_RecvVerifyResponse StateRule "Agent":
+            Pr: (St)_Agent_5/12
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY)
+                |  StateGroup
+                (Proto)_In_KMS_Agent/5
+                |  (RunId, KMSId, AgentId, RunId, pubTerm(const_VerifyResponse_pub()))
+                |  EnvGroup EnvIn
+            Ac: (Proto)_SecretX/1
+                |  (x)
+                |  ActionGroup
+            Cncl:
+                (St)_Agent_6/12
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY)
+                |  StateGroup
+        
+
+        "Agent"
+        rule Agent_SendSessionKeySignRequest StateRule "Agent":
+            Pr: (St)_Agent_6/12
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY)
+                |  StateGroup
+            Ac:
+            Cncl:
+                (St)_Agent_7/12
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY)
+                |  StateGroup
+                (Proto)_Out_KMS_Agent/5
+                |  (RunId, AgentId, KMSId, RunId, pair(pubTerm(const_SignRequest_pub()), pair(AgentLtKeyId, pair(aenc(pair(kdf1(exp(Y, x)), kdf2(exp(Y, x))), logPk), ClientId))))
+                |  EnvGroup EnvOut
+        
+
+        "Agent"
+        rule Agent_RecvSessionKeySignResponse StateRule "Agent":
+            Pr: (St)_Agent_7/12
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY)
+                |  StateGroup
+                (Proto)_In_KMS_Agent/5
+                |  (RunId, KMSId, AgentId, RunId, pair(pubTerm(const_SignResponse_pub()), SigSessionKey))
+                |  EnvGroup EnvIn
+            Ac:
+            Cncl:
+                (St)_Agent_8/13
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey)
+                |  StateGroup
+        
+
+        "Agent"
+        rule Agent_SendEncryptedSessionKey StateRule "Agent":
+            Pr: (St)_Agent_8/13
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey)
+                |  StateGroup
+            Ac: (Proto)_AgentSendEncryptedSessionKey/1
+                |  (x)
+                |  ActionGroup
+            Cncl:
+                (St)_Agent_9/13
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey)
+                |  StateGroup
+                (Proto)_OutFact_Agent/2
+                |  (RunId, pair(pubTerm(const_EncryptedSessionKey_pub()), pair(aenc(pair(kdf1(exp(Y, x)), kdf2(exp(Y, x))), logPk), pair(SigSessionKey, pair(AgentId, pair(AgentLtKeyId, ClientId))))))
+                |  EnvGroup EnvOut
+        
+
+        "Agent"
+        rule Agent_SendHandshakeComplete StateRule "Agent":
+            Pr: (St)_Agent_9/13
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey)
+                |  StateGroup
+                (Proto)_InFact_Agent/2
+                |  (RunId, payload)
+                |  EnvGroup EnvIn
+            Ac: (Proto)_Agent_Finish/1
+                |  (AgentId)
+                |  ActionGroup
+                (Proto)_Secret/1
+                |  (pair(kdf1(exp(Y, x)), kdf2(exp(Y, x))))
+                |  ActionGroup
+                (Proto)_Commit/3
+                |  (pubTerm(const_Agent_pub()), pubTerm(const_Client_pub()), pair(AgentId, pair(ClientId, pair(kdf1(exp(Y, x)), kdf2(exp(Y, x))))))
+                |  ActionGroup
+                (Proto)_Running/3
+                |  (pubTerm(const_Agent_pub()), pubTerm(const_Client_pub()), pair(AgentId, pair(ClientId, pair(kdf1(exp(Y, x)), kdf2(exp(Y, x))))))
+                |  ActionGroup
+                (Proto)_HonestReader/1
+                |  (ReaderId)
+                |  ActionGroup
+                (Proto)_HonestKmsOwner/1
+                |  (AgentId)
+                |  ActionGroup
+                (Proto)_HonestKmsOwner/1
+                |  (ClientId)
+                |  ActionGroup
+                (Proto)_AgentHandshakeCompleted/10
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, ClientLtKeyId, Y)
+                |  ActionGroup
+            Cncl:
+                (St)_Agent_10/13
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey)
+                |  StateGroup
+                (Proto)_OutFact_Agent/2
+                |  (RunId, pair(pubTerm(const_HandshakeComplete_pub()), senc(pair(pubTerm(const_HandshakeCompletePayload_pub()), payload), kdf1(exp(Y, x)))))
+                |  EnvGroup EnvOut
+                (Proto)_OutFact_Agent/2
+                |  (RunId, pair(pubTerm(const_Log_pub()), pair(pubTerm(const_HandshakeComplete_pub()), senc(pair(pubTerm(const_HandshakeCompletePayload_pub()), payload), kdf1(exp(Y, x))))))
+                |  EnvGroup EnvOut
+        
+
+        "Agent"
+        rule Agent_ReceiveMessages StateRule "Agent":
+            Pr: (St)_Agent_10/13
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey)
+                |  StateGroup
+                (Proto)_InFact_Agent/2
+                |  (RunId, pair(pubTerm(const_Message_pub()), senc(payload, kdf2(exp(Y, x)))))
+                |  EnvGroup EnvIn
+            Ac: (Proto)_AgentRecvLoop/10
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, ClientLtKeyId, Y)
+                |  ActionGroup
+            Cncl:
+                (St)_Agent_10/13
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey)
+                |  StateGroup
+        
+
+        "Agent"
+        rule Agent_SendMessages StateRule "Agent":
+            Pr: (St)_Agent_10/13
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey)
+                |  StateGroup
+                (Proto)_InFact_Agent/2
+                |  (RunId, payload)
+                |  EnvGroup EnvIn
+            Ac: (Proto)_AgentSendLoop/10
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, ClientLtKeyId, Y)
+                |  ActionGroup
+            Cncl:
+                (St)_Agent_10/13
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk, x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey)
+                |  StateGroup
+                (Proto)_OutFact_Agent/2
+                |  (RunId, pair(pubTerm(const_Message_pub()), senc(payload, kdf1(exp(Y, x)))))
+                |  EnvGroup EnvOut
+                (Proto)_OutFact_Agent/2
+                |  (RunId, pair(pubTerm(const_Log_pub()), pair(pubTerm(const_Message_pub()), senc(payload, kdf1(exp(Y, x))))))
+                |  EnvGroup EnvOut
+        
+
+==== Decomposition ==========
+
+    Environment Rules minus Setup Rules same as before
+    Protocol Rules with rid same as before
+    Environment part of IO Rules
+        rule In_FrFact_Agent EnvRule:
+            Pr: Fr/1
+                |  (new_x)
+                |  EnvGroup EnvIn
+            Ac: (Proto)_slIn_FrFact/2
+                |  (added_rid, new_x)
+                |  ActionGroup
+            Cncl:
+        
+
+        rule In_In_KMS_Agent EnvRule:
+            Pr: (Proto)_In_KMS/4
+                |  (new_x, new_x_1, new_x_2, new_x_3)
+                |  EnvGroup EnvIn
+            Ac: (Proto)_slIn_In_KMS/5
+                |  (added_rid, new_x, new_x_1, new_x_2, new_x_3)
+                |  ActionGroup
+            Cncl:
+        
+
+        rule In_InFact_Agent EnvRule:
+            Pr: In/1
+                |  (new_x)
+                |  EnvGroup EnvIn
+            Ac: (Proto)_slIn_InFact/2
+                |  (added_rid, new_x)
+                |  ActionGroup
+            Cncl:
+        
+
+        rule In_Agent_Init EnvRule:
+            Pr: Fr/1
+                |  (RunId)
+                |  EnvGroup EnvIn
+                !(Proto)_Pk/2
+                |  (ReaderId, logPk)
+                |  EnvGroup Env
+            Ac: (Proto)_slIn_Setup_Agent/7
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk)
+                |  ActionGroup
+            Cncl:
+        
+
+        rule Out_Out_KMS_Agent EnvRule:
+            Pr:
+            Ac: (Proto)_slOut_Out_KMS/5
+                |  (added_rid, new_x, new_x_1, new_x_2, new_x_3)
+                |  ActionGroup
+            Cncl:
+                (Proto)_Out_KMS/4
+                |  (new_x, new_x_1, new_x_2, new_x_3)
+                |  EnvGroup EnvOut
+        
+
+        rule Out_OutFact_Agent EnvRule:
+            Pr:
+            Ac: (Proto)_slOut_OutFact/2
+                |  (added_rid, new_x)
+                |  ActionGroup
+            Cncl:
+                Out/1
+                |  (new_x)
+                |  EnvGroup EnvOut
+        
+
+    Protocol part of Io Rules
+        "Agent"
+        rule In_FrFact_Agent EnvRule:
+            Pr:
+            Ac: (Proto)_slIn_FrFact/2
+                |  (added_rid, new_x)
+                |  ActionGroup
+            Cncl:
+                (Proto)_FrFact_Agent/2
+                |  (added_rid, new_x)
+                |  EnvGroup EnvIn
+        
+
+        "Agent"
+        rule In_In_KMS_Agent EnvRule:
+            Pr:
+            Ac: (Proto)_slIn_In_KMS/5
+                |  (added_rid, new_x, new_x_1, new_x_2, new_x_3)
+                |  ActionGroup
+            Cncl:
+                (Proto)_In_KMS_Agent/5
+                |  (added_rid, new_x, new_x_1, new_x_2, new_x_3)
+                |  EnvGroup EnvIn
+        
+
+        "Agent"
+        rule In_InFact_Agent EnvRule:
+            Pr:
+            Ac: (Proto)_slIn_InFact/2
+                |  (added_rid, new_x)
+                |  ActionGroup
+            Cncl:
+                (Proto)_InFact_Agent/2
+                |  (added_rid, new_x)
+                |  EnvGroup EnvIn
+        
+
+        "Agent"
+        rule In_Agent_Init EnvRule:
+            Pr:
+            Ac: (Proto)_slIn_Setup_Agent/7
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk)
+                |  ActionGroup
+            Cncl:
+                (Setup)_Agent/7
+                |  (RunId, AgentId, KMSId, ClientId, ReaderId, AgentLtKeyId, logPk)
+                |  EnvGroup EnvIn
+        
+
+        "Agent"
+        rule Out_Out_KMS_Agent EnvRule:
+            Pr: (Proto)_Out_KMS_Agent/5
+                |  (added_rid, new_x, new_x_1, new_x_2, new_x_3)
+                |  EnvGroup EnvOut
+            Ac: (Proto)_slOut_Out_KMS/5
+                |  (added_rid, new_x, new_x_1, new_x_2, new_x_3)
+                |  ActionGroup
+            Cncl:
+        
+
+        "Agent"
+        rule Out_OutFact_Agent EnvRule:
+            Pr: (Proto)_OutFact_Agent/2
+                |  (added_rid, new_x)
+                |  EnvGroup EnvOut
+            Ac: (Proto)_slOut_OutFact/2
+                |  (added_rid, new_x)
+                |  ActionGroup
+            Cncl:
+        
+
+==== Permissions ====
+    Perm Internal_R "e_Agent_SendSignRequest"
+    Perm Internal_R "e_Agent_RecvSignResponse"
+    Perm Internal_R "e_Agent_SendSecureSessionRequest"
+    Perm Internal_R "e_Agent_RecvSecureSessionResponse"
+    Perm Internal_R "e_Agent_SendVerifyRequest"
+    Perm Internal_R "e_Agent_RecvVerifyResponse"
+    Perm Internal_R "e_Agent_SendSessionKeySignRequest"
+    Perm Internal_R "e_Agent_RecvSessionKeySignResponse"
+    Perm Internal_R "e_Agent_SendEncryptedSessionKey"
+    Perm Internal_R "e_Agent_SendHandshakeComplete"
+    Perm Internal_R "e_Agent_ReceiveMessages"
+    Perm Internal_R "e_Agent_SendMessages"
+    Perm Out_RG "e_Out_KMS"
+    Perm Out_RG "e_OutFact"
+    Perm In_RF "e_FrFact"
+    Perm In_RF "e_In_KMS"
+    Perm In_RF "e_InFact"
+    Perm In_RF "e_Setup_Agent"
+==== Restrictions ==========

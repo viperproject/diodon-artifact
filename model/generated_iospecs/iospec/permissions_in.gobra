@@ -1,0 +1,91 @@
+package iospec
+
+
+
+import . "github.com/aws/amazon-ssm-agent/agent/iospecs/claim"
+import . "github.com/aws/amazon-ssm-agent/agent/iospecs/fact"
+import . "github.com/aws/amazon-ssm-agent/agent/iospecs/term"
+import . "github.com/aws/amazon-ssm-agent/agent/iospecs/place"
+import . "github.com/aws/amazon-ssm-agent/agent/iospecs/pub"
+import . "github.com/aws/amazon-ssm-agent/agent/iospecs/fresh"
+
+
+// permission e_FrFact
+pred e_FrFact(ghost tami_p Place, ghost tami_rid Term)
+
+ghost
+requires e_FrFact(tami_p, tami_rid)
+pure func get_e_FrFact_r1(tami_p Place, tami_rid Term) (r1 Term)
+
+ghost
+requires e_FrFact(tami_p, tami_rid)
+pure func get_e_FrFact_placeDst(tami_p Place, tami_rid Term) (placeDst Place)
+
+
+// permission e_In_KMS
+pred e_In_KMS(ghost tami_p Place, ghost tami_rid Term)
+
+ghost
+requires e_In_KMS(tami_p, tami_rid)
+pure func get_e_In_KMS_r1(tami_p Place, tami_rid Term) (r1 Term)
+
+ghost
+requires e_In_KMS(tami_p, tami_rid)
+pure func get_e_In_KMS_r2(tami_p Place, tami_rid Term) (r2 Term)
+
+ghost
+requires e_In_KMS(tami_p, tami_rid)
+pure func get_e_In_KMS_r3(tami_p Place, tami_rid Term) (r3 Term)
+
+ghost
+requires e_In_KMS(tami_p, tami_rid)
+pure func get_e_In_KMS_r4(tami_p Place, tami_rid Term) (r4 Term)
+
+ghost
+requires e_In_KMS(tami_p, tami_rid)
+pure func get_e_In_KMS_placeDst(tami_p Place, tami_rid Term) (placeDst Place)
+
+
+// permission e_InFact
+pred e_InFact(ghost tami_p Place, ghost tami_rid Term)
+
+ghost
+requires e_InFact(tami_p, tami_rid)
+pure func get_e_InFact_r1(tami_p Place, tami_rid Term) (r1 Term)
+
+ghost
+requires e_InFact(tami_p, tami_rid)
+pure func get_e_InFact_placeDst(tami_p Place, tami_rid Term) (placeDst Place)
+
+
+// permission e_Setup_Agent
+pred e_Setup_Agent(ghost tami_p Place, ghost tami_rid Term)
+
+ghost
+requires e_Setup_Agent(tami_p, tami_rid)
+pure func get_e_Setup_Agent_r1(tami_p Place, tami_rid Term) (r1 Term)
+
+ghost
+requires e_Setup_Agent(tami_p, tami_rid)
+pure func get_e_Setup_Agent_r2(tami_p Place, tami_rid Term) (r2 Term)
+
+ghost
+requires e_Setup_Agent(tami_p, tami_rid)
+pure func get_e_Setup_Agent_r3(tami_p Place, tami_rid Term) (r3 Term)
+
+ghost
+requires e_Setup_Agent(tami_p, tami_rid)
+pure func get_e_Setup_Agent_r4(tami_p Place, tami_rid Term) (r4 Term)
+
+ghost
+requires e_Setup_Agent(tami_p, tami_rid)
+pure func get_e_Setup_Agent_r5(tami_p Place, tami_rid Term) (r5 Term)
+
+ghost
+requires e_Setup_Agent(tami_p, tami_rid)
+pure func get_e_Setup_Agent_r6(tami_p Place, tami_rid Term) (r6 Term)
+
+ghost
+requires e_Setup_Agent(tami_p, tami_rid)
+pure func get_e_Setup_Agent_placeDst(tami_p Place, tami_rid Term) (placeDst Place)
+

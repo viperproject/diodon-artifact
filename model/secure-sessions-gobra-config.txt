@@ -1,9 +1,9 @@
 
 
-input_file /Users/arquintl/Sessions-Tamarin-Model/secure-sessions.spthy
+input_file /Users/arquintlinard/amazon/Sessions-Tamarin-Model/secure-sessions.spthy
 
-base_dir /Users/arquintl/Sessions-Tamarin-Model/generated_iospecs
+base_dir /Users/arquintlinard/amazon/Sessions-Tamarin-Model/generated_iospecs
 module github.com/aws/amazon-ssm-agent/agent/iospecs
 make_go_mod False
-gobra_jar /Users/arquintl/gobra/target/scala-2.13/gobra.jar
+gobra_jar /Users/arquintlinard/ETH/PhD/gobra/target/scala-2.13/gobra.jar
 verifier gobra

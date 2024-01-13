@@ -1,0 +1,214 @@
+package fact
+
+
+
+import . "github.com/aws/amazon-ssm-agent/agent/iospecs/term"
+import . "github.com/aws/amazon-ssm-agent/agent/iospecs/pub"
+import . "github.com/aws/amazon-ssm-agent/agent/iospecs/fresh"
+
+
+type Fact domain {
+    // tag 0
+    func Setup_Agent(t1 Term, t2 Term, t3 Term, t4 Term, t5 Term, t6 Term, t7 Term) Fact
+    func getSetup_Agent(f Fact) seq[Term]
+    axiom  {
+        forall t1 Term, t2 Term, t3 Term, t4 Term, t5 Term, t6 Term, t7 Term :: 
+            { Setup_Agent(t1, t2, t3, t4, t5, t6, t7) } (
+                getSetup_Agent(Setup_Agent(t1, t2, t3, t4, t5, t6, t7)) ==
+                seq[Term]{t1, t2, t3, t4, t5, t6, t7} &&
+                                                     getTag(Setup_Agent(t1, t2, t3, t4, t5, t6, t7)) == 0)
+    }
+
+    // tag 1
+    func FrFact_Agent(t1 Term, t2 Term) Fact
+    func getFrFact_Agent(f Fact) seq[Term]
+    axiom  {
+        forall t1 Term, t2 Term :: 
+            { FrFact_Agent(t1, t2) } (
+                getFrFact_Agent(FrFact_Agent(t1, t2)) ==
+                seq[Term]{t1, t2} &&
+                                 getTag(FrFact_Agent(t1, t2)) == 1)
+    }
+
+    // tag 2
+    func St_Agent_1(t1 Term, t2 Term, t3 Term, t4 Term, t5 Term, t6 Term, t7 Term, t8 Term) Fact
+    func getSt_Agent_1(f Fact) seq[Term]
+    axiom  {
+        forall t1 Term, t2 Term, t3 Term, t4 Term, t5 Term, t6 Term, t7 Term, t8 Term :: 
+            { St_Agent_1(t1, t2, t3, t4, t5, t6, t7, t8) } (
+                getSt_Agent_1(St_Agent_1(t1, t2, t3, t4, t5, t6, t7, t8)) ==
+                seq[Term]{t1, t2, t3, t4, t5, t6, t7, t8} &&
+                                                         getTag(St_Agent_1(t1, t2, t3, t4, t5, t6, t7, t8)) == 2)
+    }
+
+    // tag 3
+    func Out_KMS_Agent(t1 Term, t2 Term, t3 Term, t4 Term, t5 Term) Fact
+    func getOut_KMS_Agent(f Fact) seq[Term]
+    axiom  {
+        forall t1 Term, t2 Term, t3 Term, t4 Term, t5 Term :: 
+            { Out_KMS_Agent(t1, t2, t3, t4, t5) } (
+                getOut_KMS_Agent(Out_KMS_Agent(t1, t2, t3, t4, t5)) ==
+                seq[Term]{t1, t2, t3, t4, t5} &&
+                                             getTag(Out_KMS_Agent(t1, t2, t3, t4, t5)) == 3)
+    }
+
+    // tag 4
+    func In_KMS_Agent(t1 Term, t2 Term, t3 Term, t4 Term, t5 Term) Fact
+    func getIn_KMS_Agent(f Fact) seq[Term]
+    axiom  {
+        forall t1 Term, t2 Term, t3 Term, t4 Term, t5 Term :: 
+            { In_KMS_Agent(t1, t2, t3, t4, t5) } (
+                getIn_KMS_Agent(In_KMS_Agent(t1, t2, t3, t4, t5)) ==
+                seq[Term]{t1, t2, t3, t4, t5} &&
+                                             getTag(In_KMS_Agent(t1, t2, t3, t4, t5)) == 4)
+    }
+
+    // tag 5
+    func St_Agent_2(t1 Term, t2 Term, t3 Term, t4 Term, t5 Term, t6 Term, t7 Term, t8 Term, t9 Term) Fact
+    func getSt_Agent_2(f Fact) seq[Term]
+    axiom  {
+        forall t1 Term, t2 Term, t3 Term, t4 Term, t5 Term, t6 Term, t7 Term, t8 Term, t9 Term :: 
+            { St_Agent_2(t1, t2, t3, t4, t5, t6, t7, t8, t9) } (
+                getSt_Agent_2(St_Agent_2(t1, t2, t3, t4, t5, t6, t7, t8, t9)) ==
+                seq[Term]{t1, t2, t3, t4, t5, t6, t7, t8, t9} &&
+                                                             getTag(St_Agent_2(t1, t2, t3, t4, t5, t6, t7, t8, t9)) == 5)
+    }
+
+    // tag 6
+    func St_Agent_3(t1 Term, t2 Term, t3 Term, t4 Term, t5 Term, t6 Term, t7 Term, t8 Term, t9 Term) Fact
+    func getSt_Agent_3(f Fact) seq[Term]
+    axiom  {
+        forall t1 Term, t2 Term, t3 Term, t4 Term, t5 Term, t6 Term, t7 Term, t8 Term, t9 Term :: 
+            { St_Agent_3(t1, t2, t3, t4, t5, t6, t7, t8, t9) } (
+                getSt_Agent_3(St_Agent_3(t1, t2, t3, t4, t5, t6, t7, t8, t9)) ==
+                seq[Term]{t1, t2, t3, t4, t5, t6, t7, t8, t9} &&
+                                                             getTag(St_Agent_3(t1, t2, t3, t4, t5, t6, t7, t8, t9)) == 6)
+    }
+
+    // tag 7
+    func OutFact_Agent(t1 Term, t2 Term) Fact
+    func getOutFact_Agent(f Fact) seq[Term]
+    axiom  {
+        forall t1 Term, t2 Term :: 
+            { OutFact_Agent(t1, t2) } (
+                getOutFact_Agent(OutFact_Agent(t1, t2)) ==
+                seq[Term]{t1, t2} &&
+                                 getTag(OutFact_Agent(t1, t2)) == 7)
+    }
+
+    // tag 8
+    func InFact_Agent(t1 Term, t2 Term) Fact
+    func getInFact_Agent(f Fact) seq[Term]
+    axiom  {
+        forall t1 Term, t2 Term :: 
+            { InFact_Agent(t1, t2) } (
+                getInFact_Agent(InFact_Agent(t1, t2)) ==
+                seq[Term]{t1, t2} &&
+                                 getTag(InFact_Agent(t1, t2)) == 8)
+    }
+
+    // tag 9
+    func St_Agent_4(t1 Term, t2 Term, t3 Term, t4 Term, t5 Term, t6 Term, t7 Term, t8 Term, t9 Term, t10 Term, t11 Term, t12 Term) Fact
+    func getSt_Agent_4(f Fact) seq[Term]
+    axiom  {
+        forall t1 Term, t2 Term, t3 Term, t4 Term, t5 Term, t6 Term, t7 Term, t8 Term, t9 Term, t10 Term, t11 Term, t12 Term :: 
+            { St_Agent_4(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12) } (
+                getSt_Agent_4(St_Agent_4(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12)) ==
+                seq[Term]{t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12} &&
+                                                                            getTag(St_Agent_4(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12)) == 9)
+    }
+
+    // tag 10
+    func St_Agent_5(t1 Term, t2 Term, t3 Term, t4 Term, t5 Term, t6 Term, t7 Term, t8 Term, t9 Term, t10 Term, t11 Term, t12 Term) Fact
+    func getSt_Agent_5(f Fact) seq[Term]
+    axiom  {
+        forall t1 Term, t2 Term, t3 Term, t4 Term, t5 Term, t6 Term, t7 Term, t8 Term, t9 Term, t10 Term, t11 Term, t12 Term :: 
+            { St_Agent_5(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12) } (
+                getSt_Agent_5(St_Agent_5(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12)) ==
+                seq[Term]{t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12} &&
+                                                                            getTag(St_Agent_5(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12)) == 10)
+    }
+
+    // tag 11
+    func St_Agent_6(t1 Term, t2 Term, t3 Term, t4 Term, t5 Term, t6 Term, t7 Term, t8 Term, t9 Term, t10 Term, t11 Term, t12 Term) Fact
+    func getSt_Agent_6(f Fact) seq[Term]
+    axiom  {
+        forall t1 Term, t2 Term, t3 Term, t4 Term, t5 Term, t6 Term, t7 Term, t8 Term, t9 Term, t10 Term, t11 Term, t12 Term :: 
+            { St_Agent_6(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12) } (
+                getSt_Agent_6(St_Agent_6(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12)) ==
+                seq[Term]{t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12} &&
+                                                                            getTag(St_Agent_6(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12)) == 11)
+    }
+
+    // tag 12
+    func St_Agent_7(t1 Term, t2 Term, t3 Term, t4 Term, t5 Term, t6 Term, t7 Term, t8 Term, t9 Term, t10 Term, t11 Term, t12 Term) Fact
+    func getSt_Agent_7(f Fact) seq[Term]
+    axiom  {
+        forall t1 Term, t2 Term, t3 Term, t4 Term, t5 Term, t6 Term, t7 Term, t8 Term, t9 Term, t10 Term, t11 Term, t12 Term :: 
+            { St_Agent_7(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12) } (
+                getSt_Agent_7(St_Agent_7(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12)) ==
+                seq[Term]{t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12} &&
+                                                                            getTag(St_Agent_7(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12)) == 12)
+    }
+
+    // tag 13
+    func St_Agent_8(t1 Term, t2 Term, t3 Term, t4 Term, t5 Term, t6 Term, t7 Term, t8 Term, t9 Term, t10 Term, t11 Term, t12 Term, t13 Term) Fact
+    func getSt_Agent_8(f Fact) seq[Term]
+    axiom  {
+        forall t1 Term, t2 Term, t3 Term, t4 Term, t5 Term, t6 Term, t7 Term, t8 Term, t9 Term, t10 Term, t11 Term, t12 Term, t13 Term :: 
+            { St_Agent_8(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13) } (
+                getSt_Agent_8(St_Agent_8(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13)) ==
+                seq[Term]{t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13} &&
+                                                                                 getTag(St_Agent_8(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13)) == 13)
+    }
+
+    // tag 14
+    func St_Agent_9(t1 Term, t2 Term, t3 Term, t4 Term, t5 Term, t6 Term, t7 Term, t8 Term, t9 Term, t10 Term, t11 Term, t12 Term, t13 Term) Fact
+    func getSt_Agent_9(f Fact) seq[Term]
+    axiom  {
+        forall t1 Term, t2 Term, t3 Term, t4 Term, t5 Term, t6 Term, t7 Term, t8 Term, t9 Term, t10 Term, t11 Term, t12 Term, t13 Term :: 
+            { St_Agent_9(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13) } (
+                getSt_Agent_9(St_Agent_9(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13)) ==
+                seq[Term]{t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13} &&
+                                                                                 getTag(St_Agent_9(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13)) == 14)
+    }
+
+    // tag 15
+    func St_Agent_10(t1 Term, t2 Term, t3 Term, t4 Term, t5 Term, t6 Term, t7 Term, t8 Term, t9 Term, t10 Term, t11 Term, t12 Term, t13 Term) Fact
+    func getSt_Agent_10(f Fact) seq[Term]
+    axiom  {
+        forall t1 Term, t2 Term, t3 Term, t4 Term, t5 Term, t6 Term, t7 Term, t8 Term, t9 Term, t10 Term, t11 Term, t12 Term, t13 Term :: 
+            { St_Agent_10(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13) } (
+                getSt_Agent_10(St_Agent_10(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13)) ==
+                seq[Term]{t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13} &&
+                                                                                 getTag(St_Agent_10(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13)) == 15)
+    }
+
+    // each fact has a unique tag:
+    func getTag(f Fact) int
+
+    func persistent(f Fact) bool
+
+}
+ghost
+// returns a multiset containing just the persistent facts of l all with multiplicity 1
+ensures forall f Fact :: { f # result } (f # result) == (persistent(f) && (f # l) > 0 ? 1 : 0)
+pure func persistentFacts(l mset[Fact]) (result mset[Fact])
+
+ghost
+// returns a multiset containing just the non-persistent facts of l while retaining their multiplicity
+ensures forall f Fact :: { f # result } (f # result) == (persistent(f) ? 0 : (f # l))
+pure func linearFacts(l mset[Fact]) (result mset[Fact])
+
+ghost
+ensures res == (linearFacts(l) subset s && persistentFacts(l) subset s)
+pure func M(l mset[Fact], s mset[Fact]) (res bool) {
+    // non-persistent facts
+    return linearFacts(l) subset s &&
+        // persistent facts
+        persistentFacts(l) subset s
+}
+
+ghost
+ensures result == s setminus linearFacts(l) union r
+pure func U(l mset[Fact], r mset[Fact], s mset[Fact]) (result mset[Fact])
