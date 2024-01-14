@@ -1,0 +1,221 @@
+package bytes
+
+
+
+import . "github.com/aws/amazon-ssm-agent/agent/iospecs/pub"
+import . "github.com/aws/amazon-ssm-agent/agent/iospecs/term"
+
+
+type Bytes domain {
+    // TODO: Add constructors from other types e.g.
+    // func msgB(string) Bytes
+    
+
+    // constants
+    func const_SignRequestB() Bytes
+    func const_gB() Bytes
+    func const_SignResponseB() Bytes
+    func const_SecureSessionRequestB() Bytes
+    func const_LogB() Bytes
+    func const_SecureSessionResponseB() Bytes
+    func const_VerifyRequestB() Bytes
+    func const_VerifyResponseB() Bytes
+    func const_EncryptedSessionKeyB() Bytes
+    func const_AgentB() Bytes
+    func const_ClientB() Bytes
+    func const_HandshakeCompleteB() Bytes
+    func const_HandshakeCompletePayloadB() Bytes
+    func const_MessageB() Bytes
+
+    // function declarations
+    func adecB(t1 Bytes, t2 Bytes) Bytes
+    func aencB(t1 Bytes, t2 Bytes) Bytes
+    func expB(t1 Bytes, t2 Bytes) Bytes
+    func fstB(t1 Bytes) Bytes
+    func hashB(t1 Bytes) Bytes
+    func invB(t1 Bytes) Bytes
+    func kdf1B(t1 Bytes) Bytes
+    func kdf2B(t1 Bytes) Bytes
+    func oneB() Bytes
+    func pairB(t1 Bytes, t2 Bytes) Bytes
+    func pkB(t1 Bytes) Bytes
+    func sdecB(t1 Bytes, t2 Bytes) Bytes
+    func sencB(t1 Bytes, t2 Bytes) Bytes
+    func signB(t1 Bytes, t2 Bytes) Bytes
+    func sndB(t1 Bytes) Bytes
+    func okB() Bytes
+    func verifyB(t1 Bytes, t2 Bytes, t3 Bytes) Bytes
+    func MultB(x Bytes, y Bytes) Bytes
+    // MultB is associative
+    axiom  {
+        forall x_1, x_2, x_3 Bytes :: 
+            { MultB(x_1, MultB(x_2, x_3)) } (
+                MultB(x_1, MultB(x_2, x_3)) == MultB(MultB(x_1, x_2), x_3))
+    }
+    // MultB is commutative
+    axiom  {
+        forall x_1, x_2 Bytes :: 
+            { MultB(x_1, x_2) } (
+                MultB(x_1, x_2) == MultB(x_2, x_1))
+    }
+    
+
+    
+
+    // function equalities
+    axiom  {
+        forall x_1, x_2 Bytes :: 
+            { adecB(aencB(x_1, pkB(x_2)), x_2) } (
+                adecB(aencB(x_1, pkB(x_2)), x_2) == x_1)
+    }
+
+    axiom  {
+        forall x_1 Bytes :: 
+            { expB(x_1, oneB()) } (
+                expB(x_1, oneB()) == x_1)
+    }
+
+    axiom  {
+        forall x_1, x_2, x_3 Bytes :: 
+            { expB(expB(x_1, x_2), x_3) } (
+                expB(expB(x_1, x_2), x_3) == expB(x_1, MultB(x_2, x_3)))
+    }
+
+    axiom  {
+        forall x_1, x_2 Bytes :: 
+            { fstB(pairB(x_1, x_2)) } (
+                fstB(pairB(x_1, x_2)) == x_1)
+    }
+
+    axiom  {
+        forall x_1 Bytes :: 
+            { invB(invB(x_1)) } (
+                invB(invB(x_1)) == x_1)
+    }
+
+    axiom  {
+        invB(oneB()) == oneB()
+    }
+
+    axiom  {
+        forall x_1, x_2 Bytes :: 
+            { invB(MultB(x_2, invB(x_1))) } (
+                invB(MultB(x_2, invB(x_1))) == MultB(x_1, invB(x_2)))
+    }
+
+    axiom  {
+        forall x_1, x_2 Bytes :: 
+            { sdecB(sencB(x_1, x_2), x_2) } (
+                sdecB(sencB(x_1, x_2), x_2) == x_1)
+    }
+
+    axiom  {
+        forall x_1, x_2 Bytes :: 
+            { sndB(pairB(x_1, x_2)) } (
+                sndB(pairB(x_1, x_2)) == x_2)
+    }
+
+    axiom  {
+        forall x_1, x_2 Bytes :: 
+            { verifyB(signB(x_1, x_2), x_1, pkB(x_2)) } (
+                verifyB(signB(x_1, x_2), x_1, pkB(x_2)) == okB())
+    }
+
+    axiom  {
+        forall x_1, x_2 Bytes :: 
+            { MultB(x_1, MultB(x_2, invB(x_1))) } (
+                MultB(x_1, MultB(x_2, invB(x_1))) == x_2)
+    }
+
+    axiom  {
+        forall x_1 Bytes :: 
+            { MultB(x_1, invB(x_1)) } (
+                MultB(x_1, invB(x_1)) == oneB())
+    }
+
+    axiom  {
+        forall x_1 Bytes :: 
+            { MultB(x_1, oneB()) } (
+                MultB(x_1, oneB()) == x_1)
+    }
+
+    axiom  {
+        forall x_1, x_2, x_3 Bytes :: 
+            { MultB(x_2, MultB(x_3, invB(MultB(x_1, x_2)))) } (
+                MultB(x_2, MultB(x_3, invB(MultB(x_1, x_2)))) == MultB(x_3, invB(x_1)))
+    }
+
+    axiom  {
+        forall x_1, x_2 Bytes :: 
+            { MultB(x_2, invB(MultB(x_1, x_2))) } (
+                MultB(x_2, invB(MultB(x_1, x_2))) == invB(x_1))
+    }
+
+    axiom  {
+        forall x_1, x_2, x_3 Bytes :: 
+            { MultB(x_3, MultB(invB(x_1), invB(x_2))) } (
+                MultB(x_3, MultB(invB(x_1), invB(x_2))) == MultB(x_3, invB(MultB(x_1, x_2))))
+    }
+
+    axiom  {
+        forall x_1, x_2 Bytes :: 
+            { MultB(invB(x_1), invB(x_2)) } (
+                MultB(invB(x_1), invB(x_2)) == invB(MultB(x_1, x_2)))
+    }
+}
+
+
+
+
+type Gamma domain {
+    func gamma(Term) Bytes
+    func oneTerm(Bytes) Term
+    // totality
+    axiom  {
+        forall b Bytes :: 
+            { oneTerm(b) } (
+                gamma(oneTerm(b)) == b)
+    }
+    
+
+    // homomorphism
+    axiom  {
+        (gamma(pubTerm(const_SignRequest_pub())) == const_SignRequestB()) &&
+        (gamma(pubTerm(const_g_pub())) == const_gB()) &&
+        (gamma(pubTerm(const_SignResponse_pub())) == const_SignResponseB()) &&
+        (gamma(pubTerm(const_SecureSessionRequest_pub())) == const_SecureSessionRequestB()) &&
+        (gamma(pubTerm(const_Log_pub())) == const_LogB()) &&
+        (gamma(pubTerm(const_SecureSessionResponse_pub())) == const_SecureSessionResponseB()) &&
+        (gamma(pubTerm(const_VerifyRequest_pub())) == const_VerifyRequestB()) &&
+        (gamma(pubTerm(const_VerifyResponse_pub())) == const_VerifyResponseB()) &&
+        (gamma(pubTerm(const_EncryptedSessionKey_pub())) == const_EncryptedSessionKeyB()) &&
+        (gamma(pubTerm(const_Agent_pub())) == const_AgentB()) &&
+        (gamma(pubTerm(const_Client_pub())) == const_ClientB()) &&
+        (gamma(pubTerm(const_HandshakeComplete_pub())) == const_HandshakeCompleteB()) &&
+        (gamma(pubTerm(const_HandshakeCompletePayload_pub())) == const_HandshakeCompletePayloadB()) &&
+        (gamma(pubTerm(const_Message_pub())) == const_MessageB()) &&
+        (forall t1, t2 Term :: { gamma(adec(t1, t2)) } (gamma(adec(t1, t2)) == adecB(gamma(t1), gamma(t2)))) &&
+        (forall t1, t2 Term :: { gamma(aenc(t1, t2)) } (gamma(aenc(t1, t2)) == aencB(gamma(t1), gamma(t2)))) &&
+        (forall t1, t2 Term :: { gamma(exp(t1, t2)) } (gamma(exp(t1, t2)) == expB(gamma(t1), gamma(t2)))) &&
+        (forall t1 Term :: { gamma(fst(t1)) } (gamma(fst(t1)) == fstB(gamma(t1)))) &&
+        (forall t1 Term :: { gamma(hash(t1)) } (gamma(hash(t1)) == hashB(gamma(t1)))) &&
+        (forall t1 Term :: { gamma(inv(t1)) } (gamma(inv(t1)) == invB(gamma(t1)))) &&
+        (forall t1 Term :: { gamma(kdf1(t1)) } (gamma(kdf1(t1)) == kdf1B(gamma(t1)))) &&
+        (forall t1 Term :: { gamma(kdf2(t1)) } (gamma(kdf2(t1)) == kdf2B(gamma(t1)))) &&
+        (gamma(one()) == oneB()) &&
+        (forall t1, t2 Term :: { gamma(pair(t1, t2)) } (gamma(pair(t1, t2)) == pairB(gamma(t1), gamma(t2)))) &&
+        (forall t1 Term :: { gamma(pk(t1)) } (gamma(pk(t1)) == pkB(gamma(t1)))) &&
+        (forall t1, t2 Term :: { gamma(sdec(t1, t2)) } (gamma(sdec(t1, t2)) == sdecB(gamma(t1), gamma(t2)))) &&
+        (forall t1, t2 Term :: { gamma(senc(t1, t2)) } (gamma(senc(t1, t2)) == sencB(gamma(t1), gamma(t2)))) &&
+        (forall t1, t2 Term :: { gamma(sign(t1, t2)) } (gamma(sign(t1, t2)) == signB(gamma(t1), gamma(t2)))) &&
+        (forall t1 Term :: { gamma(snd(t1)) } (gamma(snd(t1)) == sndB(gamma(t1)))) &&
+        (gamma(ok()) == okB()) &&
+        (forall t1, t2, t3 Term :: { gamma(verify(t1, t2, t3)) } (gamma(verify(t1, t2, t3)) == verifyB(gamma(t1), gamma(t2), gamma(t3)))) &&
+        (forall t1, t2 Term :: { gamma(Mult(t1, t2)) } (gamma(Mult(t1, t2)) == MultB(gamma(t1), gamma(t2))))
+        
+
+        // TODO: Add homomorphism axiom for constructors you added yourself e.g.
+        // &&
+        // (forall s string :: {gamma(msg(s))} gamma(msg(s)) == msgB(s))
+    }
+}
