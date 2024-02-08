@@ -86,7 +86,7 @@ jobs:
         run: docker load --input /tmp/image.tar
 
       - name: Verify protocol model
-       run: docker run --entrypoint "/bin/bash" ${{ needs.Build.outputs.IMAGE_TAG }} -c "cp -r model-orig/. model/; ${{ matrix.command }}"
+        run: docker run --entrypoint "/bin/bash" ${{ needs.Build.outputs.IMAGE_TAG }} -c "cp -r model-orig/. model/; ${{ matrix.command }}"
 
 
   Publish:
