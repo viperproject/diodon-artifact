@@ -111,8 +111,16 @@ jobs:
       - name: Print image tag
         run: echo ${{ needs.build.outputs.IMAGE_TAG }}
 
+      # - name: Push image
+      #  run: docker push ${{ needs.build.outputs.IMAGE_TAG }}
       - name: Push image
-        run: docker push ${{ needs.build.outputs.IMAGE_TAG }}
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: docker/Dockerfile
+          tags: ${{ needs.build.outputs.IMAGE_TAG }}
+          labels: "runnumber=${{ github.run_id }}"
+          push: true
 
 
   cleanup:
