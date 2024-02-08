@@ -8,13 +8,13 @@ on:
   push:
 
 env:
-  IMAGE_NAME: diodon-artifact-2
+  IMAGE_NAME: diodon-artifact
   IMAGE_WORKFLOW_ARTIFACT_NAME: diodon-artifact-image
 
 jobs:
   Build:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 5
     outputs:
       IMAGE_TAG: ${{ steps.output_step.outputs.IMAGE_TAG }}
     steps:
@@ -93,10 +93,9 @@ jobs:
   Publish:
     runs-on: ubuntu-latest
     needs: [Build, test]
-    # timeout-minutes: 1
+    timeout-minutes: 5
     # set GITHUB_TOKEN permissions such that pushing the Docker image will be possible:
     permissions:
-      contents: read
       packages: write
     steps:
       - name: Download artifact
@@ -108,9 +107,6 @@ jobs:
       - name: Load image
         run: docker load --input /tmp/image.tar
 
-      - name: Test image
-        run: docker run --entrypoint "/bin/bash" ${{ needs.Build.outputs.IMAGE_TAG }} -c "echo 'Hello'"
-
       - name: Login to Github Packages
         uses: docker/login-action@v1
         with:
@@ -118,19 +114,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Print image tag
-        run: echo ${{ needs.Build.outputs.IMAGE_TAG }}
-
-      # - name: Push image
-      #   run: docker push ${{ needs.Build.outputs.IMAGE_TAG }}
       - name: Push image
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: docker/Dockerfile
-          tags: ${{ needs.Build.outputs.IMAGE_TAG }}
-          labels: "runnumber=${{ github.run_id }}"
-          push: true
+        run: docker push ${{ needs.Build.outputs.IMAGE_TAG }}
 
 
   Cleanup:
