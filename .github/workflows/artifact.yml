@@ -13,7 +13,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 3
     steps:
       - name: Create Image ID
         run: |
@@ -106,11 +106,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push image
-        uses: docker/build-push-action@v5
-        with:
-          tags: ${{ needs.build.outputs.IMAGE_TAG }}
-          labels: "runnumber=${{ github.run_id }}"
-          push: true
+        run: docker push --label "runnumber=${{ github.run_id }}" ${{ needs.build.outputs.IMAGE_TAG }}
 
 
   cleanup:
