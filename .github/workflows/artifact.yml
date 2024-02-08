@@ -75,14 +75,16 @@ jobs:
             command: "/gobra/verify-model.sh"
     timeout-minutes: 15
     steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ env.IMAGE_WORKFLOW_ARTIFACT_NAME }}
-          path: /tmp
+      - name: Print image tag
+        run: echo ${{ needs.build.outputs.IMAGE_TAG }}
+      # - name: Download artifact
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: ${{ env.IMAGE_WORKFLOW_ARTIFACT_NAME }}
+      #     path: /tmp
 
-      - name: Load image
-        run: docker load --input /tmp/image.tar
+      # - name: Load image
+      #   run: docker load --input /tmp/image.tar
 
       # - name: Verify protocol model
       #  run: docker run --entrypoint "/bin/bash" ${{ needs.build.outputs.IMAGE_TAG }} -c "cp -r model-orig/. model/; ${{ matrix.command }}"
@@ -92,6 +94,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build, test]
     timeout-minutes: 1
+    # set GITHUB_TOKEN permissions such that pushing the Docker image will be possible:
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
