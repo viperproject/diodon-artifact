@@ -181,8 +181,11 @@ rule Agent_SendHandshakeComplete [color=#177AE8]:
 
 rule Agent_ReceiveMessages [color=#177AE8]:
     [ St_Agent_10(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), In(<'Message', senc(payload, kdf2(Y^~x))>) ]
-  --[ AgentRecvLoop(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, ClientLtKeyId, Y) ]->
-    [ St_Agent_10(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey) ]
+  --[ 
+      AgentRecvLoop(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, ClientLtKeyId, Y),
+      AgentRecvTransMsg(payload, kdf2(Y^~x))
+    ]->
+    [ St_Agent_10(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), Out(payload) ]
 
 rule Agent_SendMessages [color=#177AE8]:
     let
@@ -350,6 +353,14 @@ lemma client_recv_sign_response_valid [sources,heuristic=s]: // i.e., do not use
     "All KMSId ClientId RunId SigY #i.
       ClientSignResponse(KMSId, ClientId, RunId, <'SignResponse', SigY>)@i ==>
         Ex #j. KMSSignResponse(KMSId, ClientId, RunId, <'SignResponse', SigY>)@j & #j < #i
+    "
+
+
+// removes remaining partial deconstructions:
+lemma agent_recv_transport_valid [sources,heuristic=s]: // i.e., do not use oracle
+    "All payload SessKey #i.
+      AgentRecvTransMsg(payload, SessKey)@i ==>
+        Ex #j. KU(payload)@j & #j < #i
     "
 
 
