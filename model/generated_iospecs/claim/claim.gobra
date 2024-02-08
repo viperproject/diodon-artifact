@@ -132,6 +132,15 @@ type Claim domain {
                 seq[Term]{t1, t2, t3, t4, t5, t6, t7, t8, t9, t10})
     }
 
+    func AgentRecvTransMsg(t1 Term, t2 Term) Claim
+    func getAgentRecvTransMsg(f Claim) seq[Term]
+    axiom  {
+        forall t1 Term, t2 Term :: 
+            { AgentRecvTransMsg(t1, t2) } (
+                getAgentRecvTransMsg(AgentRecvTransMsg(t1, t2)) ==
+                seq[Term]{t1, t2})
+    }
+
     func AgentSendLoop(t1 Term, t2 Term, t3 Term, t4 Term, t5 Term, t6 Term, t7 Term, t8 Term, t9 Term, t10 Term) Claim
     func getAgentSendLoop(f Claim) seq[Term]
     axiom  {
