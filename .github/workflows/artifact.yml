@@ -8,7 +8,8 @@ on:
   push:
 
 env:
-  IMAGE_ARTIFACT_NAME: diodon-artifact-image
+  IMAGE_NAME: artifact
+  IMAGE_WORKFLOW_ARTIFACT_NAME: diodon-artifact-image
 
 jobs:
   build:
@@ -19,8 +20,8 @@ jobs:
     steps:
       - name: Create Image ID
         run: |
-          REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          echo "IMAGE_ID=ghcr.io/$REPO_OWNER/diodon-artifact" >> $GITHUB_ENV
+          REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE_ID=ghcr.io/$REPO/${{ env.IMAGE_NAME }}" >> $GITHUB_ENV
 
       - name: Checkout repo
         uses: actions/checkout@v2
@@ -52,7 +53,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.IMAGE_ARTIFACT_NAME }}
+          name: ${{ env.IMAGE_WORKFLOW_ARTIFACT_NAME }}
           path: /tmp/image.tar
 
       - name: Set output
@@ -77,7 +78,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.IMAGE_ARTIFACT_NAME }}
+          name: ${{ env.IMAGE_WORKFLOW_ARTIFACT_NAME }}
           path: /tmp
 
       - name: Load image
@@ -95,7 +96,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.IMAGE_ARTIFACT_NAME }}
+          name: ${{ env.IMAGE_WORKFLOW_ARTIFACT_NAME }}
           path: /tmp
 
       - name: Load image
@@ -111,16 +112,16 @@ jobs:
       - name: Print image tag
         run: echo ${{ needs.build.outputs.IMAGE_TAG }}
 
-      # - name: Push image
-      #  run: docker push ${{ needs.build.outputs.IMAGE_TAG }}
       - name: Push image
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: docker/Dockerfile
-          tags: ${{ needs.build.outputs.IMAGE_TAG }}
-          labels: "runnumber=${{ github.run_id }}"
-          push: true
+        run: docker push ${{ needs.build.outputs.IMAGE_TAG }}
+      # - name: Push image
+      #   uses: docker/build-push-action@v2
+      #   with:
+      #     context: .
+      #     file: docker/Dockerfile
+      #     tags: ${{ needs.build.outputs.IMAGE_TAG }}
+      #     labels: "runnumber=${{ github.run_id }}"
+      #     push: true
 
 
   cleanup:
@@ -131,5 +132,5 @@ jobs:
       - name: Delete artifact
         uses: geekyeggo/delete-artifact@v4
         with:
-          name: ${{ env.IMAGE_ARTIFACT_NAME }}
+          name: ${{ env.IMAGE_WORKFLOW_ARTIFACT_NAME }}
           failOnError: false
