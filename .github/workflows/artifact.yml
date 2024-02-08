@@ -14,6 +14,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 3
+    outputs:
+      IMAGE_TAG: ${{ steps.output_step.outputs.IMAGE_TAG }}
     steps:
       - name: Create Image ID
         run: |
@@ -54,6 +56,7 @@ jobs:
           path: /tmp/image.tar
 
       - name: Set output
+        id: output_step
         run: echo "IMAGE_TAG=${{ env.IMAGE_TAG }}" >> $GITHUB_OUTPUT
 
 
@@ -104,6 +107,9 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Print image tag
+        run: echo ${{ needs.build.outputs.IMAGE_TAG }}
 
       - name: Push image
         run: docker push ${{ needs.build.outputs.IMAGE_TAG }}
