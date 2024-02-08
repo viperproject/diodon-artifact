@@ -8,7 +8,7 @@ on:
   push:
 
 env:
-  IMAGE_NAME: artifact
+  IMAGE_NAME: diodon-artifact-2
   IMAGE_WORKFLOW_ARTIFACT_NAME: diodon-artifact-image
 
 jobs:
@@ -20,8 +20,8 @@ jobs:
     steps:
       - name: Create Image ID
         run: |
-          REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          echo "IMAGE_ID=ghcr.io/$REPO/${{ env.IMAGE_NAME }}" >> $GITHUB_ENV
+          REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE_ID=ghcr.io/$REPO_OWNER/${{ env.IMAGE_NAME }}" >> $GITHUB_ENV
 
       - name: Checkout repo
         uses: actions/checkout@v2
@@ -56,7 +56,7 @@ jobs:
           name: ${{ env.IMAGE_WORKFLOW_ARTIFACT_NAME }}
           path: /tmp/image.tar
 
-      - name: Set output
+      - name: Set job output
         id: output_step
         run: echo "IMAGE_TAG=${{ env.IMAGE_TAG }}" >> $GITHUB_OUTPUT
 
