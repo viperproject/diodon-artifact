@@ -9,6 +9,8 @@ RUN apt-get update && \
     # libtinfo5 is needed by maude:
     libtinfo5 \
     locales \
+    # we need python for our Tamarin oracle:
+    python3 \
     # vim is only provided for convenience:
     vim \
     wget \
