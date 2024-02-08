@@ -1,4 +1,8 @@
-name: Protocol Model Verification
+name: Artifact
+
+# creates the artifact docker image and
+# - verifies the Tamarin model
+# - TODO
 
 on:
   push:
