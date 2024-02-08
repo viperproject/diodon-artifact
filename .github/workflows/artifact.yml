@@ -124,7 +124,9 @@ jobs:
       - name: Push image
         # here we have to use the IMAGE_TAG instead of the IMAGE_NAME!
         # run: docker push ${{ needs.Build.outputs.IMAGE_TAG }}
-        run: docker push --all-tags ghcr.io/${{ github.repository }}
+        run: |
+          REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          docker push --all-tags ghcr.io/$REPO
       # - name: Push image
       #   uses: docker/build-push-action@v2
       #   with:
