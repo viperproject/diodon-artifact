@@ -25,6 +25,8 @@ jobs:
 
       # it seems that `GITHUB_TOKEN` can't be configured to have read permissions to private repositories of the same user/organization
       # using a GitHub App seems to be the best workaround: https://github.com/orgs/community/discussions/25516
+      # note that this action requires that the app is installed for the repo owner (Settings > Applications) and is configured to
+      # allow access to the specified repositories.
       - name: Get token from GitHub App
         uses: actions/create-github-app-token@v1
         id: app_token
@@ -33,8 +35,9 @@ jobs:
           private-key: ${{ secrets.APP_PEM }}
           # owner is required, otherwise the creds will fail the checkout step
           owner: ${{ github.repository_owner }}
-          repositories: "diodon-artifact,amazon-ssm-agent" # note that the token must be valid for this repo as well as all submodules
+          repositories: "diodon-artifact,amazon-ssm-agent"
 
+      # repo checkout will only work if `app_token` provides access to the current repo and all its submodules.
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
@@ -103,7 +106,7 @@ jobs:
         run: docker load --input /tmp/image.tar
 
       - name: Verify protocol model
-        run: docker run --entrypoint "/bin/bash" ${{ needs.Build.outputs.IMAGE_TAG }} -c "cp -r model-orig/. model/; ${{ matrix.command }}"
+        run: docker run --entrypoint "/bin/bash" ${{ needs.Build.outputs.IMAGE_TAG }} -c "cp -r model-orig/. model/; cp -r implementation-orig/. implementation/; ${{ matrix.command }}"
 
 
   Publish:
