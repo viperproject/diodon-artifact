@@ -70,11 +70,15 @@ jobs:
       # tests should not be stopped when they fail on one of the OSes:
       fail-fast: false
       matrix:
-        name: ["Verify protocol model"]
+        name: ["Verify protocol model", "Verify core"]
         include:
           - name: "Verify protocol model"
             command: "/gobra/verify-model.sh"
-    timeout-minutes: 15
+            timeout-minutes: 15
+          - name: "Verify core"
+            command: "/gobra/verify-core.sh"
+            timeout-minutes: 30
+    timeout-minutes: ${{ matrix.timeout-minutes }}
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4

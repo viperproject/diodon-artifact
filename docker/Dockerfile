@@ -1,6 +1,6 @@
-# Gobra commit a2915f9
-# FROM ghcr.io/viperproject/gobra@sha256:74c99e35b5e51eefe38931717b373173cddf7931ec13e97cb202b7d739a0664b
-FROM ghcr.io/viperproject/gobra:latest
+# Gobra commit 88e0a9b
+FROM ghcr.io/viperproject/gobra@sha256:5f81e650fa8e0039e4ef64d8b211e7d8b1814cdbbebf10d22106300b7c28a418
+# FROM ghcr.io/viperproject/gobra:latest
 
 RUN apt-get update && \
 	apt-get install -y \
@@ -57,10 +57,13 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en  
 ENV LC_ALL en_US.UTF-8
 
-RUN mkdir model
+RUN mkdir model-orig && mkdir implementation-orig
 
 # copy model
-copy model ./model
+copy model ./model-orig
+
+# copy implementation
+copy implementation ./implementation-orig
 
 # copy shell scripts
 COPY docker/*.sh ./
@@ -69,11 +72,10 @@ COPY docker/*.sh ./
 RUN rm -r evaluation
 RUN rm -r tutorial-examples
 
-RUN mv model model-orig
-
-RUN mkdir model
+RUN mkdir model && mkdir implementation
 
 # disable entry point specified by the Gobra base container:
 # ENTRYPOINT []
 ENTRYPOINT cp -r model-orig/. model/ && \
+    cp -r implementation-orig/. implementation/ && \
     /bin/bash
