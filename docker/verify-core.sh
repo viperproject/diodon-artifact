@@ -29,5 +29,4 @@ java -Xss128m -jar $GOBRA_JAR \
     --input $INPUT_FILES \
     --gobraDirectory $GOBRA_REPORT_DIR \
     --parseAndTypeCheckMode PARALLEL \
-    --disablePureFunctsTerminationRequirement \
     --parallelizeBranches
