@@ -93,7 +93,7 @@ jobs:
             timeout-minutes: 15
           - name: "Verify core"
             command: "/gobra/verify-core.sh"
-            timeout-minutes: 30
+            timeout-minutes: 15
     timeout-minutes: ${{ matrix.timeout-minutes }}
     steps:
       - name: Download artifact
