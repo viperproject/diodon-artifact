@@ -15,8 +15,6 @@ jobs:
   Build:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    permissions:
-      contents: read
     outputs:
       IMAGE_TAG: ${{ steps.output_step.outputs.IMAGE_TAG }}
     steps:
@@ -25,10 +23,22 @@ jobs:
           REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           echo "IMAGE_ID=ghcr.io/$REPO_OWNER/${{ env.IMAGE_NAME }}" >> $GITHUB_ENV
 
+      # it seems that `GITHUB_TOKEN` can't be configured to have read permissions to private repositories of the same user/organization
+      # using a GitHub App seems to be the best workaround: https://github.com/orgs/community/discussions/25516
+      - name: Get token from GitHub App
+        uses: actions/create-github-app-token@v1
+        id: app_token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PEM }}
+          # owner is required, otherwise the creds will fail the checkout step
+          owner: ${{ github.repository_owner }}
+
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
           submodules: 'recursive'
+          token: ${{ steps.app_token.outputs.token }}
 
       - name: Image version
         run: |
