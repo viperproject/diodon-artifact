@@ -146,7 +146,7 @@ jobs:
       actions: write
     steps:
       - name: Delete artifact
-        uses: geekyeggo/delete-artifact@v4
+        uses: geekyeggo/delete-artifact@v5
         with:
           name: ${{ env.IMAGE_WORKFLOW_ARTIFACT_NAME }}
           failOnError: false
