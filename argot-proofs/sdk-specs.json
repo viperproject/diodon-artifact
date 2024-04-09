@@ -1,0 +1,115 @@
+[
+    {
+        "ObjectPath": "gopkg.in/yaml.v2",
+        "Methods": {
+            "yaml_parser_scan_flow_scalar": { "Args": [[]], "Rets": [[]] },
+            "yaml_emitter_analyze_scalar": { "Args": [[]], "Rets": [[]] },
+            "yaml_parser_scan_block_scalar": { "Args": [[]], "Rets": [[]] },
+            "Unmarshal": { "Args": [[0, 1], [1]], "Rets": [[0], [0]] },
+            "Marshal": { "Args": [[0]], "Rets": [[0, 1]] }
+        }
+    },
+    {
+        "ObjectPath": "golang.org/x/crypto/blowfish",
+        "Methods": {
+            "init": {
+                "Args": [[]],
+                "Rets": [[]],
+                "Comment": "(too many constants) init initializes many constants"
+            }
+        }
+    },
+    {
+        "ObjectPath": "vendor/golang.org/x/net/http2/hpack",
+        "Methods": {
+            "init": {
+                "Args": [[]],
+                "Rets": [[]],
+                "Comment": "(too many constants) init initializes huffman codes"
+            }
+        }
+    },
+    {
+        "ObjectPath": "image/jpeg",
+        "Methods": {
+            "init": {
+                "Args": [[]],
+                "Rets": [[]],
+                "Comment": "(too many constants)"
+            }
+        }
+    },
+    {
+        "ObjectPath": "github.com/aws/aws-sdk-go/aws",
+        "Methods": {
+            "mergeInConfig": { "Args": [[]], "Rets": [[]] }
+        }
+    },
+    {
+        "ObjectPath": "github.com/aws/aws-sdk-go/private/protocol/xml/xmlutil",
+        "Methods": {
+            "UnmarshalXML": {
+                "Args": [[0], [0, 1], [0, 2]],
+                "Rets": [[0], [0], [0]]
+            }
+        }
+    },
+    {
+        "ObjectPath": "(*github.com/aws/aws-sdk-go/aws/request.Request)",
+        "Methods": {
+            "Send": { "Args": [[0], [0, 1]], "Rets": [[0], [0]] },
+            "NewRequest": {
+                "Args": [[0], [0, 1], [0, 2], [0, 3]],
+                "Rets": [[0], [0], [0], [0]]
+            }
+        }
+    },
+    {
+        "ObjectPath": "github.com/aws/aws-sdk-go/aws/awsutil/copy",
+        "Methods": {
+            "rcopy": { "Args": [[0], [0, 1], [2]], "Rets": [[], []] }
+        }
+    },
+    {
+        "InterfaceId": "github.com/aws/aws-sdk-go/aws/request.Retryer",
+        "Methods": {
+            "RetryRules": { "Args": [[0], [1]], "Rets": [[0], [0]] },
+            "ShouldRetry": { "Args": [[0], [1]], "Rets": [[0], [0]] },
+            "MaxRetries": { "Args": [[0]], "Rets": [[0]] }
+        }
+    },
+    {
+        "InterfaceId": "github.com/aws/aws-sdk-go/aws/request.temporary",
+        "Methods": {
+            "Temporary": { "Args": [[0]], "Rets": [[0]] }
+        }
+    },
+    {
+        "InterfaceId": "github.com/aws/aws-sdk-go/aws/awserr.Error",
+        "Methods": {
+            "Error": { "Args": [[0]], "Rets": [[0]] },
+            "Code": { "Args": [[0]], "Rets": [[0]] },
+            "OrigErr": { "Args": [[0]], "Rets": [[0]] },
+            "Message": { "Args": [[0]], "Rets": [[0]] }
+        }
+    },
+    {
+        "InterfaceId": "github.com/aws/aws-sdk-go/aws/awserr.RequestFailure",
+        "Methods": {
+            "StatusCode": { "Args": [[0]], "Rets": [[0]] }
+        }
+    },
+    {
+        "InterfaceId": "github.com/aws/aws-sdk-go/aws/request.Validator",
+        "Methods": {
+            "Validate": { "Args": [[0]], "Rets": [[0]] }
+        }
+    },
+    {
+        "InterfaceId": "github.com/aws/aws-sdk-go/service/s3.endpointARNGetter",
+        "Methods": {
+            "getEndpointARN": { "Args": [[0]], "Rets": [[0, 1]] },
+            "hasEndpointARN": { "Args": [[0]], "Rets": [[0]] }
+        }
+    }
+]

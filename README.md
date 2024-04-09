@@ -8,7 +8,9 @@ This is the artifact for the paper "DIODON: Scaling Verification of Security Pro
 ## Structure
 - `model` contains the Tamarin model of the protocol used by the SSM Agent to establish interactive shell sessions
 - `implementation` contains the entire SSM Agent codebase.
-    - `implementation/agent/session/datachannel` contains the Go package representing the CORE
+    - `implementation/agent/session/datachannel` contains the Go package representing the CORE.
+- `ar-go-tools` contains the static analysis tools (Argot) to analyze the SSM Agent.
+- `argot-proofs` contains the scripts used to verify the SSM Agent with Argot.
 - `docker` contains the Dockerfile to build a Docker image containing all tools, the model, and the implementation, allowing seamless verification and, thus, reproduction of our results.
 
 
