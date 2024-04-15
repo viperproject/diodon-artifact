@@ -3,7 +3,7 @@ FROM ghcr.io/viperproject/gobra@sha256:5f81e650fa8e0039e4ef64d8b211e7d8b1814cdbb
 # FROM ghcr.io/viperproject/gobra:latest
 
 RUN apt-get update && \
-	apt-get install -y \
+    apt-get install -y \
     curl \
     # graphviz \
     # libtinfo5 is needed by maude:
@@ -14,10 +14,12 @@ RUN apt-get update && \
     # vim is only provided for convenience:
     vim \
     wget \
-    zip
+    zip \
+    make \
+    git
 
 # install go
-ENV GO_VERSION 1.22.0
+ENV GO_VERSION="1.22.2"
 RUN mkdir tmp && \
     cd tmp && \
     wget "https://go.dev/dl/go$GO_VERSION.linux-amd64.tar.gz" && \
@@ -27,15 +29,16 @@ RUN mkdir tmp && \
 
 # add Go to path:
 ENV PATH="${PATH}:/usr/local/go/bin"
+RUN go env -w GOBIN="/usr/local/go/bin"
 
 # `/.local/bin` is the installation location of Tamarin and its dependencies
 RUN mkdir -p /.local/bin
-ENV PATH=/.local/bin:$PATH
+ENV PATH="${PATH}:/.local/bin"
 
 # install Maude
-ENV TAMARIN_RELEASE_VERSION_FOR_MAUDE 1.6.0
-ENV MAUDE_VERSION 2.7.1
-ENV MAUDE_URL https://github.com/tamarin-prover/tamarin-prover/releases/download/$TAMARIN_RELEASE_VERSION_FOR_MAUDE/Maude-$MAUDE_VERSION-linux.zip
+ENV TAMARIN_RELEASE_VERSION_FOR_MAUDE="1.6.0"
+ENV MAUDE_VERSION="2.7.1"
+ENV MAUDE_URL="https://github.com/tamarin-prover/tamarin-prover/releases/download/$TAMARIN_RELEASE_VERSION_FOR_MAUDE/Maude-$MAUDE_VERSION-linux.zip"
 RUN curl -q -s -S -L --create-dirs -o maude.zip $MAUDE_URL && \
     unzip maude.zip -d /.local/bin/ && \
     rm maude.zip && \
@@ -43,7 +46,7 @@ RUN curl -q -s -S -L --create-dirs -o maude.zip $MAUDE_URL && \
     chmod a+x /.local/bin/maude
 
 # install tamarin-prover
-ENV TAMARIN_VERSION 1.8.0
+ENV TAMARIN_VERSION="1.8.0"
 RUN curl -q -s -S -L --create-dirs -o tamarin.tar.gz https://github.com/tamarin-prover/tamarin-prover/releases/download/$TAMARIN_VERSION/tamarin-prover-$TAMARIN_VERSION-linux64-ubuntu.tar.gz && \
     tar -x -C /.local/bin/ -f tamarin.tar.gz && \
     rm tamarin.tar.gz && \
@@ -53,9 +56,22 @@ RUN curl -q -s -S -L --create-dirs -o tamarin.tar.gz https://github.com/tamarin-
 USER root
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && \
     locale-gen
-ENV LANG en_US.UTF-8  
-ENV LANGUAGE en_US:en  
-ENV LC_ALL en_US.UTF-8
+ENV LANG="en_US.UTF-8"
+ENV LANGUAGE="en_US:en"
+ENV LC_ALL="en_US.UTF-8"
+
+# install argot dependencies
+RUN go install golang.org/x/vuln/cmd/govulncheck@latest && \
+    go install github.com/fzipp/gocyclo/cmd/gocyclo@latest && \
+    go install github.com/gordonklaus/ineffassign@latest && \
+    go install golang.org/x/lint/golint@latest && \
+    go install golang.org/x/tools/cmd/deadcode@latest
+
+# install argot
+RUN mkdir ar-go-tools && mkdir argot-proofs
+copy ar-go-tools ./ar-go-tools
+RUN cd ./ar-go-tools && make release
+copy argot-proofs ./argot-proofs
 
 RUN mkdir model-orig && mkdir implementation-orig
 

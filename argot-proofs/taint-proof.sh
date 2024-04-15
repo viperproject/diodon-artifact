@@ -2,7 +2,8 @@
 
 # Script to run the taint analysis proof on the SSM agent
 
-DIODON_DIR="$HOME"/workplace/diodon-artifact # FIXME change this
+SCRIPT_DIR=$(dirname $(realpath -s $0))
+DIODON_DIR="$SCRIPT_DIR"/..
 AGENT_DIR="$DIODON_DIR"/implementation
 ARGOT_DIR="$DIODON_DIR"/ar-go-tools
 PROOF_DIR="$DIODON_DIR"/argot-proofs
