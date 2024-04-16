@@ -19,7 +19,7 @@ RUN apt-get update && \
     git
 
 # install go
-ENV GO_VERSION="1.22.2"
+ENV GO_VERSION="1.21.5"
 RUN mkdir tmp && \
     cd tmp && \
     wget "https://go.dev/dl/go$GO_VERSION.linux-amd64.tar.gz" && \
