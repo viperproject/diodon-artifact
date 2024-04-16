@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script to run the taint analysis proof on the SSM agent
+# Script to run the modptr analysis proof on the SSM agent
 
 SCRIPT_DIR=$(dirname "$(realpath -s "$0")")
 DIODON_DIR="$SCRIPT_DIR"/..
@@ -8,14 +8,14 @@ AGENT_DIR="$DIODON_DIR"/implementation
 ARGOT_DIR="$DIODON_DIR"/ar-go-tools
 PROOF_DIR="$DIODON_DIR"/argot-proofs
 REPORT_DIR="$PROOF_DIR"/reports
-TAINT_BIN="$ARGOT_DIR"/bin/taint
+MODPTR_BIN="$ARGOT_DIR"/bin/modptr
 
-# Compile Argot taint tool
+# Compile Argot modptr tool
 cd "$ARGOT_DIR" || exit
-echo "Compiling Argot taint tool in directory $(pwd)"
-make taint || exit
+echo "Compiling Argot modptr tool in directory $(pwd)"
+make modptr || exit
 
-# Run the taint analysis
+# Run the modptr analysis
 if [ ! -e "$REPORT_DIR" ]; then
     mkdir -p "$REPORT_DIR"
 fi
@@ -26,13 +26,13 @@ if [ ! -e "$AGENT_DIR" ]; then
 fi
 cd "$AGENT_DIR" || exit
 
-TAINT_LOG_FILE="$REPORT_DIR"/taint-log
+MODPTR_LOG_FILE="$REPORT_DIR"/modptr-log
 
-echo "Running taint analysis on SSM agent in directory $(pwd)"
-echo "Saving log to ${TAINT_LOG_FILE}"
+echo "Running modptr (${MODPTR_BIN}) analysis on SSM agent in directory $(pwd)"
+echo "Saving log to ${MODPTR_LOG_FILE}"
 
-"$TAINT_BIN" -config "$PROOF_DIR"/argot-config.yaml \
+"$MODPTR_BIN" -config "$PROOF_DIR"/argot-config.yaml \
     "$AGENT_DIR"/agent/agent_parser.go \
     "$AGENT_DIR"/agent/agent_unix.go \
     "$AGENT_DIR"/agent/agent.go \
-    # > "$TAINT_LOG_FILE" 2>&1 # redirect stdout and stderr to log file
+    # > "$MODPTR_LOG_FILE" 2>&1 # redirect stdout and stderr to log file

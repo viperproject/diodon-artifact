@@ -9,7 +9,7 @@ DATACHANNEL_DIR="$AGENT_DIR/agent/session/datachannel"
 GOBRA_JAR="/gobra/gobra.jar"
 GOBRA_REPORT_DIR="$AGENT_DIR/.gobra"
 
-mkdir -p $GOBRA_REPORT_DIR
+mkdir -p "$GOBRA_REPORT_DIR"
 
 INPUT_FILES="\
     $DATACHANNEL_DIR/datachannel.go\
@@ -26,7 +26,7 @@ INPUT_FILES="\
 java -Xss128m -jar $GOBRA_JAR \
     --module "github.com/aws/amazon-ssm-agent" \
     --include "$AGENT_DIR/.verification" --include "$AGENT_DIR" \
-    --input $INPUT_FILES \
-    --gobraDirectory $GOBRA_REPORT_DIR \
+    --input "$INPUT_FILES" \
+    --gobraDirectory "$GOBRA_REPORT_DIR" \
     --parseAndTypeCheckMode PARALLEL \
     --parallelizeBranches
