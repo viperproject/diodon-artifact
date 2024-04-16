@@ -19,10 +19,44 @@ options:
   silence-warn: false
 
 modification-tracking-problems:
+  # All methods with the core invariant
   - values:
-      - package: .*
-        method: PerformHandshake
+      - package: .*datachannel
+        method: SendStreamDataMessage
         label: 0 # argument value to track
+      - package: .*datachannel
+        method: SendAgentSessionStateMessage
+        label: 0
+      - package: .*datachannel
+        method: SkipHandshake
+        label: 0
+      - package: .*datachannel
+        method: PerformHandshake
+        label: 0
+      - package: .*datachannel
+        method: GetClientVersion
+        label: 0
+      - package: .*datachannel
+        method: GetInstanceId
+        label: 0
+      - package: .*datachannel
+        method: GetRegion
+        label: 0
+      - package: .*datachannel
+        method: IsActive
+        label: 0
+      - package: .*datachannel
+        method: GetSeparateOutputPayload
+        label: 0
+      - package: .*datachannel
+        method: SetSeparateOutputPayload
+        label: 0
+      - package: .*datachannel
+        method: PrepareToCloseChannel
+        label: 0
+      - package: .*datachannel
+        method: Close
+        label: 0
     filters:
       - package: .*datachannel
         method: .*
