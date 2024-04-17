@@ -65,8 +65,14 @@ taint-tracking-problems:
   - filters:
       - type: error$
     sanitizers:
-      - method: sanitizeStr
-        package: .*
+      - method: KMSSign
+        package: github.com/aws/amazon-ssm-agent/agent/session/datachannel/iosanitization
+      - method: KMSVerify
+        package: github.com/aws/amazon-ssm-agent/agent/session/datachannel/iosanitization
+      - method: DataStreamSend
+        package: github.com/aws/amazon-ssm-agent/agent/session/datachannel/iosanitization
+      - method: DataChannelForwardToMessageHandler
+        package: github.com/aws/amazon-ssm-agent/agent/session/datachannel/iosanitization
     sources:
       # agent secret key, write key, and read key
       - package: .*
