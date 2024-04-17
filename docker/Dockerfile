@@ -60,18 +60,22 @@ ENV LANG="en_US.UTF-8"
 ENV LANGUAGE="en_US:en"
 ENV LC_ALL="en_US.UTF-8"
 
-# install argot dependencies
-RUN go install golang.org/x/vuln/cmd/govulncheck@latest && \
-    go install github.com/fzipp/gocyclo/cmd/gocyclo@latest && \
-    go install github.com/gordonklaus/ineffassign@latest && \
-    go install golang.org/x/lint/golint@latest && \
-    go install golang.org/x/tools/cmd/deadcode@latest
-
-# install argot
+# copy argot
 RUN mkdir ar-go-tools && mkdir argot-proofs
 copy ar-go-tools ./ar-go-tools
-RUN cd ./ar-go-tools && make release
 copy argot-proofs ./argot-proofs
+
+# install argot dependencies
+RUN cd ./argot-proofs/dependencies && \
+    go install golang.org/x/vuln/cmd/govulncheck && \
+    go install github.com/fzipp/gocyclo/cmd/gocyclo && \
+    go install github.com/gordonklaus/ineffassign && \
+    go install golang.org/x/lint/golint && \
+    go install golang.org/x/tools/cmd/deadcode
+
+# compile argot
+RUN cd ./ar-go-tools && make release
+
 
 RUN mkdir model-orig && mkdir implementation-orig
 
