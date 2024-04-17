@@ -94,6 +94,9 @@ jobs:
           - name: "Verify core"
             command: "/gobra/verify-core.sh"
             timeout-minutes: 15
+          - name: "Check semantic encapsulation of I/O operations"
+            command: "/gobra/verify-taint.sh"
+            timeout-minutes: 15
     timeout-minutes: ${{ matrix.timeout-minutes }}
     steps:
       - name: Download artifact
