@@ -1,5 +1,30 @@
 [
     {
+        "ObjectPath": "github.com/aws/amazon-ssm-agent/agent/session/datachannel/iosanitization",
+        "Methods": {
+            "KMSSign": {
+                "Args": [[]],
+                "Rets": [[]],
+                "Comment": "This function is part of the I/O spec"
+            },
+            "KMSVerify": {
+                "Args": [[]],
+                "Rets": [[]],
+                "Comment": "This function is part of the I/O spec"
+            },
+            "DataStreamSend": {
+                "Args": [[]],
+                "Rets": [[]],
+                "Comment": "This function is part of the I/O spec"
+            },
+            "DataChannelForwardToMessageHandler": {
+                "Args": [[]],
+                "Rets": [[]],
+                "Comment": "This function is part of the I/O spec"
+            }
+        }
+    },
+    {
         "InterfaceId": "github.com/aws/amazon-ssm-agent/extra/aws-sdk-go/aws/request.temporary",
         "Methods": {
             "Temporary": { "Args": [[0]], "Rets": [[0]] }

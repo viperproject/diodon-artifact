@@ -32,7 +32,5 @@ echo "Running taint analysis on SSM agent in directory $(pwd)"
 echo "Saving log to ${TAINT_LOG_FILE}"
 
 "$TAINT_BIN" -config "$PROOF_DIR"/argot-config.yaml \
-    "$AGENT_DIR"/agent/agent_parser.go \
-    "$AGENT_DIR"/agent/agent_unix.go \
-    "$AGENT_DIR"/agent/agent.go \
+    "$AGENT_DIR"/agent/framework/processor/executer/outofproc/sessionworker/main.go \
     # > "$TAINT_LOG_FILE" 2>&1 # redirect stdout and stderr to log file

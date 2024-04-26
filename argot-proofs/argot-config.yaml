@@ -4,320 +4,325 @@ dataflow-specs:
   - std-specs.json
 options:
   field-sensitive-funcs:
-    - .*aws-sdk-go/service/kms.*
+    - .*/messageservice/interactor.*
     - .*/session/crypto.*
     - .*/session/datachannel.*
     - .*/session/datastream.*
+    - .*/session/plugins/port.*
     - .*/session/plugins/sessionplugin.*
+    - .*/session/plugins/standardstream.*
     - .*/session/retry.*
-    - .*/messageservice/interactor.*
+    - .*/session/shell.*
+    - .*aws-sdk-go/service/kms.*
   log-level: 3 # log at info level (3), debug level is 4 and trace is 5
   max-alarms: 2
-  max-depth: 20
+  max-depth: 40
   pkg-filter: (github.com/aws/amazon-ssm-agent)
   report-paths: false
-  silence-warn: false
+  silence-warn: true
 
 modification-tracking-problems:
   # All methods with the core invariant
   - values:
-      - package: .*datachannel
+      - package: .*datachannel$
         method: SendStreamDataMessage
         label: 0 # argument value to track
-      - package: .*datachannel
+      - package: .*datachannel$
         method: SendAgentSessionStateMessage
         label: 0
-      - package: .*datachannel
+      - package: .*datachannel$
         method: SkipHandshake
         label: 0
-      - package: .*datachannel
+      - package: .*datachannel$
         method: PerformHandshake
         label: 0
-      - package: .*datachannel
+      - package: .*datachannel$
         method: GetClientVersion
         label: 0
-      - package: .*datachannel
+      - package: .*datachannel$
         method: GetInstanceId
         label: 0
-      - package: .*datachannel
+      - package: .*datachannel$
         method: GetRegion
         label: 0
-      - package: .*datachannel
+      - package: .*datachannel$
         method: IsActive
         label: 0
-      - package: .*datachannel
+      - package: .*datachannel$
         method: GetSeparateOutputPayload
         label: 0
-      - package: .*datachannel
+      - package: .*datachannel$
         method: SetSeparateOutputPayload
         label: 0
-      - package: .*datachannel
+      - package: .*datachannel$
         method: PrepareToCloseChannel
         label: 0
-      - package: .*datachannel
+      - package: .*datachannel$
         method: Close
         label: 0
     filters:
-      - package: .*datachannel
+      - package: .*datachannel$
         method: .*
 
 taint-tracking-problems:
   - filters:
-      - type: error$
-    sanitizers:
-      - method: KMSSign
-        package: github.com/aws/amazon-ssm-agent/agent/session/datachannel/iosanitization
-      - method: KMSVerify
-        package: github.com/aws/amazon-ssm-agent/agent/session/datachannel/iosanitization
-      - method: DataStreamSend
-        package: github.com/aws/amazon-ssm-agent/agent/session/datachannel/iosanitization
-      - method: DataChannelForwardToMessageHandler
-        package: github.com/aws/amazon-ssm-agent/agent/session/datachannel/iosanitization
+      - type: error$ # TODO is this ok?
+    explicit-flow-only: false # information flow (false) or data flow (true)
     sources:
-      # agent secret key, write key, and read key
-      - package: .*
-        method: computeKdf
-      # session ID
-      - package: .*
-        method: computeSHA384
+      - package: crypto/elliptic$
+        method: GenerateKey$
     sinks:
-      - interface: T
-        package: github.com/aws/amazon-ssm-agent/agent/log
+      - interface: T$
+        package: .*log$
+      - method: Info.*$
+        package: .*log$
+      - method: Debug.*$
+        package: .*log$
+      - method: Trace.*$
+        package: .*log$
+      - method: Warn.*$
+        package: .*log$
+      - method: Warn.*$
+        package: .*log$
+      - method: Error.*$
+        package: .*log$
+      - method: Critical.*$
+        package: .*log$
       - method: SetFlags$
-        package: log
+        package: log$
       - method: SetOutput$
-        package: log
+        package: log$
       - method: Dial$
-        package: net
+        package: net$
       - method: DialIP$
-        package: net
+        package: net$
       - method: DialTCP$
-        package: net
+        package: net$
       - method: DialTimeout$
-        package: net
+        package: net$
       - method: DialUDP$
-        package: net
+        package: net$
       - method: DialUnix$
-        package: net
+        package: net$
       - method: FileConn$
-        package: net
+        package: net$
       - method: FileListener$
-        package: net
+        package: net$
       - method: FilePacketConn$
-        package: net
+        package: net$
       - method: Listen$
-        package: net
+        package: net$
       - method: ListenIP$
-        package: net
+        package: net$
       - method: ListenMulticastUDP$
-        package: net
+        package: net$
       - method: ListenPacket$
-        package: net
+        package: net$
       - method: ListenTCP$
-        package: net
+        package: net$
       - method: ListenUDP$
-        package: net
+        package: net$
       - method: ListenUnix$
-        package: net
+        package: net$
       - method: ListenUnixgram$
-        package: net
+        package: net$
       - method: LookupAddr$
-        package: net
+        package: net$
       - method: LookupCNAME$
-        package: net
+        package: net$
       - method: LookupHost$
-        package: net
+        package: net$
       - method: LookupIP$
-        package: net
+        package: net$
       - method: LookupMX$
-        package: net
+        package: net$
       - method: LookupNS$
-        package: net
+        package: net$
       - method: LookupPort$
-        package: net
+        package: net$
       - method: LookupSRV$
-        package: net
+        package: net$
       - method: LookupTXT$
-        package: net
+        package: net$
       - method: ResolveIPAddr$
-        package: net
+        package: net$
       - method: ResolveTCPAddr$
-        package: net
+        package: net$
       - method: ResolveUDPAddr$
-        package: net
+        package: net$
       - method: ResolveUnixAddr$
-        package: net
+        package: net$
       - method: Chdir$
-        package: os
+        package: os$
       - method: Chmod$
-        package: os
+        package: os$
       - method: Chown$
-        package: os
+        package: os$
       - method: Chtimes$
-        package: os
+        package: os$
       - method: Clearenv$
-        package: os
+        package: os$
       - method: Create$
-        package: os
+        package: os$
       - method: CreateTemp$
-        package: os
+        package: os$
       - method: DirFS$
-        package: os
+        package: os$
       - method: Lchown$
-        package: os
+        package: os$
       - method: Link$
-        package: os
+        package: os$
       - method: Lstat$
-        package: os
+        package: os$
       - method: Mkdir$
-        package: os
+        package: os$
       - method: MkdirAll$
-        package: os
+        package: os$
       - method: MkdirTemp$
-        package: os
+        package: os$
       - method: NewFile$
-        package: os
+        package: os$
       - method: Open$
-        package: os
+        package: os$
       - method: OpenFile$
-        package: os
+        package: os$
       - method: Pipe$
-        package: os
+        package: os$
       - method: ReadDir$
-        package: os
+        package: os$
       - method: ReadFile$
-        package: os
+        package: os$
       - method: Readlink$
-        package: os
+        package: os$
       - method: Remove$
-        package: os
+        package: os$
       - method: RemoveAll$
-        package: os
+        package: os$
       - method: Rename$
-        package: os
+        package: os$
       - method: SameFile$
-        package: os
+        package: os$
       - method: Setenv$
-        package: os
+        package: os$
       - method: Stat$
-        package: os
+        package: os$
       - method: Symlink$
-        package: os
+        package: os$
       - method: Truncate$
-        package: os
+        package: os$
       - method: Unsetenv$
-        package: os
+        package: os$
       - method: WriteFile$
-        package: os
+        package: os$
       - method: Chdir$
-        package: os
+        package: os$
       - method: Chmod$
-        package: os
+        package: os$
       - method: Chown$
-        package: os
+        package: os$
       - method: Close$
-        package: os
+        package: os$
       - method: Fd$
-        package: os
+        package: os$
       - method: Name$
-        package: os
+        package: os$
       - method: Read$
-        package: os
+        package: os$
       - method: ReadAt$
-        package: os
+        package: os$
       - method: ReadDir$
-        package: os
+        package: os$
       - method: ReadFrom$
-        package: os
+        package: os$
       - method: Readdir$
-        package: os
+        package: os$
       - method: Readdirnames$
-        package: os
+        package: os$
       - method: Seek$
-        package: os
+        package: os$
       - method: SetDeadline$
-        package: os
+        package: os$
       - method: SetReadDeadline$
-        package: os
+        package: os$
       - method: SetWriteDeadline$
-        package: os
+        package: os$
       - method: Stat$
-        package: os
+        package: os$
       - method: Sync$
-        package: os
+        package: os$
       - method: SyscallConn$
-        package: os
+        package: os$
       - method: Truncate$
-        package: os
+        package: os$
       - method: Write$
-        package: os
+        package: os$
       - method: WriteAt$
-        package: os
+        package: os$
       - method: WriteString$
-        package: os
+        package: os$
       - method: IsDir$
-        package: os
+        package: os$
       - method: ModTime$
-        package: os
+        package: os$
       - method: Mode$
-        package: os
+        package: os$
       - method: Name$
-        package: os
+        package: os$
       - method: Size$
-        package: os
+        package: os$
       - method: Sys$
-        package: os
+        package: os$
       - method: Name$
-        package: os
+        package: os$
       - method: LookPath$
-        package: os/exec
+        package: os/exec$
       - method: Open$
-        package: plugin
+        package: plugin$
       - method: WriteHeapDump$
-        package: runtime/debug
+        package: runtime/debug$
       - method: .*
-        package: os
+        package: os$
       - method: .*
-        package: os/exec
+        package: os/exec$
       - method: .*
-        package: net
+        package: net$
       - method: .*
-        package: net/http
+        package: net/http$
       - method: .*
-        package: unsafe
+        package: unsafe$
       - method: Breakpoint$
-        package: runtime
+        package: runtime$
       - method: CPUProfile$
-        package: runtime
+        package: runtime$
       - method: Goexit$
-        package: runtime
+        package: runtime$
       - method: SetCgoTraceback$
-        package: runtime
+        package: runtime$
       - method: UnlockOSThread$
-        package: runtime
+        package: runtime$
       - method: SetGCPercent$
-        package: runtime/debug
+        package: runtime/debug$
       - method: SetMaxStack$
-        package: runtime/debug
+        package: runtime/debug$
       - method: SetMaxThreads$
-        package: runtime/debug
+        package: runtime/debug$
       - method: SetPanicOnFault$
-        package: runtime/debug
+        package: runtime/debug$
       - method: Read$
-        package: runtime/metrics
+        package: runtime/metrics$
       - method: SetFinalizer$
-        package: runtime
+        package: runtime$
       - method: .*
-        package: reflect
+        package: reflect$
       - method: .*
-        package: runtime
+        package: runtime$
       - method: .*
-        package: runtime/cgo
+        package: runtime/cgo$
       - method: .*
-        package: runtime/debug
+        package: runtime/debug$
       - method: .*
-        package: runtime/pprof
+        package: runtime/pprof$
       - method: .*
-        package: os/signal
+        package: os/signal$
       - method: Print.*
-        package: fmt
+        package: fmt$
