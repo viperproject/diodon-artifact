@@ -32,7 +32,5 @@ echo "Running modptr (${MODPTR_BIN}) analysis on SSM agent in directory $(pwd)"
 echo "Saving log to ${MODPTR_LOG_FILE}"
 
 "$MODPTR_BIN" -config "$PROOF_DIR"/argot-config.yaml \
-    "$AGENT_DIR"/agent/agent_parser.go \
-    "$AGENT_DIR"/agent/agent_unix.go \
-    "$AGENT_DIR"/agent/agent.go \
-    # > "$MODPTR_LOG_FILE" 2>&1 # redirect stdout and stderr to log file
+    "$AGENT_DIR"/agent/framework/processor/executer/outofproc/sessionworker/main.go \
+    > "$MODPTR_LOG_FILE" 2>&1 # redirect stdout and stderr to log file
