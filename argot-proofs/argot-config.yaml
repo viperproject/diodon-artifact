@@ -16,7 +16,6 @@ options:
     - .*aws-sdk-go/service/kms.*
   log-level: 3 # log at info level (3), debug level is 4 and trace is 5
   max-alarms: 2
-  max-depth: 40
   pkg-filter: (github.com/aws/amazon-ssm-agent)
   report-paths: false
   silence-warn: true
