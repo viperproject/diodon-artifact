@@ -1,8 +1,8 @@
-# DIODON: Scaling Verification of Security Protocol Implementations to Large Codebases
+# The Secrets Must Not Flow: Scaling Security Verification to Large Codebases
 
 [![SSM Agent Verification](https://github.com/ArquintL/diodon-artifact/actions/workflows/artifact.yml/badge.svg?branch=main)](https://github.com/ArquintL/diodon-artifact/actions/workflows/artifact.yml?query=branch%3Amain)
 
-This is the artifact for the paper "DIODON: Scaling Verification of Security Protocol Implementations to Large Codebases" containing the protocol model and codebase of the SSM Agent.
+This is the artifact for the paper "The Secrets Must Not Flow: Scaling Security Verification to Large Codebases" containing the protocol model, the SSM Agent's codebase, and the static analysis tools.
 
 
 ## Structure
