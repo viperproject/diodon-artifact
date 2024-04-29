@@ -19,6 +19,7 @@ options:
   pkg-filter: (github.com/aws/amazon-ssm-agent)
   report-paths: false
   silence-warn: true
+  escape-config: "escape-config.json"
 
 modification-tracking-problems:
   # All methods with the core invariant
