@@ -96,10 +96,10 @@ jobs:
             timeout-minutes: 15
           - name: "Verify I/O independence"
             command: "/gobra/verify-io-independence.sh"
-            timeout-minutes: 15
+            timeout-minutes: 10
           - name: "Verify semantic encapsulation of the core"
             command: "/gobra/verify-semantic-encapsulation.sh"
-            timeout-minutes: 15
+            timeout-minutes: 20
     timeout-minutes: ${{ matrix.timeout-minutes }}
     steps:
       - name: Download artifact
