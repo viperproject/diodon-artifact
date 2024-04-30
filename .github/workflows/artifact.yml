@@ -111,7 +111,7 @@ jobs:
       - name: Load image
         run: docker load --input /tmp/image.tar
 
-      - name: Verify protocol model
+      - name: ${{ matrix.name }}
         run: docker run --entrypoint "/bin/bash" ${{ needs.Build.outputs.IMAGE_TAG }} -c "cp -r model-orig/. model/; cp -r implementation-orig/. implementation/; ${{ matrix.command }}"
 
 
