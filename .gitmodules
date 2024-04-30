@@ -4,5 +4,5 @@
 	branch = diodon
 [submodule "ar-go-tools"]
 	path = ar-go-tools
-	url = https://github.com/awslabs/ar-go-tools
+	url = https://github.com/ArquintL/ar-go-tools
 	branch = diodon-wip

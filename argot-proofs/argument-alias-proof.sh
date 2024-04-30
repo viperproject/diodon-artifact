@@ -1,9 +1,12 @@
 #!/bin/bash
 
+# exit when any command fails
+set -e
+
 # Script to run the argalias analysis proof on the SSM agent
 
-SCRIPT_DIR=$(dirname "$(realpath -s "$0")")
-DIODON_DIR="$SCRIPT_DIR"/..
+SCRIPT_DIR=$(dirname "$0")
+DIODON_DIR=$(realpath "$SCRIPT_DIR"/..)
 AGENT_DIR="$DIODON_DIR"/implementation
 ARGOT_DIR="$DIODON_DIR"/ar-go-tools
 PROOF_DIR="$DIODON_DIR"/argot-proofs

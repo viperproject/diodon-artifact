@@ -35,7 +35,7 @@ jobs:
           private-key: ${{ secrets.APP_PEM }}
           # owner is required, otherwise the creds will fail the checkout step
           owner: ${{ github.repository_owner }}
-          repositories: "diodon-artifact,amazon-ssm-agent"
+          repositories: "diodon-artifact,amazon-ssm-agent,ar-go-tools"
 
       # repo checkout will only work if `app_token` provides access to the current repo and all its submodules.
       - name: Checkout repo
