@@ -19,46 +19,59 @@ options:
   pkg-filter: (github.com/aws/amazon-ssm-agent)
   report-paths: false
   silence-warn: true
+  escape-config: "escape-config.json"
 
 modification-tracking-problems:
   # All methods with the core invariant
   - values:
       - package: .*datachannel$
-        method: SendStreamDataMessage
+        method: SendStreamDataMessage$
         label: 0 # argument value to track
+        type: .*(IDataChannel|dataChannel)
       - package: .*datachannel$
-        method: SendAgentSessionStateMessage
+        method: SendAgentSessionStateMessage$
         label: 0
+        type: .*(IDataChannel|dataChannel)
       - package: .*datachannel$
-        method: SkipHandshake
+        method: SkipHandshake$
         label: 0
+        type: .*(IDataChannel|dataChannel)
       - package: .*datachannel$
-        method: PerformHandshake
+        method: PerformHandshake$
         label: 0
+        type: .*(IDataChannel|dataChannel)
       - package: .*datachannel$
-        method: GetClientVersion
+        method: GetClientVersion$
         label: 0
+        type: .*(IDataChannel|dataChannel)
       - package: .*datachannel$
-        method: GetInstanceId
+        method: GetInstanceId$
         label: 0
+        type: .*(IDataChannel|dataChannel)
       - package: .*datachannel$
-        method: GetRegion
+        method: GetRegion$
         label: 0
+        type: .*(IDataChannel|dataChannel)
       - package: .*datachannel$
-        method: IsActive
+        method: IsActive$
         label: 0
+        type: .*(IDataChannel|dataChannel)
       - package: .*datachannel$
-        method: GetSeparateOutputPayload
+        method: GetSeparateOutputPayload$
         label: 0
+        type: .*(IDataChannel|dataChannel)
       - package: .*datachannel$
-        method: SetSeparateOutputPayload
+        method: SetSeparateOutputPayload$
         label: 0
+        type: .*(IDataChannel|dataChannel)
       - package: .*datachannel$
-        method: PrepareToCloseChannel
+        method: PrepareToCloseChannel$
         label: 0
+        type: .*(IDataChannel|dataChannel)
       - package: .*datachannel$
-        method: Close
+        method: Close$
         label: 0
+        type: .*(IDataChannel|dataChannel)
     filters:
       - package: .*datachannel$
         method: .*

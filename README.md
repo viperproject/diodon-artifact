@@ -43,3 +43,12 @@ The Docker image provides several ready-to-use scripts in the `/gobra` directory
 - `verify-core.sh`: Verifies the SSM Agent's CORE using Gobra
 - `verify-io-independence.sh`: Runs the taint analysis and verifies that all I/O operations are I/O independent except those for which we prove using Gobra that they refine the protocol model's SSM Agent role.
 - `verify-semantic-encapsulation.sh`: Runs the pointer analysis to verify that the CORE's internal state is not modified by the APPLICATION.
+
+#### Bug Patches
+The git patch files in the `/implementation` directory introduce bugs to the SSM Agent codebase that our verification tools identify.
+
+- `refinement_bug.patch`: caught by `verify-core.sh`
+- `logging_eph_priv_key_bug.patch`: caught by `verify-io-independence.sh`
+- `logging_shared_secret_bug.patch`: caught by `verify-io-independence.sh`
+- `alias_arguments_bug.patch`: caught by `verify-semantic-encapsulation.sh`
+- `modify_core_state_bug.patch`: caught by `verify-semantic-encapsulation.sh`
