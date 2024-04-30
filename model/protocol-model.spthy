@@ -8,54 +8,6 @@ builtins: symmetric-encryption, asymmetric-encryption, diffie-hellman, signing
 functions: hash/1, kdf1/1, kdf2/1
 
 
-/*
- * Modeling thoughts:
- * - To ensure that all operations are logged, the client is untrusted (i.e. an untrusted employee) and for arbitrary commands, we want to make sure that they
- *      end up (in an accessible form) in the logging service
- * - On the other hand to ensure that MGS is "just" forwarding (end-to-end encrypted) commands, we do not want to trust MGS and treat is as a DY attacker. In
- *      this setting, client <-> agent communication happens via an untrusted network to make the least possible assumptions about MGS.
- * - The property that all commands that get executed have been logged cannot be proven:
- *      Main problem is the lack of causal dependency of receiving a log message and the execution of the corresponding command.
- *      In particular:
- *      - Due to the attacker model, the attacker might simply drop all log messages such that none arrive
- *      - Proving that MGS sends a particular log message is a liveness property
- * - Instead, we want accountability, i.e., a logged command has indeed been issued by the client (or the client has reveal the session key, which it shouldn't).
- * 
- * Properties:
- * - Trusted MGS & agent: all commands have been logged
- *      not trusting MGS: logging could simply not happen
- *      not trusting agent: session key provided by agent (or commands encrypted with a company's public key) could be wrong. I.e., logging happens but reading
- *          log will fail
- * - 
- *
- * Questions:
- * - Whom do we actually trust? If we don't trust MGS, is guaranteed logging even achievable?
- * - How do KMS Keys (i.e. the symmetric one) work? Customers provide them (or generate them) but who guarantees that Amazon does not use it? Is this ensured
- *      via legal contracts? If so, what other trust assumptions can we make?
- * - We do trust KMS fully, right? I.e. agents and clients have a secure channel to KMS?
- * - What is the KMS key's purpose in Samarth's prototype? Isn't a DH key exchange sufficient?
- * - KMS seems to be used as a delegate which knows a party's own authentic secret keys and those of its communication partners. Can we trust the agent trust
- *      a client's key ID (which is provided as part of the secure session response)
- *
- *
- * Notes from call with Joey:
- * - hopefully, we do not have to trust MGS for authentication purposes
- * - KMS has to be fully trusted as it can obtain the session key (by decrypting the encrypted data key meant for the logging service) or forge signatures
- *      during the key exchange and thus become a man-in-the-middle.
- * - client should not be trusted and agent should not get the logging service's public key from the client. Instead, this should be provisioned (out of band)
- *      to the agent.
- * - talk to Victor (and Brandon / Jason?) about a static analysis to get guarantees for the code-base that we do not verify. E.g. check that security-relevant
- *      data (reading or changing the secret or public keys) is absent outside the verified code base.
- *
- * Insights:
- * - secure channel to KMS should be parameterized by run ID.
- * - otherwise, a client with the same ID as the agent suffers from replay attacks of KMS responses as messages are treated to be sent on the same channel
- *      from/to KMS.
- *
- * TODO: offload encryption happening in agent to KMS
- */
-
-
 // Begin PKI & KMS infrastructure
 rule Register_pk:
     [ Fr(~ltk) ]
