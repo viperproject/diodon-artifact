@@ -87,8 +87,7 @@ rule Alice_sendMsg:
      [ St_Alice_2(ridA, A, B, skA, skB, ~x, Y),
        In(msgIn) ]
       --[ AliceSendLoop(Y^~x),
-          AliceSendTransMsg(msgIn, key),
-          OutFormat2(mOut) ]->
+          AliceSendTransMsg(msgIn, key) ]->
      [ St_Alice_2(ridA, A, B, skA, skB, ~x, Y),
        Out(mOut) ]
 
@@ -101,8 +100,7 @@ rule Alice_recvMsg:
      [ St_Alice_2(ridA, A, B, skA, skB, ~x, Y),
        In(mIn) ]
       --[ AliceRecvLoop(Y^~x),
-          AliceRecvTransMsg(msgOut, key),
-          InFormat2(mIn) ]->
+          AliceRecvTransMsg(msgOut, key) ]->
      [ St_Alice_2(ridA, A, B, skA, skB, ~x, Y),
        Out(msgOut) ]
 
@@ -152,8 +150,7 @@ rule Bob_recvMsg:
        In(mIn) ]
       --[ BobRecvLoop(X^~y),
           BobRecvTransMsg(msgOut, key),
-          BobRecvTransMsgIden(A, B, msgOut, key),
-          InFormat2(mIn) ]->
+          BobRecvTransMsgIden(A, B, msgOut, key) ]->
      [ St_Bob_2(ridB, B, A, skB, skA, ~y, X),
        Out(msgOut) ]
 
@@ -166,8 +163,7 @@ rule Bob_sendMsg:
      [ St_Bob_2(ridB, B, A, skB, skA, ~y, X),
        In(msgIn) ]
       --[ BobSendLoop(X^~y),
-          BobSendTransMsg(msgIn, key),
-          OutFormat2(mOut) ]->
+          BobSendTransMsg(msgIn, key) ]->
      [ St_Bob_2(ridB, B, A, skB, skA, ~y, X),
        Out(mOut) ]
 
@@ -187,11 +183,6 @@ lemma sources [sources]:
         AliceRecvTransMsg(payload, key)@i ==>
           (Ex #j. BobSendTransMsg(payload, key)@j & #j < #i) |
           (Ex #j #k. KU(key)@j & #j < #i & KU(payload)@k & #k < #i))
-      &
-      (All x1 x2 #i.
-        InFormat2(format2(x1, x2))@i ==>
-          (Ex #j. OutFormat2(format2(x1, x2))@j) |
-          (Ex #j #k. KU(x1)@j & #j < #i & KU(x2)@k & #k < #i))
       &
       (All key m #i.
        IN_ALICE(key, m) @ i ==>
