@@ -1,24 +1,26 @@
-theory DhOld
+theory Dh
 begin
 
-builtins: diffie-hellman
+builtins: diffie-hellman, symmetric-encryption
 
-functions: sign/2, pk/1, verify/2, extract/1, true/0
-
+functions: sign/2, pk/1, verify/2, extract/1, true/0, kdf1/1, kdf2/1
 equations: extract(sign(m, k)) = m
-
 equations: verify(sign(m, k), pk(k)) = true
 
 
 /* format = transparent constructor used for the messages */
-functions: format/5, ex1/1, ex2/1, ex3/1, ex4/1, ex5/1
-
+functions: format2/2, ex21/1, ex22/1
 equations:
-  ex1(format(x1,x2,x3,x4,x5)) = x1,
-  ex2(format(x1,x2,x3,x4,x5)) = x2,
-  ex3(format(x1,x2,x3,x4,x5)) = x3,
-  ex4(format(x1,x2,x3,x4,x5)) = x4,
-  ex5(format(x1,x2,x3,x4,x5)) = x5
+  ex21(format2(x1,x2)) = x1,
+  ex22(format2(x1,x2)) = x2
+
+functions: format5/5, ex51/1, ex52/1, ex53/1, ex54/1, ex55/1
+equations:
+  ex51(format5(x1,x2,x3,x4,x5)) = x1,
+  ex52(format5(x1,x2,x3,x4,x5)) = x2,
+  ex53(format5(x1,x2,x3,x4,x5)) = x3,
+  ex54(format5(x1,x2,x3,x4,x5)) = x4,
+  ex55(format5(x1,x2,x3,x4,x5)) = x5
 
 
 /* -------------------- */
@@ -61,19 +63,48 @@ rule Alice_send:
 
 rule Alice_recvAndSend:
   let
-    msgIn = format('0', B, A, 'g'^x, Y)
-    mOut = format('1', A, B, Y, 'g'^x)
-    key = Y^x
+    msgIn = format5('0', B, A, 'g'^~x, Y)
+    mOut = format5('1', A, B, Y, 'g'^~x)
+    key = Y^~x
   in
-     [ St_Alice_1(ridA, A, B, skA, skB, x),
+     [ St_Alice_1(ridA, A, B, skA, skB, ~x),
        In(sign(msgIn, skB)) ]
       --[ IN_ALICE(Y, msgIn),
           Secret(A, B, key),
           Running('R', 'I', <A, B, key>),
-          Commit('I', 'R', <A, B, key>)
+          Commit('I', 'R', <A, B, key>),
+          AliceHsDone(key)
         ]->
-     [ St_Alice_2(ridA, A, B, skA, skB, x, Y),
+     [ St_Alice_2(ridA, A, B, skA, skB, ~x, Y),
        Out(sign(mOut, skA)) ]
+
+
+rule Alice_sendMsg:
+  let
+    key = kdf1(Y^~x)
+    mOut = format2('2', senc(msgIn, key))
+  in
+     [ St_Alice_2(ridA, A, B, skA, skB, ~x, Y),
+       In(msgIn) ]
+      --[ AliceSendLoop(Y^~x),
+          AliceSendTransMsg(msgIn, key),
+          OutFormat2(mOut) ]->
+     [ St_Alice_2(ridA, A, B, skA, skB, ~x, Y),
+       Out(mOut) ]
+
+
+rule Alice_recvMsg:
+  let
+    key = kdf2(Y^~x)
+    mIn = format2('2', senc(msgOut, key))
+  in
+     [ St_Alice_2(ridA, A, B, skA, skB, ~x, Y),
+       In(mIn) ]
+      --[ AliceRecvLoop(Y^~x),
+          AliceRecvTransMsg(msgOut, key),
+          InFormat2(mIn) ]->
+     [ St_Alice_2(ridA, A, B, skA, skB, ~x, Y),
+       Out(msgOut) ]
 
 
 
@@ -86,7 +117,7 @@ rule Bob_init: // technically an env rule
 
 rule Bob_recvAndSend:
   let
-    mOut = format('0', B, A, X, 'g'^~y)
+    mOut = format5('0', B, A, X, 'g'^~y)
     key = X^~y
   in
      [ Setup_Bob(ridB, B, A, skB, skA),
@@ -101,29 +132,72 @@ rule Bob_recvAndSend:
 
 rule Bob_recv:
   let
-    msgIn = format('1', A, B, 'g'^y, X)
-    key = X^y
+    msgIn = format5('1', A, B, 'g'^~y, X)
+    key = X^~y
   in
-     [ St_Bob_1(ridB, B, A, skB, skA, y, X),
+     [ St_Bob_1(ridB, B, A, skB, skA, ~y, X),
        In(sign(msgIn, skA)) ]
      --[ Commit('R', 'I', <A, B, key>),
-         Secret(A, B, key) ]->
-     [ St_Bob_2(ridB, B, A, skB, skA, y, X) ]
+         Secret(A, B, key),
+         BobHsDone(key) ]->
+     [ St_Bob_2(ridB, B, A, skB, skA, ~y, X) ]
+
+
+rule Bob_recvMsg:
+  let
+    key = kdf1(X^~y)
+    mIn = format2('2', senc(msgOut, key))
+  in
+     [ St_Bob_2(ridB, B, A, skB, skA, ~y, X),
+       In(mIn) ]
+      --[ BobRecvLoop(X^~y),
+          BobRecvTransMsg(msgOut, key),
+          BobRecvTransMsgIden(A, B, msgOut, key),
+          InFormat2(mIn) ]->
+     [ St_Bob_2(ridB, B, A, skB, skA, ~y, X),
+       Out(msgOut) ]
+
+
+rule Bob_sendMsg:
+  let
+    key = kdf2(X^~y)
+    mOut = format2('2', senc(msgIn, key))
+  in
+     [ St_Bob_2(ridB, B, A, skB, skA, ~y, X),
+       In(msgIn) ]
+      --[ BobSendLoop(X^~y),
+          BobSendTransMsg(msgIn, key),
+          OutFormat2(mOut) ]->
+     [ St_Bob_2(ridB, B, A, skB, skA, ~y, X),
+       Out(mOut) ]
+
 
 
 /* ------------------------- */
 /*   Lemmas and properties   */
 /* ------------------------- */
 /* source lemma */
-lemma types [sources]:
-  " (All y m #i.
-       IN_ALICE(y , m) @ i
-       ==>
-       ( (Ex #j. KU(y) @ j & j < i)
-       | (Ex #j. OUT_BOB( m ) @ j )
-       )
-    )
-  "
+lemma sources [sources]:
+    " (All payload key #i.
+        BobRecvTransMsg(payload, key)@i ==>
+          (Ex #j. AliceSendTransMsg(payload, key)@j & #j < #i) |
+          (Ex #j #k. KU(key)@j & #j < #i & KU(payload)@k & #k < #i))
+      &
+      (All payload key #i.
+        AliceRecvTransMsg(payload, key)@i ==>
+          (Ex #j. BobSendTransMsg(payload, key)@j & #j < #i) |
+          (Ex #j #k. KU(key)@j & #j < #i & KU(payload)@k & #k < #i))
+      &
+      (All x1 x2 #i.
+        InFormat2(format2(x1, x2))@i ==>
+          (Ex #j. OutFormat2(format2(x1, x2))@j) |
+          (Ex #j #k. KU(x1)@j & #j < #i & KU(x2)@k & #k < #i))
+      &
+      (All key m #i.
+       IN_ALICE(key, m) @ i ==>
+        ( (Ex #j. KU(key) @ j & j < i)
+        | (Ex #j. OUT_BOB( m ) @ j )))
+    "
 
 
 /* Executability check */
