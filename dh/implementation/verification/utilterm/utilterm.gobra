@@ -1,4 +1,4 @@
-package util
+package utilterm
 
 import tm "dh-gobra/verification/term"
 import pub "dh-gobra/verification/pub"
@@ -9,13 +9,17 @@ type Term = tm.Term
 type TermUtil domain {
 
     // constructors
+    func tuple2(tm.Term, tm.Term) tm.Term
+    axiom { 
+        forall x1, x2 tm.Term :: {tuple2(x1, x2)} tuple2(x1, x2) == tm.format2(x1, x2)
+    }
     func tuple3(tm.Term, tm.Term, tm.Term) tm.Term
     axiom { 
         forall x1, x2, x3 tm.Term :: {tuple3(x1, x2, x3)} tuple3(x1, x2, x3) == tm.pair(x1,tm.pair(x2,x3))
     }
     func tuple5(tm.Term, tm.Term, tm.Term, tm.Term, tm.Term) tm.Term
     axiom { 
-        forall x1, x2, x3, x4, x5 tm.Term :: {tuple5(x1, x2, x3, x4, x5)} tuple5(x1, x2, x3, x4, x5) == tm.format(x1, x2, x3, x4, x5)
+        forall x1, x2, x3, x4, x5 tm.Term :: {tuple5(x1, x2, x3, x4, x5)} tuple5(x1, x2, x3, x4, x5) == tm.format5(x1, x2, x3, x4, x5)
     }
 
     func ok() tm.Term
@@ -46,7 +50,10 @@ type TermUtil domain {
         integer32(1) == tm.pubTerm(pub.const_1_pub()) 
     }
     axiom { 
-        forall i uint32 :: { integer32(i) } (i != 0 && i != 1) ==> integer32(i) == tm.freshTerm(fresh.fr_integer32(i))
+        integer32(2) == tm.pubTerm(pub.const_2_pub()) 
+    }
+    axiom { 
+        forall i uint32 :: { integer32(i) } (i < 0 || 2 < i) ==> integer32(i) == tm.freshTerm(fresh.fr_integer32(i))
     }
 
     func idI() tm.Term

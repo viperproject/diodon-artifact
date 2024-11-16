@@ -3,6 +3,7 @@ package library
 import binary "encoding/binary"
 import errors "errors"
 //@ import . "dh-gobra/verification/bytes"
+//@ import by "dh-gobra/verification/utilbytes"
 
 const Msg2Tag uint32 = 0
 const Msg3Tag uint32 = 1
@@ -52,7 +53,7 @@ func (l *LibState) MarshalMsg1(msg1 *Msg1) (res []byte, err error) {
 //@ trusted
 //@ preserves acc(Mem(data), 1/16)
 //@ ensures err == nil ==> res.Mem()
-//@ ensures err == nil ==> Abs(data) == (unfolding acc(res.Mem(), 1/16) in tuple5B(integer32B(Msg2Tag), integer32B(res.IdB), integer32B(res.IdA), Abs(res.X), Abs(res.Y)))
+//@ ensures err == nil ==> Abs(data) == (unfolding acc(res.Mem(), 1/16) in by.tuple5B(by.integer32B(Msg2Tag), by.integer32B(res.IdB), by.integer32B(res.IdA), Abs(res.X), Abs(res.Y)))
 func (l *LibState) UnmarshalMsg2(data []byte) (res *Msg2, err error) {
 	if len(data) < 2 * DHHalfKeyLength + 12 {
 		return nil, errors.New("msg2 is too short")
@@ -75,7 +76,7 @@ func (l *LibState) UnmarshalMsg2(data []byte) (res *Msg2, err error) {
 //@ trusted
 //@ preserves acc(msg3.Mem(), 1/16)
 //@ ensures err == nil ==> Mem(res)
-//@ ensures err == nil ==> Abs(res) == (unfolding acc(msg3.Mem(), 1/16) in tuple5B(integer32B(Msg3Tag), integer32B(msg3.IdA), integer32B(msg3.IdB), Abs(msg3.Y), Abs(msg3.X)))
+//@ ensures err == nil ==> Abs(res) == (unfolding acc(msg3.Mem(), 1/16) in by.tuple5B(by.integer32B(Msg3Tag), by.integer32B(msg3.IdA), by.integer32B(msg3.IdB), Abs(msg3.Y), Abs(msg3.X)))
 func (l *LibState) MarshalMsg3(msg3 *Msg3) (res []byte, err error) {
 	res = make([]byte, 12)
 	binary.BigEndian.PutUint32(res[:4], Msg3Tag)

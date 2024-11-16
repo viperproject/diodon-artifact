@@ -147,16 +147,19 @@ type Fact domain {
 
 }
 ghost
+decreases
 // returns a multiset containing just the persistent facts of l all with multiplicity 1
 ensures forall f Fact :: { f # result } (f # result) == (persistent(f) && (f # l) > 0 ? 1 : 0)
 pure func persistentFacts(l mset[Fact]) (result mset[Fact])
 
 ghost
+decreases
 // returns a multiset containing just the non-persistent facts of l while retaining their multiplicity
 ensures forall f Fact :: { f # result } (f # result) == (persistent(f) ? 0 : (f # l))
 pure func linearFacts(l mset[Fact]) (result mset[Fact])
 
 ghost
+decreases
 ensures res == (linearFacts(l) subset s && persistentFacts(l) subset s)
 pure func M(l mset[Fact], s mset[Fact]) (res bool) {
     // non-persistent facts
@@ -166,5 +169,6 @@ pure func M(l mset[Fact], s mset[Fact]) (res bool) {
 }
 
 ghost
+decreases
 ensures result == s setminus linearFacts(l) union r
 pure func U(l mset[Fact], r mset[Fact], s mset[Fact]) (result mset[Fact])

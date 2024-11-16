@@ -18,6 +18,7 @@ pred (l *LibState) Mem()
 pred Mem(data []byte)
 
 ghost
+decreases
 requires acc(Mem(b), _)
 pure func Abs(b []byte) (res by.Bytes)
 @*/

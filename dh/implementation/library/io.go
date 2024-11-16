@@ -5,7 +5,7 @@ import fmt "fmt"
 //@ import . "dh-gobra/verification/bytes"
 //@ import . "dh-gobra/verification/place"
 //@ import . "dh-gobra/verification/iospec"
-//@ import tm "dh-gobra/verification/util"
+//@ import tm "dh-gobra/verification/utilterm"
 
 const MAX_DATA_SIZE = 1024
 

@@ -11,7 +11,8 @@ import sign "golang.org/x/crypto/nacl/sign"
 //@ import . "dh-gobra/verification/place"
 //@ import . "dh-gobra/verification/iospec"
 //@ import am "dh-gobra/verification/term"
-//@ import tm "dh-gobra/verification/util"
+//@ import by "dh-gobra/verification/utilbytes"
+//@ import tm "dh-gobra/verification/utilterm"
 
 const NonceLength = 24
 
@@ -97,7 +98,7 @@ func (l *LibState) expMod(base, exp []byte) (res []byte, err error) {
 //@ preserves acc(l.Mem(), 1/16)
 //@ preserves acc(Mem(exp), 1/16)
 //@ ensures err == nil ==> Mem(res)
-//@ ensures err == nil ==> Abs(res) == expB(generatorB(), Abs(exp))
+//@ ensures err == nil ==> Abs(res) == expB(by.generatorB(), Abs(exp))
 // arg is big-endian
 func (l *LibState) DhExp(exp []byte) (res []byte, err error) {
 	g := big.NewInt(GroupGenerator)
@@ -156,6 +157,7 @@ func (l *LibState) Open(signedData []byte, pk []byte /*@, ghost skT tm.Term @*/)
 }
 
 //@ trusted
+//@ decreases
 //@ requires acc(Mem(s1), 1/16) && acc(Mem(s2), 1/16)
 //@ ensures  res == (Abs(s1) == Abs(s2))
 //@ pure

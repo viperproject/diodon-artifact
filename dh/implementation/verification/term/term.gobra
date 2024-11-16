@@ -22,19 +22,26 @@ type Term domain {
                 getPubTerm(pubTerm(p)) == p)
     }
 
-    func ex1(t1 Term) Term
-    func ex2(t1 Term) Term
-    func ex3(t1 Term) Term
-    func ex4(t1 Term) Term
-    func ex5(t1 Term) Term
+    func ex21(t1 Term) Term
+    func ex22(t1 Term) Term
+    func ex51(t1 Term) Term
+    func ex52(t1 Term) Term
+    func ex53(t1 Term) Term
+    func ex54(t1 Term) Term
+    func ex55(t1 Term) Term
     func exp(t1 Term, t2 Term) Term
     func extract(t1 Term) Term
-    func format(t1 Term, t2 Term, t3 Term, t4 Term, t5 Term) Term
+    func format2(t1 Term, t2 Term) Term
+    func format5(t1 Term, t2 Term, t3 Term, t4 Term, t5 Term) Term
     func fst(t1 Term) Term
     func inv(t1 Term) Term
+    func kdf1(t1 Term) Term
+    func kdf2(t1 Term) Term
     func one() Term
     func pair(t1 Term, t2 Term) Term
     func pk(t1 Term) Term
+    func sdec(t1 Term, t2 Term) Term
+    func senc(t1 Term, t2 Term) Term
     func sign(t1 Term, t2 Term) Term
     func snd(t1 Term) Term
     func ok() Term
@@ -55,33 +62,45 @@ type Term domain {
     
 
     axiom  {
-        forall x1, x2, x3, x4, x5 Term :: 
-            { ex1(format(x1, x2, x3, x4, x5)) } (
-                ex1(format(x1, x2, x3, x4, x5)) == x1)
+        forall x1, x2 Term :: 
+            { ex21(format2(x1, x2)) } (
+                ex21(format2(x1, x2)) == x1)
+    }
+
+    axiom  {
+        forall x1, x2 Term :: 
+            { ex22(format2(x1, x2)) } (
+                ex22(format2(x1, x2)) == x2)
     }
 
     axiom  {
         forall x1, x2, x3, x4, x5 Term :: 
-            { ex2(format(x1, x2, x3, x4, x5)) } (
-                ex2(format(x1, x2, x3, x4, x5)) == x2)
+            { ex51(format5(x1, x2, x3, x4, x5)) } (
+                ex51(format5(x1, x2, x3, x4, x5)) == x1)
     }
 
     axiom  {
         forall x1, x2, x3, x4, x5 Term :: 
-            { ex3(format(x1, x2, x3, x4, x5)) } (
-                ex3(format(x1, x2, x3, x4, x5)) == x3)
+            { ex52(format5(x1, x2, x3, x4, x5)) } (
+                ex52(format5(x1, x2, x3, x4, x5)) == x2)
     }
 
     axiom  {
         forall x1, x2, x3, x4, x5 Term :: 
-            { ex4(format(x1, x2, x3, x4, x5)) } (
-                ex4(format(x1, x2, x3, x4, x5)) == x4)
+            { ex53(format5(x1, x2, x3, x4, x5)) } (
+                ex53(format5(x1, x2, x3, x4, x5)) == x3)
     }
 
     axiom  {
         forall x1, x2, x3, x4, x5 Term :: 
-            { ex5(format(x1, x2, x3, x4, x5)) } (
-                ex5(format(x1, x2, x3, x4, x5)) == x5)
+            { ex54(format5(x1, x2, x3, x4, x5)) } (
+                ex54(format5(x1, x2, x3, x4, x5)) == x4)
+    }
+
+    axiom  {
+        forall x1, x2, x3, x4, x5 Term :: 
+            { ex55(format5(x1, x2, x3, x4, x5)) } (
+                ex55(format5(x1, x2, x3, x4, x5)) == x5)
     }
 
     axiom  {
@@ -122,6 +141,12 @@ type Term domain {
         forall x_1, x_2 Term :: 
             { inv(Mult(x_2, inv(x_1))) } (
                 inv(Mult(x_2, inv(x_1))) == Mult(x_1, inv(x_2)))
+    }
+
+    axiom  {
+        forall x_1, x_2 Term :: 
+            { sdec(senc(x_1, x_2), x_2) } (
+                sdec(senc(x_1, x_2), x_2) == x_1)
     }
 
     axiom  {
