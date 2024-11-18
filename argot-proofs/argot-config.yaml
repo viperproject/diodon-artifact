@@ -87,8 +87,12 @@ dataflow-problems:
     - .*/session/retry.*
     - .*/session/shell.*
     - .*aws-sdk-go/service/kms.*
+
   taint-tracking:
-    - filters:
+    - tag: diodon-io-independence
+      description: "Diodon: SSM Agent I/O independence proof"
+      severity: HIGH
+      filters:
         - type: error$ # TODO is this ok?
       fail-on-implicit-flow: true # handle information flow
       sources:
