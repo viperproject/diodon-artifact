@@ -18,56 +18,56 @@ pointer-config:
 immutability-problems:
   # All methods with the core invariant
   - values:
-      - package: .*datachannel$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: SendStreamDataMessage$
         context: 0 # argument value to track
         # type: .*(IDataChannel|dataChannel)
-      - package: .*datachannel$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: SendAgentSessionStateMessage$
         context: 0
         # type: .*(IDataChannel|dataChannel)
-      - package: .*datachannel$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: SkipHandshake$
         context: 0
         # type: .*(IDataChannel|dataChannel)
-      - package: .*datachannel$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: PerformHandshake$
         context: 0
         # type: .*(IDataChannel|dataChannel)
-      - package: .*datachannel$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: GetClientVersion$
         context: 0
         # type: .*(IDataChannel|dataChannel)
-      - package: .*datachannel$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: GetInstanceId$
         context: 0
         # type: .*(IDataChannel|dataChannel)
-      - package: .*datachannel$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: GetRegion$
         context: 0
         # type: .*(IDataChannel|dataChannel)
-      - package: .*datachannel$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: IsActive$
         context: 0
         # type: .*(IDataChannel|dataChannel)
-      - package: .*datachannel$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: GetSeparateOutputPayload$
         context: 0
         # type: .*(IDataChannel|dataChannel)
-      - package: .*datachannel$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: SetSeparateOutputPayload$
         context: 0
         # type: .*(IDataChannel|dataChannel)
-      - package: .*datachannel$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: PrepareToCloseChannel$
         context: 0
         # type: .*(IDataChannel|dataChannel)
-      - package: .*datachannel$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: Close$
         context: 0
         # type: .*(IDataChannel|dataChannel)
     filters:
-      - package: .*datachannel$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: .*
 
 dataflow-problems:
