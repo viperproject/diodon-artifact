@@ -238,29 +238,9 @@ func (i *Initiator) ProduceHsMsg1() (msg []byte, err error) {
 	return
 }
 
-// the body of this predicate is only provided for illustration purposes
-// obtaining `Mem(msg)` is however only possible by
-// applying `HsMsg2ViewShift` and, thus, giving up the
-// corresponding token and fact.
-//@ pred HsMsg2Footprint(msg []byte) // {
-//	msg.Mem()
-// }
-
-/*@
-ghost
-decreases
-requires pl.token(t) && io.e_InFact(t, rid)
-requires HsMsg2Footprint(msg)
-ensures  pl.token(old(io.get_e_InFact_placeDst(t, rid)))
-ensures  Mem(msg) && by.gamma(inputDataT) == Abs(msg)
-ensures  inputDataT == old(io.get_e_InFact_r1(t, rid))
-func HsMsg2ViewShift(t pl.Place, rid tm.Term, msg []byte) (inputDataT tm.Term)
-@*/
-
 //@ preserves i.Inv()
-//@ requires  HsMsg2Footprint(msg)
-//@ ensures   viewshiftApplied ? Mem(msg) : HsMsg2Footprint(msg)
-func (i *Initiator) ProcessHsMsg2(msg []byte) (err error /*@, viewshiftApplied bool @*/) {
+//@ preserves Mem(msg)
+func (i *Initiator) ProcessHsMsg2(msg []byte) (err error) {
 	//@ unfold i.Inv()
 	if i.initiatorState != ProducedHsMsg1 {
 		err = NewError("Invalid state")
@@ -274,8 +254,7 @@ func (i *Initiator) ProcessHsMsg2(msg []byte) (err error /*@, viewshiftApplied b
 	//@ unfold io.phiRF_Alice_6(t0, ridT, s0)
 	//@ assert io.e_InFact(t0, ridT)
 	//@ t1 := io.get_e_InFact_placeDst(t0, ridT)
-	//@ msgT := HsMsg2ViewShift(t0, ridT, msg)
-	//@ viewshiftApplied = true
+	/*@ msgT := @*/ GetInFact(msg /*@, t0, ridT @*/)
 	//@ s1 := s0 union mset[ft.Fact]{ ft.InFact_Alice(ridT, msgT) }
 
 	var msg2Data []byte
@@ -446,28 +425,10 @@ func (i *Initiator) ProduceHsMsg3() (signedMsg3 []byte, err error) {
 	return
 }
 
-// the body of this predicate is only provided for illustration purposes
-// obtaining `Mem(msg)` is however only possible by
-// applying `PayloadMsgViewShift` and, thus, giving up the
-// corresponding token and fact.
-//@ pred PayloadMsgFootprint(msg []byte) // {
-//	msg.Mem()
-// }
-	
-/*@
-ghost
-decreases
-requires pl.token(t) && io.e_InFact(t, rid)
-requires PayloadMsgFootprint(msg)
-ensures  pl.token(old(io.get_e_InFact_placeDst(t, rid)))
-ensures  Mem(msg) && by.gamma(inputDataT) == Abs(msg)
-ensures  inputDataT == old(io.get_e_InFact_r1(t, rid))
-func PayloadMsgViewShift(t pl.Place, rid tm.Term, msg []byte) (inputDataT tm.Term)
-@*/
-
-// TODO: change view shift
-// one could call this for every byte array as the unverified code could anyway
-// modify a network received buffer in arbitrary ways
+// technically, one could call this for every byte array. However, this is not a
+// problem as the unverified code could anyway provide an arbitrary byte array, e.g.,
+// modify a network received buffer in arbitrary ways before passing this buffer to
+// the core.
 //@ trusted
 //@ decreases
 //@ requires pl.token(t) && io.e_InFact(t, rid)
@@ -557,7 +518,7 @@ func (i *Initiator) ProcessTransportMsg(msgData []byte) (payload []byte, err err
 
 //@ preserves i.Inv() && Mem(payload)
 //@ ensures   err == nil ==> Mem(msgData)
-func (i *Initiator) ProduceTransportMsg(payload []byte) (msgData []byte, err error /*@, viewshiftApplied bool @*/) {
+func (i *Initiator) ProduceTransportMsg(payload []byte) (msgData []byte, err error) {
 	//@ unfold i.Inv()
 	if i.initiatorState != HandshakeCompleted {
 		err = NewError("Invalid state")
