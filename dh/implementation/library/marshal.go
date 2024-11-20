@@ -7,6 +7,7 @@ import errors "errors"
 
 const Msg2Tag uint32 = 0
 const Msg3Tag uint32 = 1
+const TransMsgTag uint32 = 2
 
 type Msg1 struct {
 	X []byte
@@ -63,8 +64,10 @@ func (l *LibState) UnmarshalMsg2(data []byte) (res *Msg2, err error) {
 	// note that idB occurs before idA in the 2nd message:
 	idB := binary.BigEndian.Uint32(data[4:8])
 	idA := binary.BigEndian.Uint32(data[8:12])
-	X := data[12:(DHHalfKeyLength + 12)]
-	Y := data[(DHHalfKeyLength + 12):(2 * DHHalfKeyLength + 12)]
+	X := make([]byte, DHHalfKeyLength)
+	copy(X, data[12:(DHHalfKeyLength + 12)])
+	Y := make([]byte, DHHalfKeyLength)
+	copy(Y, data[(DHHalfKeyLength + 12):(2 * DHHalfKeyLength + 12)])
 
 	if tag != Msg2Tag {
 		return nil, errors.New("unexpected message tag in msg2")
@@ -85,4 +88,33 @@ func (l *LibState) MarshalMsg3(msg3 *Msg3) (res []byte, err error) {
 	// note that Y occurs before X in the 3rd message:
 	res = append(res, msg3.Y...)
 	return append(res, msg3.X...), nil
+}
+
+//@ trusted
+//@ preserves acc(Mem(ciphertext), 1/16)
+//@ ensures err == nil ==> Mem(res)
+//@ ensures err == nil ==> Abs(res) == by.tuple2B(by.integer32B(TransMsgTag), Abs(ciphertext))
+func (l *LibState) MarshalTransportMsg(ciphertext []byte) (res []byte, err error) {
+	res = make([]byte, len(ciphertext) + 4)
+	binary.BigEndian.PutUint32(res[:4], TransMsgTag)
+	return append(res, ciphertext...), nil
+}
+
+//@ trusted
+//@ preserves acc(Mem(data), 1/16)
+//@ ensures err == nil ==> Mem(ciphertext) && Abs(data) == by.tuple2B(by.integer32B(TransMsgTag), Abs(ciphertext))
+func (l *LibState) UnmarshalTransportMsg(data []byte) (ciphertext []byte, err error) {
+	if len(data) < 4 {
+		return nil, errors.New("transport message is too short")
+	}
+
+	tag := binary.BigEndian.Uint32(data[:4])
+	ciphertext = make([]byte, len(data) - 4)
+	copy(ciphertext, data[4:])
+
+	if tag != TransMsgTag {
+		return nil, errors.New("unexpected message tag in transport message")
+	}
+
+	return
 }

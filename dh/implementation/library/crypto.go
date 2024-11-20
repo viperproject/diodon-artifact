@@ -3,9 +3,13 @@ package library
 import bytes "bytes"
 import hex "encoding/hex"
 import errors "errors"
+import hash "hash"
 import io "io"
 import big "math/big"
+import hmac "crypto/hmac"
 import rand "crypto/rand"
+import blake2s "golang.org/x/crypto/blake2s"
+import chacha20poly1305 "golang.org/x/crypto/chacha20poly1305"
 import sign "golang.org/x/crypto/nacl/sign"
 //@ import . "dh-gobra/verification/bytes"
 //@ import . "dh-gobra/verification/place"
@@ -48,6 +52,7 @@ func (l *LibState) Setup(/*@ ghost t Place, ghost rid tm.Term @*/) (idA, idB uin
 //@ ensures  err == nil ==> Mem(nonce)
 //@ ensures  err == nil ==> Abs(nonce) == gamma(old(get_e_FrFact_r1(t, rid)))
 //@ ensures  err == nil ==> token(t1) && t1 == old(get_e_FrFact_placeDst(t, rid))
+//@ ensures  err != nil ==> t1 == t && token(t) && e_FrFact(t, rid) && get_e_FrFact_r1(t, rid) == old(get_e_FrFact_r1(t, rid)) && get_e_FrFact_placeDst(t, rid) == old(get_e_FrFact_placeDst(t, rid))
 func (l *LibState) CreateNonce(/*@ ghost t Place, ghost rid tm.Term @*/) (nonce []byte, err error /*@, ghost t1 Place @*/) {
 	var nonceBuf [NonceLength]byte
 	io.ReadFull(rand.Reader, nonceBuf[:])
@@ -108,8 +113,7 @@ func (l *LibState) DhExp(exp []byte) (res []byte, err error) {
 //@ trusted
 //@ preserves acc(l.Mem(), 1/16)
 //@ preserves acc(Mem(dhSecret), 1/16) && acc(Mem(dhHalfKey), 1/16)
-//@ ensures err == nil ==> Mem(res)
-//@ ensures err == nil ==> Abs(res) == expB(Abs(dhHalfKey), Abs(dhSecret))
+//@ ensures err == nil ==> Mem(res) && Abs(res) == expB(Abs(dhHalfKey), Abs(dhSecret))
 // args are big-endian
 func (l *LibState) DhSharedSecret(dhSecret, dhHalfKey []byte) (res []byte, err error) {
 	return l.expMod(dhHalfKey, dhSecret)
@@ -157,10 +161,113 @@ func (l *LibState) Open(signedData []byte, pk []byte /*@, ghost skT tm.Term @*/)
 }
 
 //@ trusted
+//@ preserves acc(l.Mem(), 1/16)
+//@ preserves acc(Mem(plaintext), 1/16)
+//@ requires acc(Mem(key), 1/16)
+//@ requires Abs(key) == gamma(keyT)
+//@ ensures  acc(Mem(key), 1/16)
+//@ ensures err == nil ==> Mem(res)
+//@ ensures err == nil ==> Abs(res) == sencB(Abs(plaintext), gamma(keyT))
+func (l *LibState) Encrypt(plaintext []byte, key []byte /*@, ghost keyT tm.Term @*/) (res []byte, err error) {
+	nonce := make([]byte, chacha20poly1305.NonceSize)
+	_, err = io.ReadFull(rand.Reader, nonce)
+	if err != nil {
+		return
+	}
+	aead, err := chacha20poly1305.New(key)
+	if err != nil {
+		return
+	}
+	res = make([]byte, len(plaintext) + chacha20poly1305.Overhead + chacha20poly1305.NonceSize)
+	aead.Seal(res[chacha20poly1305.NonceSize:chacha20poly1305.NonceSize], nonce, plaintext, nil)
+	// we prepend the nonce:
+	copy(res[0:chacha20poly1305.NonceSize], nonce)
+	return
+}
+
+//@ trusted
+//@ preserves acc(l.Mem(), 1/16)
+//@ preserves acc(Mem(ciphertext), 1/16)
+//@ requires acc(Mem(key), 1/16)
+//@ requires Abs(key) == gamma(keyT)
+//@ ensures  acc(Mem(key), 1/16)
+//@ ensures  err == nil ==> Mem(res)
+//@ ensures  err == nil ==> Abs(ciphertext) == sencB(Abs(res), gamma(keyT))
+func (l *LibState) Decrypt(ciphertext []byte, key []byte /*@, ghost keyT tm.Term @*/) (res []byte, err error) {
+	if len(ciphertext) < chacha20poly1305.Overhead + chacha20poly1305.NonceSize {
+		return nil, errors.New("ciphertext is too short")
+	}
+	nonce := ciphertext[0:chacha20poly1305.NonceSize]
+	aead, err := chacha20poly1305.New(key)
+	if err != nil {
+		return
+	}
+	res = make([]byte, len(ciphertext) - chacha20poly1305.Overhead - chacha20poly1305.NonceSize)
+	_, err = aead.Open(res[:0], nonce, ciphertext[chacha20poly1305.NonceSize:], nil)
+	return
+}
+
+//@ trusted
 //@ decreases
 //@ requires acc(Mem(s1), 1/16) && acc(Mem(s2), 1/16)
 //@ ensures  res == (Abs(s1) == Abs(s2))
 //@ pure
 func Equals(s1, s2 []byte) (res bool) {
 	return bytes.Equal(s1, s2)
+}
+
+// t0 = kdf1(key, input) && len(t0) == 32
+// t1 = kdf2(key, input) && len(t1) == 32
+// we use `keyAbs` as a workaround as Viper complains after
+// inlining `Abs(key)` that Abs's precondition might not hold,
+// which is a bug.
+//@ trusted
+//@ decreases
+//@ preserves Mem(t0) && Mem(t1)
+//@ requires  acc(Mem(key), 1/16) && keyAbs == Abs(key)
+//@ ensures   acc(Mem(key), 1/16)
+//@ ensures   err == nil ==> kdf1B(keyAbs) == Abs(t0) 
+//@ ensures   err == nil ==> kdf2B(keyAbs) == Abs(t1)
+func KDF2Slice(t0, t1 []byte, key []byte /*@, ghost keyAbs Bytes @*/) (err error) {
+	if len(t0) != 32 || len(t1) != 32 {
+		err = errors.New("invalid argument length")
+		return
+	}
+	var prk [blake2s.Size]byte
+	HMAC1Slice(prk[:], key, nil)
+	HMAC1Slice(t0, prk[:], []byte{0x1})
+	HMAC2Slice(t1, prk[:], t0[:], []byte{0x2})
+	setZero(prk[:])
+	return
+}
+
+//@ trusted
+//@ preserves Mem(sum) && Mem(key) && Mem(in0)
+func HMAC1Slice(sum []byte, key, in0 []byte) {
+	mac := hmac.New(func() hash.Hash {
+		h, _ := blake2s.New256(nil)
+		return h
+	}, key)
+	mac.Write(in0)
+	mac.Sum(sum[:0])
+}
+
+//@ trusted
+//@ preserves Mem(sum) && Mem(key) && Mem(in0) && Mem(in1)
+func HMAC2Slice(sum []byte, key, in0, in1 []byte) {
+	mac := hmac.New(func() hash.Hash {
+		h, _ := blake2s.New256(nil)
+		return h
+	}, key)
+	mac.Write(in0)
+	mac.Write(in1)
+	mac.Sum(sum[:0])
+}
+
+//@ trusted
+//@ preserves Mem(arr)
+func setZero(arr []byte) {
+	for i := range arr {
+		arr[i] = 0
+	}
 }

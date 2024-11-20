@@ -1,23 +1,20 @@
 package main
 
+import "bufio"
 import "encoding/base64"
-import "errors"
 import "flag"
 import "fmt"
-import "math/rand"
 import "os"
 import "dh-gobra/initiator"
-import "dh-gobra/library"
+import "dh-gobra/iolib"
 
 type Config struct {
-	IsInitiator            bool
 	PrivateKey             string
 	PeerEndpoint           string // <address>:<port>, e.g. "127.0.0.1:57654" (IPv4) or "[::1]:57950" (IPv6)
 	PeerPublicKey          string
 }
 
 func parseArgs() Config {
-	isInitiatorPtr := flag.Bool("isInitiator", false, "specifies whether this instance should act as an initiator")
 	privateKeyPtr := flag.String("privateKey", "", "base64 encoded private key of this protocol participant")
 	peerEndpointPtr := flag.String("endpoint", "", "<address>:<port> of the peer's endpoint")
 	peerPublicKeyPtr := flag.String("peerPublicKey", "", "base64 encoded public key of the peer")
@@ -25,7 +22,6 @@ func parseArgs() Config {
 	flag.Parse()
 
 	config := Config{
-		IsInitiator:            *isInitiatorPtr,
 		PrivateKey:             *privateKeyPtr,
 		PeerEndpoint:           *peerEndpointPtr,
 		PeerPublicKey:          *peerPublicKeyPtr,
@@ -43,19 +39,83 @@ func main() {
 		return
 	}
 
-	lib, err := library.NewLibState(config.PeerEndpoint, 0, 1, privateKey, peerPublicKey)
+	initiator, err := initiator.NewInitiator(privateKey, peerPublicKey)
 	if err != nil {
 		os.Exit(-1)
 		return
 	}
 
-	rid := rand.Uint32()
-	if config.IsInitiator {
-		err = initiator.RunInitiator(lib, rid)
-	} else {
-		err = errors.New("responder is currently not implemented")
+	iolib, err := iolib.NewLibState(config.PeerEndpoint)
+	if err != nil {
+		os.Exit(-1)
+		return
 	}
-	lib.Close()
+
+	hsMsg1, err := initiator.ProduceHsMsg1()
+	if err != nil {
+		os.Exit(-1)
+		return
+	}
+
+	err = iolib.Send(hsMsg1)
+	if err != nil {
+		os.Exit(-1)
+		return
+	}
+
+	hsMsg2, err := iolib.Recv()
+	if err != nil {
+		os.Exit(-1)
+		return
+	}
+
+	err = initiator.ProcessHsMsg2(hsMsg2)
+	if err != nil {
+		os.Exit(-1)
+		return
+	}
+
+	hsMsg3, err := initiator.ProduceHsMsg3()
+	if err != nil {
+		os.Exit(-1)
+		return
+	}
+
+	err = iolib.Send(hsMsg3)
+	if err != nil {
+		os.Exit(-1)
+		return
+	}
+
+	// handshake is now over
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		line := scanner.Text()
+		requestMsg, err := initiator.ProduceTransportMsg([]byte(line))
+		if err != nil {
+			os.Exit(-1)
+			return
+		}
+		err = iolib.Send(requestMsg)
+		if err != nil {
+			os.Exit(-1)
+			return
+		}
+
+		responseMsg, err := iolib.Recv()
+		if err != nil {
+			os.Exit(-1)
+			return
+		}
+		responsePayload, err := initiator.ProcessTransportMsg(responseMsg)
+		if err != nil {
+			os.Exit(-1)
+			return
+		}
+		fmt.Println(responsePayload)
+	}
+
+	iolib.Close()
 	if err == nil {
 		os.Exit(0)
 	} else {

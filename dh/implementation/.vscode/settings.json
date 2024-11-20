@@ -5,5 +5,5 @@
         "."
     ],
     "gobraSettings.autoVerify": false,
-    "gobraSettings.buildVersion": "Stable"
+    "gobraSettings.buildVersion": "Nightly"
 }
