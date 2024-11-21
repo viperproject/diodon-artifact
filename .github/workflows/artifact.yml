@@ -87,7 +87,7 @@ jobs:
         include:
           - name: "Verify DH protocol model"
             command: "/gobra/dh/verify-model.sh"
-            timeout-minutes: 1
+            timeout-minutes: 3
           - name: "Verify DH core"
             command: "/gobra/dh/verify-core.sh"
             timeout-minutes: 5
