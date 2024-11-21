@@ -1,6 +1,6 @@
 
 
-input_file /Users/arquintlinard/ETH/PhD/gh-artifact/arquintl-diodon-artifact/dh/model/dh.spthy
+input_file /Users/arquintlinard/ETH/PhD/gh-artifact/arquintl-diodon-artifact/dh/model/protocol-model.spthy
 
 base_dir /Users/arquintlinard/ETH/PhD/gh-artifact/arquintl-diodon-artifact/dh/model/generated_iospecs
 module dh-gobra/verification

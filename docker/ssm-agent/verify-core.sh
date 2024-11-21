@@ -4,16 +4,16 @@
 set -e
 
 SCRIPT_DIR=$(dirname "$0")
-AGENT_DIR="$SCRIPT_DIR/implementation"
-DATACHANNEL_DIR="$AGENT_DIR/agent/session/datachannel"
+IMPLEMENTATION_DIR="$SCRIPT_DIR/implementation"
+DATACHANNEL_DIR="$IMPLEMENTATION_DIR/agent/session/datachannel"
 GOBRA_JAR="/gobra/gobra.jar"
-GOBRA_REPORT_DIR="$AGENT_DIR/.gobra"
+GOBRA_REPORT_DIR="$IMPLEMENTATION_DIR/.gobra"
 
 mkdir -p "$GOBRA_REPORT_DIR"
 
 java -Xss128m -jar "$GOBRA_JAR" \
     --module "github.com/aws/amazon-ssm-agent" \
-    --include "$AGENT_DIR/.verification" --include "$AGENT_DIR" \
+    --include "$IMPLEMENTATION_DIR/.verification" --include "$IMPLEMENTATION_DIR" \
     --input "$DATACHANNEL_DIR/datachannel.go" \
     --input "$DATACHANNEL_DIR/handshake_complete.go" \
     --input "$DATACHANNEL_DIR/handshake_request.go" \

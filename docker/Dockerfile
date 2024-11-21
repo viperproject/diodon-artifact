@@ -1,11 +1,10 @@
-# Gobra commit 88e0a9b
-FROM ghcr.io/viperproject/gobra@sha256:5f81e650fa8e0039e4ef64d8b211e7d8b1814cdbbebf10d22106300b7c28a418
+# Gobra commit 97f0988
+FROM ghcr.io/viperproject/gobra@sha256:8d9f2b83c49a9a19f5a27167f138f23a2c4aa6677e7e9dbf157d83a110d6a088
 # FROM ghcr.io/viperproject/gobra:latest
 
 RUN apt-get update && \
     apt-get install -y \
     curl \
-    # graphviz \
     # libtinfo5 is needed by maude:
     libtinfo5 \
     locales \
@@ -62,8 +61,8 @@ ENV LC_ALL="en_US.UTF-8"
 
 # copy argot
 RUN mkdir ar-go-tools && mkdir argot-proofs
-copy ar-go-tools ./ar-go-tools
-copy argot-proofs ./argot-proofs
+COPY ar-go-tools ./ar-go-tools
+COPY argot-proofs ./argot-proofs
 
 # install argot dependencies
 RUN cd ./argot-proofs/dependencies && \
@@ -77,25 +76,26 @@ RUN cd ./argot-proofs/dependencies && \
 RUN cd ./ar-go-tools && make release
 
 
-RUN mkdir model-orig && mkdir implementation-orig
+RUN mkdir dh-orig && mkdir ssm-agent-orig
 
-# copy model
-copy model ./model-orig
+# copy dh
+COPY dh ./dh-orig
 
-# copy implementation
-copy implementation ./implementation-orig
+# copy ssm-agent
+COPY ssm-agent ./ssm-agent-orig
 
 # copy shell scripts
-COPY docker/*.sh ./
+COPY docker/dh/*.sh ./dh-orig
+COPY docker/ssm-agent/*.sh ./ssm-agent-orig
 
 # remove some unneeded folders that come with the base image:
 RUN rm -r evaluation
 RUN rm -r tutorial-examples
 
-RUN mkdir model && mkdir implementation
+RUN mkdir dh && mkdir ssm-agent
 
 # disable entry point specified by the Gobra base container:
 # ENTRYPOINT []
-ENTRYPOINT cp -r model-orig/. model/ && \
-    cp -r implementation-orig/. implementation/ && \
+ENTRYPOINT cp -r dh-orig/. dh/ && \
+    cp -r ssm-agent-orig/. ssm-agent/ && \
     /bin/bash

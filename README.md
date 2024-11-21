@@ -24,13 +24,13 @@ We require an installation of Docker. The following steps have been tested on ma
 - We recommend to adapt the Docker settings to provide sufficient resources to Docker. We have tested our artifact on a 2019 16-inch MacBook Pro with 2.3 GHz 8-Core Intel Core i9 running macOS Sonoma 14.0 and configured Docker to allocate up 16 cores (which includes 8 virtual cores), 6 GB of memory, and 1 GB of swap memory. In case you are using an ARM-based Mac, enable the option "Use Rosetta for x86/amd64 emulation on Apple Silicon" in the Docker Desktop Settings, which is available on macOS 13 or newer. Measurements on an Apple M1 Pro Silicon have shown that performing this additional emulation results in 20-25\% longer verification times compared to those reported in the remainder of this artifact appendix.
 - Navigate to a convenient folder, in which directories can be created for the purpose of running this artifact.
 - Open a shell at this folder location.
-- Create two new folders named `model-sync` and `implementation-sync` by executing:
+- Create two new folders named `dh-sync` and `ssm-agent-sync` by executing:
 	```
-    mkdir model-sync && mkdir implementation-sync
+    mkdir dh-sync && mkdir ssm-agent-sync
     ```
 - Download and start the Docker image containing our artifact by executing the following command:
     ```
-    docker run -it --platform linux/amd64 --volume $PWD/model-sync:/gobra/model --volume $PWD/implementation-sync:/gobra/implementation ghcr.io/arquintl/diodon-artifact:latest
+    docker run -it --platform linux/amd64 --volume $PWD/dh-sync:/gobra/dh --volume $PWD/ssm-agent-sync:/gobra/ssm-agent ghcr.io/arquintl/diodon-artifact:latest
     ```
     > ⚠️
     > Note that this command results in the Docker container writing files to the two folders `model-sync` and `implementation-sync` on your host machine.

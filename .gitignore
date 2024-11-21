@@ -2,5 +2,6 @@
 .idea
 *.log
 tmp/
-
+dh-sync/
+ssm-agent-sync/
 argot-proofs/reports/
