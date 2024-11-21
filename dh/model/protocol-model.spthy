@@ -1,0 +1,246 @@
+theory Dh
+begin
+
+builtins: diffie-hellman, symmetric-encryption
+
+functions: sign/2, pk/1, verify/2, extract/1, true/0, kdf1/1, kdf2/1
+equations: extract(sign(m, k)) = m
+equations: verify(sign(m, k), pk(k)) = true
+
+
+/* format = transparent constructor used for the messages */
+functions: format2/2, ex21/1, ex22/1
+equations:
+  ex21(format2(x1,x2)) = x1,
+  ex22(format2(x1,x2)) = x2
+
+functions: format5/5, ex51/1, ex52/1, ex53/1, ex54/1, ex55/1
+equations:
+  ex51(format5(x1,x2,x3,x4,x5)) = x1,
+  ex52(format5(x1,x2,x3,x4,x5)) = x2,
+  ex53(format5(x1,x2,x3,x4,x5)) = x3,
+  ex54(format5(x1,x2,x3,x4,x5)) = x4,
+  ex55(format5(x1,x2,x3,x4,x5)) = x5
+
+
+/* -------------------- */
+/*   Environment rules  */
+/* -------------------- */
+
+/* Key registration */
+rule Register_key:
+     [ Fr(~skA) ]
+     -->
+     [ !Sk($A, ~skA), !Pubk($A, pk(~skA)) , Out(pk(~skA))]
+
+/* Corruption */
+rule Corrupt_Ltk:
+     [ !Sk( $A, ~skA ) ]
+     --[ Corrupt($A) ]->
+     [ Out(~skA) ]
+
+
+
+
+/* -------------------- */
+/*   Protocol rules     */
+/* -------------------- */
+
+/* Alice role */
+rule Alice_init: // technically an env rule
+     [ Fr(~rid), !Sk(A, skA), !Pubk(B, pk(skB)) ]
+     -->
+     [ Setup_Alice(~rid, A, B, skA, skB) ]
+
+
+rule Alice_send:
+     [ Setup_Alice(ridA, A, B, skA, skB),
+       Fr(~x) ]
+     -->
+     [ St_Alice_1(ridA, A, B, skA, skB, ~x),
+       Out('g'^~x) ]
+
+
+rule Alice_recvAndSend:
+  let
+    msgIn = format5('0', B, A, 'g'^~x, Y)
+    mOut = format5('1', A, B, Y, 'g'^~x)
+    key = Y^~x
+  in
+     [ St_Alice_1(ridA, A, B, skA, skB, ~x),
+       In(sign(msgIn, skB)) ]
+      --[ IN_ALICE(Y, msgIn),
+          Secret(A, B, key),
+          Running('R', 'I', <A, B, key>),
+          Commit('I', 'R', <A, B, key>),
+          AliceHsDone(key)
+        ]->
+     [ St_Alice_2(ridA, A, B, skA, skB, ~x, Y),
+       Out(sign(mOut, skA)) ]
+
+
+rule Alice_sendMsg:
+  let
+    key = kdf1(Y^~x)
+    mOut = format2('2', senc(msgIn, key))
+  in
+     [ St_Alice_2(ridA, A, B, skA, skB, ~x, Y),
+       In(msgIn) ]
+      --[ AliceSendLoop(Y^~x),
+          AliceSendTransMsg(msgIn, key) ]->
+     [ St_Alice_2(ridA, A, B, skA, skB, ~x, Y),
+       Out(mOut) ]
+
+
+rule Alice_recvMsg:
+  let
+    key = kdf2(Y^~x)
+    mIn = format2('2', senc(msgOut, key))
+  in
+     [ St_Alice_2(ridA, A, B, skA, skB, ~x, Y),
+       In(mIn) ]
+      --[ AliceRecvLoop(Y^~x),
+          AliceRecvTransMsg(msgOut, key) ]->
+     [ St_Alice_2(ridA, A, B, skA, skB, ~x, Y),
+       Out(msgOut) ]
+
+
+
+/* Bob role */
+rule Bob_init: // technically an env rule
+     [ Fr(~rid), !Sk(B, skB), !Pubk(A, pk(skA)) ]
+     -->
+     [ Setup_Bob(~rid, B, A, skB, skA) ]
+
+
+rule Bob_recvAndSend:
+  let
+    mOut = format5('0', B, A, X, 'g'^~y)
+    key = X^~y
+  in
+     [ Setup_Bob(ridB, B, A, skB, skA),
+       Fr(~y),
+       In(X) ]
+     --[ OUT_BOB(mOut),
+         Running('I', 'R', <A, B, key>)
+       ]->
+     [ St_Bob_1(ridB, B, A, skB, skA, ~y, X),
+       Out(sign(mOut, skB)) ]
+    
+
+rule Bob_recv:
+  let
+    msgIn = format5('1', A, B, 'g'^~y, X)
+    key = X^~y
+  in
+     [ St_Bob_1(ridB, B, A, skB, skA, ~y, X),
+       In(sign(msgIn, skA)) ]
+     --[ Commit('R', 'I', <A, B, key>),
+         Secret(A, B, key),
+         BobHsDone(key) ]->
+     [ St_Bob_2(ridB, B, A, skB, skA, ~y, X) ]
+
+
+rule Bob_recvMsg:
+  let
+    key = kdf1(X^~y)
+    mIn = format2('2', senc(msgOut, key))
+  in
+     [ St_Bob_2(ridB, B, A, skB, skA, ~y, X),
+       In(mIn) ]
+      --[ BobRecvLoop(X^~y),
+          BobRecvTransMsg(msgOut, key),
+          BobRecvTransMsgIden(A, B, msgOut, key) ]->
+     [ St_Bob_2(ridB, B, A, skB, skA, ~y, X),
+       Out(msgOut) ]
+
+
+rule Bob_sendMsg:
+  let
+    key = kdf2(X^~y)
+    mOut = format2('2', senc(msgIn, key))
+  in
+     [ St_Bob_2(ridB, B, A, skB, skA, ~y, X),
+       In(msgIn) ]
+      --[ BobSendLoop(X^~y),
+          BobSendTransMsg(msgIn, key) ]->
+     [ St_Bob_2(ridB, B, A, skB, skA, ~y, X),
+       Out(mOut) ]
+
+
+
+/* ------------------------- */
+/*   Lemmas and properties   */
+/* ------------------------- */
+/* source lemma */
+lemma sources [sources]:
+    " (All payload key #i.
+        BobRecvTransMsg(payload, key)@i ==>
+          (Ex #j. AliceSendTransMsg(payload, key)@j & #j < #i) |
+          (Ex #j #k. KU(key)@j & #j < #i & KU(payload)@k & #k < #i))
+      &
+      (All payload key #i.
+        AliceRecvTransMsg(payload, key)@i ==>
+          (Ex #j. BobSendTransMsg(payload, key)@j & #j < #i) |
+          (Ex #j #k. KU(key)@j & #j < #i & KU(payload)@k & #k < #i))
+      &
+      (All key m #i.
+       IN_ALICE(key, m) @ i ==>
+        ( (Ex #j. KU(key) @ j & j < i)
+        | (Ex #j. OUT_BOB( m ) @ j )))
+    "
+
+
+/* Executability check */
+lemma exec:
+  exists-trace
+    "Ex #i #j A B k. Commit('R', 'I', <A, B, k>)@i & Commit('I', 'R', <A, B, k>)@j"
+
+
+/* Authentication: from the point of view of init, resp agrees with init */
+lemma ni_agreement_init: // non injective: at least one resp agrees
+  "All A B x #i. 
+    Commit('I', 'R', <A, B, x>)@i
+    ==> (  (Ex #j. Running('I', 'R', <A, B, x>)@j)
+         | (Ex #k. Corrupt(A)@k)
+         | (Ex #l. Corrupt(B)@l))"
+
+lemma i_agreement_init: // injective: at least as many resp as there are init agree on a given value
+                        // (proved by showing there's only one commit for each key)
+  "All A B x #i. 
+    Commit('I', 'R', <A, B, x>)@i
+    ==> (  (  (Ex #j. Running('I', 'R', <A, B, x>)@j)
+            & (All #ii. Commit('I', 'R', <A, B, x>)@ii ==> #i = #ii))
+         | (Ex #k. Corrupt(A)@k)
+         | (Ex #l. Corrupt(B)@l))"
+
+
+/* Authentication: from the point of view of resp, init agrees with resp */
+lemma ni_agreement_resp: // non injective: at least one init agrees
+  "All A B x #i. 
+    Commit('R', 'I', <A, B, x>)@i
+    ==> (  (Ex #j. Running('R', 'I', <A, B, x>)@j)
+         | (Ex #k. Corrupt(A)@k)
+         | (Ex #l. Corrupt(B)@l))"
+
+lemma i_agreement_resp: // injective: at least as many init as there are resp agree on a given value
+                        // (proved by showing there's only one commit for each A,B,key)
+  "All A B x #i. 
+    Commit('R', 'I', <A, B, x>)@i
+    ==> (  (  (Ex #j. Running('R', 'I', <A, B, x>)@j)
+            & (All #ii. Commit('R', 'I', <A, B, x>)@ii ==> #i = #ii))
+         | (Ex #k. Corrupt(A)@k)
+         | (Ex #l. Corrupt(B)@l))"
+
+
+/* Forward secrecy of the key */
+lemma forward_secrecy:
+  "All #i A B m.
+    Secret(A, B, m)@i
+    ==>
+    ((not (Ex #j. K(m)@j))
+   | (Ex #j. Corrupt(A)@j & j < i)
+   | (Ex #j. Corrupt(B)@j & j < i))"
+   
+
+end

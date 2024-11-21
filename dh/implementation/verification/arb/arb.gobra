@@ -1,0 +1,13 @@
+package arb
+
+import pl "dh-gobra/verification/place"
+import tm "dh-gobra/verification/term"
+
+
+ghost
+decreases
+func GetArbPlace() pl.Place
+
+ghost
+decreases
+func GetArbTerm() tm.Term
