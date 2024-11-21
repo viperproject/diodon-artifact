@@ -12,7 +12,7 @@ mkdir -p "$GOBRA_REPORT_DIR"
 
 java -Xss128m -jar "$GOBRA_JAR" \
     --module "dh-gobra" \
-    --include "$IMPLEMENTATION_DIR/verification" --include "$IMPLEMENTATION_DIR" \
+    --include "$IMPLEMENTATION_DIR" --include "$IMPLEMENTATION_DIR/.verification"  \
     --input "$IMPLEMENTATION_DIR/initiator/initiator.go" \
     --gobraDirectory "$GOBRA_REPORT_DIR" \
     --parseAndTypeCheckMode PARALLEL \
