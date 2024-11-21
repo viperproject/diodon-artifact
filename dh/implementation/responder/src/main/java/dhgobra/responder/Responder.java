@@ -10,6 +10,7 @@ import dhgobra.library.Library;
 import dhgobra.library.Msg1;
 import dhgobra.library.Msg2;
 import dhgobra.library.Msg3;
+import dhgobra.library.TransportKeys;
 import dhgobra.library.Config;
 //@ import place.*;
 //@ import fresh.*;
@@ -217,17 +218,11 @@ public final class Responder {
         
         lib.success(sharedSecret);
 
-        Scanner input = new Scanner(System.in);
-        System.out.println("Provide IR Key:");
-        String irKeyString = input.nextLine();
-        byte[] irKey = lib.convertFromHex(irKeyString);
-        System.out.println("Provide RI Key:");
-        String riKeyString = input.nextLine();
-        byte[] riKey = lib.convertFromHex(riKeyString);
+        TransportKeys transportKeys = lib.getTransportKeys(sharedSecret);
 
         while (true) {
-            recvTransportMessage(irKey);
-            sendTransportMessage(riKey, input);
+            recvTransportMessage(transportKeys.irKey);
+            sendTransportMessage(transportKeys.riKey);
         }
     }
 
@@ -329,7 +324,8 @@ public final class Responder {
         }
     }
     
-    private void sendTransportMessage(byte[] riKey, Scanner input) {
+    private void sendTransportMessage(byte[] riKey) {
+        Scanner input = new Scanner(System.in);
         String msg = input.nextLine();
         byte[] plaintext = msg.getBytes(StandardCharsets.UTF_8);
         byte[] ciphertext = lib.encrypt(plaintext, riKey);

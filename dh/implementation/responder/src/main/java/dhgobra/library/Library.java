@@ -33,6 +33,10 @@ import javax.crypto.spec.SecretKeySpec;
 // import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters;
 // import org.bouncycastle.crypto.Signer;
 // import org.bouncycastle.crypto.signers.Ed25519Signer;
+import org.bouncycastle.crypto.digests.Blake2sDigest;
+import org.bouncycastle.crypto.macs.HMac;
+import org.bouncycastle.crypto.params.KeyParameter;
+import org.bouncycastle.jcajce.provider.digest.Blake2s.Blake2s256;
 
 public final class Library {
     private final DatagramSocket socket;
@@ -443,5 +447,38 @@ public final class Library {
             System.out.println(e);
             return null;
         }
+    }
+
+    public TransportKeys getTransportKeys(byte[] sharedSecret) {
+        byte[] prk = new byte[32];
+        HMAC1Slice(prk, sharedSecret, null);
+        byte[] t0 = new byte[32];
+        HMAC1Slice(t0, prk, new byte[] {0x1});
+        byte[] t1 = new byte[32];
+        HMAC2Slice(t1, prk, t0, new byte[] {0x2});
+        return new TransportKeys(t0, t1);
+    }
+
+    private void HMAC1Slice(byte[] sum, byte[] key, byte[] in0) {
+        assert(sum != null && sum.length == 32);
+        var hmac = new HMac(new Blake2sDigest());
+        hmac.init(new KeyParameter(key));
+        if (in0 != null) {
+            hmac.update(in0, 0, in0.length);
+        }
+        hmac.doFinal(sum, 0);
+    }
+
+    private void HMAC2Slice(byte[] sum, byte[] key, byte[] in0, byte[] in1) {
+        assert(sum != null && sum.length == 32);
+        HMac hmac = new HMac(new Blake2sDigest());
+        hmac.init(new KeyParameter(key));
+        if (in0 != null) {
+            hmac.update(in0, 0, in0.length);
+        }
+        if (in1 != null) {
+            hmac.update(in1, 0, in1.length);
+        }
+        hmac.doFinal(sum, 0);
     }
 }

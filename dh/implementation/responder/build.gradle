@@ -4,8 +4,8 @@ apply plugin: 'application'
 mainClassName = 'dhgobra.main.Main'
 
 // specify backwards compatibility with 11
-sourceCompatibility = 15
-targetCompatibility = 15
+sourceCompatibility = 21
+targetCompatibility = 21
 
 defaultTasks 'run'
 
@@ -15,7 +15,7 @@ repositories {
 
 dependencies {
     implementation group: 'commons-cli', name: 'commons-cli', version: '1.5.0'
-    // implementation group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.70'
+    implementation group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.70'
 }
 
 jar {
@@ -28,13 +28,9 @@ jar {
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
-    /*
     // filter signature files because JAR signatures are invalid after
     // creating a fat-JAR:
-    from (configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }) {
-        exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
-    }
-    */
+    exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA'
 }
 
 // set destination for JAR output:
