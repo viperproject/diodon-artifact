@@ -23,7 +23,7 @@ jar {
         attributes 'Main-Class': mainClassName
     }
     // name of the generated JAR output:
-    baseName 'dh-gobra'
+    archiveBaseName.set('dh-gobra')
     // to create a fat JAR:
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
@@ -39,6 +39,6 @@ jar {
 
 // set destination for JAR output:
 tasks.withType(Jar) {
-    destinationDir = file("$rootDir")
+    destinationDirectory = file("$rootDir")
     // duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }

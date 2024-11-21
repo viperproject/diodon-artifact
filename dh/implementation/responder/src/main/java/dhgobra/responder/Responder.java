@@ -3,6 +3,9 @@ package dhgobra.responder;
 // Verified with https://github.com/verifast/verifast/releases/tag/18.02
 
 import java.util.Arrays;
+import java.util.Scanner;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import dhgobra.library.Library;
 import dhgobra.library.Msg1;
 import dhgobra.library.Msg2;
@@ -213,7 +216,19 @@ public final class Responder {
         //@ close stateArgs(BT, AT, skBT, skAT, yFR, receivedXT);
         
         lib.success(sharedSecret);
-        return true;
+
+        Scanner input = new Scanner(System.in);
+        System.out.println("Provide IR Key:");
+        String irKeyString = input.nextLine();
+        byte[] irKey = lib.convertFromHex(irKeyString);
+        System.out.println("Provide RI Key:");
+        String riKeyString = input.nextLine();
+        byte[] riKey = lib.convertFromHex(riKeyString);
+
+        while (true) {
+            recvTransportMessage(irKey);
+            sendTransportMessage(riKey, input);
+        }
     }
 
     private byte[] recvMsg1() 
@@ -296,5 +311,32 @@ public final class Responder {
             return null;
         }
         return lib.unmarshalMsg3(msg3Data);
+    }
+
+    private void recvTransportMessage(byte[] irKey) {
+        byte[] msgData = lib.recv();
+        byte[] tag = Arrays.copyOf(msgData, 4);
+        if (lib.bytesToUint32(tag) != 2) {
+            System.out.println("invalid transport message");
+            return;
+        }
+        byte[] ciphertext = Arrays.copyOfRange(msgData, 4, msgData.length);
+        byte[] plaintext = lib.decrypt(ciphertext, irKey);
+        if (plaintext == null) {
+            System.out.println("decryption failed");
+        } else {
+            System.out.println("Received: " + new String(plaintext, StandardCharsets.UTF_8));
+        }
+    }
+    
+    private void sendTransportMessage(byte[] riKey, Scanner input) {
+        String msg = input.nextLine();
+        byte[] plaintext = msg.getBytes(StandardCharsets.UTF_8);
+        byte[] ciphertext = lib.encrypt(plaintext, riKey);
+        byte[] msgData = ByteBuffer.allocate(ciphertext.length + 4)
+            .put(lib.uint32ToBytes(2))
+            .put(ciphertext)
+            .array();
+        lib.send(msgData);
     }
 }

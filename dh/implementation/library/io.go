@@ -30,3 +30,10 @@ func NewError(msg string) (err error) {
 func (l *LibState) PrintSharedSecret(sharedSecret []byte) {
 	fmt.Printf("Initiator & responder agreed on shared secret %x\n", sharedSecret)
 }
+
+//@ trusted
+//@ preserves acc(l.Mem(), 1/16)
+//@ preserves acc(Mem(irKey), 1/16) && acc(Mem(riKey), 1/16)
+func (l *LibState) PrintKeys(irKey, riKey []byte) {
+	fmt.Printf("IR Key %x\nRI Key %x\n", irKey, riKey)
+}

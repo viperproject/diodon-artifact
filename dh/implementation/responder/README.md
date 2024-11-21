@@ -11,6 +11,10 @@ Build:
 ```
 gradle build
 ```
+The following command explicitly specifies a JDK in case the default one is too old:
+```
+gradle build -Dorg.gradle.java.home=/opt/homebrew/opt/openjdk
+```
 
 Run:
 ```

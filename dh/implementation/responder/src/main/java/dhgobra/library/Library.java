@@ -4,11 +4,14 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Random;
 import java.net.*;
+import java.nio.ByteBuffer;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.PublicKey;
 import java.security.PrivateKey;
+import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.spec.EdECPoint;
@@ -17,9 +20,16 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.NamedParameterSpec;
 import java.security.spec.EdECPrivateKeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
-import javax.crypto.spec.SecretKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.io.IOException;
+import java.util.Scanner;
+import javax.crypto.Cipher;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 // import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters;
 // import org.bouncycastle.crypto.Signer;
 // import org.bouncycastle.crypto.signers.Ed25519Signer;
@@ -329,7 +339,7 @@ public final class Library {
         return true;
     }
 
-    private byte[] uint32ToBytes(long value) {
+    public byte[] uint32ToBytes(long value) {
         if (!longInRange(value)) {
             return null;
         }
@@ -341,7 +351,7 @@ public final class Library {
         };
     }
 
-    private long bytesToUint32(byte[] data) {
+    public long bytesToUint32(byte[] data) {
         if (data == null || data.length != 4) {
             return -1;
         }
@@ -358,5 +368,80 @@ public final class Library {
 
     public void success(byte[] sharedSecret) {
         System.out.println("Initiator & responder agreed on shared secret " + convertToHex(sharedSecret));
+    }
+
+    private static final String ENCRYPT_ALGO = "ChaCha20-Poly1305";
+    private static final int NONCE_LEN = 12;
+    public byte[] encrypt(byte[] plaintext, byte[] key) {
+        Cipher cipher;
+        try {
+            cipher = Cipher.getInstance(ENCRYPT_ALGO);
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
+            return null;
+        }
+
+        byte[] nonce = new byte[NONCE_LEN];
+        new SecureRandom().nextBytes(nonce);
+
+        // IV, initialization value with nonce
+        IvParameterSpec iv = new IvParameterSpec(nonce);
+
+        SecretKey keyObject = new SecretKeySpec(key, "AES");
+        try {
+            cipher.init(Cipher.ENCRYPT_MODE, keyObject, iv);
+        } catch (InvalidKeyException | InvalidAlgorithmParameterException e) {
+            return null;
+        }
+
+        byte[] encryptedText;
+        try {
+            encryptedText = cipher.doFinal(plaintext);
+        } catch (IllegalBlockSizeException | BadPaddingException e) {
+            return null;
+        }
+
+        // prepend nonce to the encrypted text
+        byte[] output = ByteBuffer.allocate(encryptedText.length + NONCE_LEN)
+                .put(nonce)
+                .put(encryptedText)
+                .array();
+
+        return output;
+    }
+
+    public byte[] decrypt(byte[] ciphertext, byte[] key) {
+        ByteBuffer bb = ByteBuffer.wrap(ciphertext);
+
+        // split ciphertext to get the prepended nonce
+        byte[] nonce = new byte[NONCE_LEN];
+        byte[] encryptedText = new byte[ciphertext.length - NONCE_LEN];
+        bb.get(nonce);
+        bb.get(encryptedText);
+        
+        Cipher cipher;
+        try {
+            cipher = Cipher.getInstance(ENCRYPT_ALGO);
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
+            System.out.println(e);
+            return null;
+        }
+
+        IvParameterSpec iv = new IvParameterSpec(nonce);
+
+        SecretKey keyObject = new SecretKeySpec(key, "AES");
+        try {
+            cipher.init(Cipher.DECRYPT_MODE, keyObject, iv);
+        } catch (InvalidKeyException | InvalidAlgorithmParameterException e) {
+            System.out.println(e);
+            return null;
+        }
+
+        // decrypted text
+        try {
+            return cipher.doFinal(encryptedText);
+        } catch (IllegalBlockSizeException | BadPaddingException e) {
+            System.out.println(e);
+            return null;
+        }
     }
 }

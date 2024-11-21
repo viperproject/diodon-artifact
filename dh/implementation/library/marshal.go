@@ -95,7 +95,7 @@ func (l *LibState) MarshalMsg3(msg3 *Msg3) (res []byte, err error) {
 //@ ensures err == nil ==> Mem(res)
 //@ ensures err == nil ==> Abs(res) == by.tuple2B(by.integer32B(TransMsgTag), Abs(ciphertext))
 func (l *LibState) MarshalTransportMsg(ciphertext []byte) (res []byte, err error) {
-	res = make([]byte, len(ciphertext) + 4)
+	res = make([]byte, 4)
 	binary.BigEndian.PutUint32(res[:4], TransMsgTag)
 	return append(res, ciphertext...), nil
 }

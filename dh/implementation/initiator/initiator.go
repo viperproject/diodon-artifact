@@ -408,10 +408,10 @@ func (i *Initiator) ProduceHsMsg3() (signedMsg3 []byte, err error) {
 			i.irKey, i.riKey = NewBytes(32), NewBytes(32)
 			//@ sharedSecretB := Abs(sharedSecret)
 			err = KDF2Slice(i.irKey, i.riKey, sharedSecret /*@, sharedSecretB @*/)
-			/*@
-			ghost if err == nil {
-				fold HandshakeCompletedPred(i.irKey, i.riKey, i.xT, i.YT)
-			} @*/
+			if err == nil {
+				i.l.PrintKeys(i.irKey, i.riKey)
+				//@ fold HandshakeCompletedPred(i.irKey, i.riKey, i.xT, i.YT)
+			}
 		}
 	//@ )
 
