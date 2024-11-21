@@ -1,0 +1,33 @@
+package utilbytes
+
+import by "dh-gobra/verification/bytes"
+import tm "dh-gobra/verification/utilterm"
+
+type Bytes = by.Bytes
+
+type BytesUtil domain {
+    // constructors
+    func tuple2B(by.Bytes, by.Bytes) by.Bytes
+    axiom { 
+        forall x1, x2 by.Bytes :: {tuple2B(x1, x2)} tuple2B(x1, x2) == by.format2B(x1, x2)
+    }
+    func tuple5B(by.Bytes, by.Bytes, by.Bytes, by.Bytes, by.Bytes) by.Bytes
+    axiom { 
+        forall x1, x2, x3, x4, x5 by.Bytes :: {tuple5B(x1, x2, x3, x4, x5)} tuple5B(x1, x2, x3, x4, x5) == by.format5B(x1, x2, x3, x4, x5)
+    }
+
+    func integer32B(uint32) by.Bytes
+    axiom {
+        forall i uint32 :: { integer32B(i) } integer32B(i) == by.gamma(tm.integer32(i))
+    }
+
+    func generatorB() by.Bytes
+    axiom {
+        generatorB() == by.const_gB()
+    }
+
+    func getMsgB(by.Bytes) by.Bytes
+    axiom {
+        forall x1 by.Bytes :: { getMsgB(x1) } getMsgB(x1) == by.extractB(x1)
+    }
+}

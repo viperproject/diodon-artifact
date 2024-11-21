@@ -1,0 +1,154 @@
+package claim
+
+
+
+import . "dh-gobra/verification/term"
+
+
+type Claim domain {
+    func IN_ALICE(t1 Term, t2 Term) Claim
+    func getIN_ALICE(f Claim) seq[Term]
+    axiom  {
+        forall t1 Term, t2 Term :: 
+            { IN_ALICE(t1, t2) } (
+                getIN_ALICE(IN_ALICE(t1, t2)) ==
+                seq[Term]{t1, t2})
+    }
+
+    func Secret(t1 Term, t2 Term, t3 Term) Claim
+    func getSecret(f Claim) seq[Term]
+    axiom  {
+        forall t1 Term, t2 Term, t3 Term :: 
+            { Secret(t1, t2, t3) } (
+                getSecret(Secret(t1, t2, t3)) ==
+                seq[Term]{t1, t2, t3})
+    }
+
+    func Running(t1 Term, t2 Term, t3 Term) Claim
+    func getRunning(f Claim) seq[Term]
+    axiom  {
+        forall t1 Term, t2 Term, t3 Term :: 
+            { Running(t1, t2, t3) } (
+                getRunning(Running(t1, t2, t3)) ==
+                seq[Term]{t1, t2, t3})
+    }
+
+    func Commit(t1 Term, t2 Term, t3 Term) Claim
+    func getCommit(f Claim) seq[Term]
+    axiom  {
+        forall t1 Term, t2 Term, t3 Term :: 
+            { Commit(t1, t2, t3) } (
+                getCommit(Commit(t1, t2, t3)) ==
+                seq[Term]{t1, t2, t3})
+    }
+
+    func AliceHsDone(t1 Term) Claim
+    func getAliceHsDone(f Claim) Term
+    axiom  {
+        forall t1 Term :: 
+            { AliceHsDone(t1) } (
+                getAliceHsDone(AliceHsDone(t1)) ==
+                t1)
+    }
+
+    func AliceSendLoop(t1 Term) Claim
+    func getAliceSendLoop(f Claim) Term
+    axiom  {
+        forall t1 Term :: 
+            { AliceSendLoop(t1) } (
+                getAliceSendLoop(AliceSendLoop(t1)) ==
+                t1)
+    }
+
+    func AliceSendTransMsg(t1 Term, t2 Term) Claim
+    func getAliceSendTransMsg(f Claim) seq[Term]
+    axiom  {
+        forall t1 Term, t2 Term :: 
+            { AliceSendTransMsg(t1, t2) } (
+                getAliceSendTransMsg(AliceSendTransMsg(t1, t2)) ==
+                seq[Term]{t1, t2})
+    }
+
+    func AliceRecvLoop(t1 Term) Claim
+    func getAliceRecvLoop(f Claim) Term
+    axiom  {
+        forall t1 Term :: 
+            { AliceRecvLoop(t1) } (
+                getAliceRecvLoop(AliceRecvLoop(t1)) ==
+                t1)
+    }
+
+    func AliceRecvTransMsg(t1 Term, t2 Term) Claim
+    func getAliceRecvTransMsg(f Claim) seq[Term]
+    axiom  {
+        forall t1 Term, t2 Term :: 
+            { AliceRecvTransMsg(t1, t2) } (
+                getAliceRecvTransMsg(AliceRecvTransMsg(t1, t2)) ==
+                seq[Term]{t1, t2})
+    }
+
+    func OUT_BOB(t1 Term) Claim
+    func getOUT_BOB(f Claim) Term
+    axiom  {
+        forall t1 Term :: 
+            { OUT_BOB(t1) } (
+                getOUT_BOB(OUT_BOB(t1)) ==
+                t1)
+    }
+
+    func BobHsDone(t1 Term) Claim
+    func getBobHsDone(f Claim) Term
+    axiom  {
+        forall t1 Term :: 
+            { BobHsDone(t1) } (
+                getBobHsDone(BobHsDone(t1)) ==
+                t1)
+    }
+
+    func BobRecvLoop(t1 Term) Claim
+    func getBobRecvLoop(f Claim) Term
+    axiom  {
+        forall t1 Term :: 
+            { BobRecvLoop(t1) } (
+                getBobRecvLoop(BobRecvLoop(t1)) ==
+                t1)
+    }
+
+    func BobRecvTransMsg(t1 Term, t2 Term) Claim
+    func getBobRecvTransMsg(f Claim) seq[Term]
+    axiom  {
+        forall t1 Term, t2 Term :: 
+            { BobRecvTransMsg(t1, t2) } (
+                getBobRecvTransMsg(BobRecvTransMsg(t1, t2)) ==
+                seq[Term]{t1, t2})
+    }
+
+    func BobRecvTransMsgIden(t1 Term, t2 Term, t3 Term, t4 Term) Claim
+    func getBobRecvTransMsgIden(f Claim) seq[Term]
+    axiom  {
+        forall t1 Term, t2 Term, t3 Term, t4 Term :: 
+            { BobRecvTransMsgIden(t1, t2, t3, t4) } (
+                getBobRecvTransMsgIden(BobRecvTransMsgIden(t1, t2, t3, t4)) ==
+                seq[Term]{t1, t2, t3, t4})
+    }
+
+    func BobSendLoop(t1 Term) Claim
+    func getBobSendLoop(f Claim) Term
+    axiom  {
+        forall t1 Term :: 
+            { BobSendLoop(t1) } (
+                getBobSendLoop(BobSendLoop(t1)) ==
+                t1)
+    }
+
+    func BobSendTransMsg(t1 Term, t2 Term) Claim
+    func getBobSendTransMsg(f Claim) seq[Term]
+    axiom  {
+        forall t1 Term, t2 Term :: 
+            { BobSendTransMsg(t1, t2) } (
+                getBobSendTransMsg(BobSendTransMsg(t1, t2)) ==
+                seq[Term]{t1, t2})
+    }
+
+
+}
