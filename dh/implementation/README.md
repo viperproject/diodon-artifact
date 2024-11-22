@@ -1,6 +1,4 @@
 # Go Diffie-Hellman Implementation
-[![DH Code Verification](https://github.com/soundverification/wireguard/actions/workflows/dh-code.yml/badge.svg?branch=main)](https://github.com/soundverification/wireguard/actions/workflows/dh-code.yml?query=branch%3Amain)
-[![License: MPL 2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](../../LICENSE)
 
 ## Building & Running the Initiator Role
 Build:
@@ -28,7 +26,8 @@ Keypair 2:
 
 ## Verifying the Initiator Role
 Gobra can be used as follows to successfully verify this implementation.
-Detailed explanations and Gobra's JAR file are given in WireGuard's implementation folder.
+The Docker image provides a Gobra JAR and a shell script to do so.
+Alternatively, the following command manually configures Gobra:
 ```
-java -Xss128m -jar ../../wireguard/implementation/gobra.jar -I verification -I ./ --module dh-gobra --directory initiator
+java -Xss128m -jar <path to gobra.jar> --recursive -I ./ -I .verification --module dh-gobra --includePackages initiator --parallelizeBranches
 ```
