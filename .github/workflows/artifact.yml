@@ -126,10 +126,10 @@ jobs:
           - name: "Verify SSM Agent protocol model"
             command: "/gobra/ssm-agent/verify-model.sh"
             timeout-minutes: 15
+          - name: "Verify SSM Agent core"
+            command: "/gobra/ssm-agent/verify-core.sh"
+            timeout-minutes: 15
           # TODO renable once these tasks are fixed
-          # - name: "Verify SSM Agent core"
-          #   command: "/gobra/ssm-agent/verify-core.sh"
-          #   timeout-minutes: 15
           # - name: "Verify SSM Agent I/O independence"
           #   command: "/gobra/ssm-agent/verify-io-independence.sh"
           #   timeout-minutes: 10

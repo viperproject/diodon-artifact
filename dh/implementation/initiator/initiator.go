@@ -403,11 +403,12 @@ func (i *Initiator) ProduceHsMsg3() (signedMsg3 []byte, err error) {
  	//@ ensures   err == nil ==> HandshakeCompletedPred(i.irKey, i.riKey, i.xT, i.YT)
 	//@ outline(
 		var sharedSecret []byte
-		sharedSecret, err = i.l.DhSharedSecret(i.x, i.Y)
+		//@ ghost var sharedSecretB by.Bytes
+		sharedSecret, err /*@, sharedSecretB @*/ = i.l.DhSharedSecret(i.x, i.Y)
 		if err == nil {
 			i.irKey, i.riKey = NewBytes(32), NewBytes(32)
-			//@ sharedSecretB := Abs(sharedSecret)
-			err = KDF2Slice(i.irKey, i.riKey, sharedSecret /*@, sharedSecretB @*/)
+			//@ ghost var t0Abs, t1Abs by.Bytes
+			err /*@, t0Abs, t1Abs @*/ = KDF2Slice(i.irKey, i.riKey, sharedSecret /*@, sharedSecretB @*/)
 			if err == nil {
 				i.l.PrintKeys(i.irKey, i.riKey)
 				//@ fold HandshakeCompletedPred(i.irKey, i.riKey, i.xT, i.YT)
