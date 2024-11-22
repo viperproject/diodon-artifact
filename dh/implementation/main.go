@@ -1,19 +1,22 @@
 package main
 
-import "bufio"
-import "encoding/base64"
-import "errors"
-import "flag"
-import "fmt"
-import "os"
-import "dh-gobra/initiator"
-import "dh-gobra/iolib"
+import (
+	"bufio"
+	"encoding/base64"
+	"errors"
+	"flag"
+	"fmt"
+	"os"
+
+	"dh-gobra/initiator"
+	"dh-gobra/iolib"
+)
 
 type Config struct {
-	IsInitiator            bool
-	PrivateKey             string
-	PeerEndpoint           string // <address>:<port>, e.g. "127.0.0.1:57654" (IPv4) or "[::1]:57950" (IPv6)
-	PeerPublicKey          string
+	IsInitiator   bool
+	PrivateKey    string
+	PeerEndpoint  string // <address>:<port>, e.g. "127.0.0.1:57654" (IPv4) or "[::1]:57950" (IPv6)
+	PeerPublicKey string
 }
 
 func parseArgs() Config {
@@ -25,10 +28,10 @@ func parseArgs() Config {
 	flag.Parse()
 
 	config := Config{
-		IsInitiator:            *isInitiatorPtr,
-		PrivateKey:             *privateKeyPtr,
-		PeerEndpoint:           *peerEndpointPtr,
-		PeerPublicKey:          *peerPublicKeyPtr,
+		IsInitiator:   *isInitiatorPtr,
+		PrivateKey:    *privateKeyPtr,
+		PeerEndpoint:  *peerEndpointPtr,
+		PeerPublicKey: *peerPublicKeyPtr,
 	}
 	return config
 }
@@ -41,10 +44,8 @@ func main() {
 		reportAndExit(errors.New("responder is currently not implemented"))
 	}
 
-	privateKey, peerPublicKey, err := parseKeys(config)
-	if err != nil {
-		reportAndExit(err)
-	}
+	privateKey := parsePrivateKey(config)
+	peerPublicKey := parsePublicKey(config)
 
 	initiator, err := initiator.NewInitiator(privateKey, peerPublicKey)
 	if err != nil {
@@ -125,20 +126,27 @@ func reportAndExit(err error) {
 	os.Exit(1)
 }
 
-func parseKeys(config Config) (privateKey [64]byte, peerPublicKey [32]byte, err error) {
+func parsePrivateKey(config Config) [64]byte {
+	var privateKey [64]byte
 	encoding := base64.StdEncoding
 	privateKeySlice, err := encoding.DecodeString(config.PrivateKey)
 	if err != nil {
-		return privateKey, peerPublicKey, err
-	}
-
-	peerPublicKeySlice, err := encoding.DecodeString(config.PeerPublicKey)
-	if err != nil {
-		return privateKey, peerPublicKey, err
+		reportAndExit(errors.New("failed to decode private key"))
 	}
 
 	copy(privateKey[:], privateKeySlice)
-	copy(peerPublicKey[:], peerPublicKeySlice)
 
-	return privateKey, peerPublicKey, nil
+	return privateKey
+}
+
+func parsePublicKey(config Config) (publicKey [32]byte) {
+	encoding := base64.StdEncoding
+	publicKeySlice, err := encoding.DecodeString(config.PeerPublicKey)
+	if err != nil {
+		reportAndExit(errors.New("failed to decode public key"))
+	}
+
+	copy(publicKey[:], publicKeySlice)
+
+	return publicKey
 }

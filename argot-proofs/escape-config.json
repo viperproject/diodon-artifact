@@ -101,6 +101,6 @@
         "fmt.Errorf": "noop",
         "(*github.com/go-git/go-git/v5/plumbing/format/idxfile.Encoder).Write": "noop"
     },
-    "pkg-filter": "(github.com/aws/amazon-ssm-agent.*)|(command-line-arguments)|(sync)|(bytes)|(unicode)|(crypto/internal)|(crypto/aes)|(crypto/cipher)|(crypto/sha512)|(crypto/sha1)|(crypto/sha256)|(crypto/md5)|(crypto/subtle)|(hash/crc32)|(github.com/go-git/go-git/v5/plumbing.*)",
+    "pkg-filter": "(dh-gobra.*)|(github.com/aws/amazon-ssm-agent.*)|(command-line-arguments)|(sync)|(bytes)|(unicode)|(crypto/internal)|(crypto/aes)|(crypto/cipher)|(crypto/sha512)|(crypto/sha1)|(crypto/sha256)|(crypto/md5)|(crypto/subtle)|(hash/crc32)|(github.com/go-git/go-git/v5/plumbing.*)",
     "default-summarize": false
 }
