@@ -113,9 +113,9 @@ func (l *LibState) DhExp(exp []byte) (res []byte, err error) {
 //@ trusted
 //@ preserves acc(l.Mem(), 1/16)
 //@ preserves acc(Mem(dhSecret), 1/16) && acc(Mem(dhHalfKey), 1/16)
-//@ ensures err == nil ==> Mem(res) && Abs(res) == expB(Abs(dhHalfKey), Abs(dhSecret))
+//@ ensures err == nil ==> Mem(res) && Abs(res) == resB && resB == expB(Abs(dhHalfKey), Abs(dhSecret))
 // args are big-endian
-func (l *LibState) DhSharedSecret(dhSecret, dhHalfKey []byte) (res []byte, err error) {
+func (l *LibState) DhSharedSecret(dhSecret, dhHalfKey []byte) (res []byte, err error /*@, ghost resB Bytes @*/) {
 	return l.expMod(dhHalfKey, dhSecret)
 }
 
@@ -223,12 +223,12 @@ func Equals(s1, s2 []byte) (res bool) {
 // which is a bug.
 //@ trusted
 //@ decreases
-//@ preserves Mem(t0) && Mem(t1)
+//@ requires  Mem(t0) && Mem(t1)
 //@ requires  acc(Mem(key), 1/16) && keyAbs == Abs(key)
-//@ ensures   acc(Mem(key), 1/16)
-//@ ensures   err == nil ==> kdf1B(keyAbs) == Abs(t0) 
-//@ ensures   err == nil ==> kdf2B(keyAbs) == Abs(t1)
-func KDF2Slice(t0, t1 []byte, key []byte /*@, ghost keyAbs Bytes @*/) (err error) {
+//@ ensures   Mem(t0) && t0Abs == Abs(t0) && Mem(t1) && t1Abs == Abs(t1)
+//@ ensures   err == nil ==> kdf1B(keyAbs) == t0Abs
+//@ ensures   err == nil ==> kdf2B(keyAbs) == t1Abs
+func KDF2Slice(t0, t1 []byte, key []byte /*@, ghost keyAbs Bytes @*/) (err error /*@, ghost t0Abs Bytes, ghost t1Abs Bytes @*/) {
 	if len(t0) != 32 || len(t1) != 32 {
 		err = errors.New("invalid argument length")
 		return
