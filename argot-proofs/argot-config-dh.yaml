@@ -3,7 +3,7 @@ options:
   use-escape-analysis: true
   escape-config: "escape-config.json"
   report-paths: true
-  silence-warn: true
+  silence-warn: false
   analysis-options:
     max-alarms: 2
 
@@ -14,6 +14,19 @@ pointer-config:
     - fmt.Errorf
     - .*.Errorf
 
+immutability-problems:
+  # All methods with the core invariant
+  - values:
+      - package: dh-gobra/initiator
+        method: ProduceHsMsg1
+        context: 0
+      - package: dh-gobra/initiator
+        method: ProduceHsMsg2
+        context: 0
+    filters:
+      - package: dh-gobra/initiator
+        method: .*
+
 dataflow-problems:
   summarize-on-demand: true
   user-specs:
@@ -23,14 +36,14 @@ dataflow-problems:
     - .*
 
   taint-tracking:
-    - tag: diodon-io-independence
-      description: "Diodon: Diffie-Hellman I/O independence proof"
+    - tag: diodon-dh-io-independence
+      description: "Diodon: DH I/O independence proof"
       severity: HIGH
       filters:
         - type: error$ # TODO is this ok?
       fail-on-implicit-flow: true # handle information flow
       sources:
-        - package: .*
+        - package: command-line-arguments
           method: parsePrivateKey$
       sinks:
         - interface: T$

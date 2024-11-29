@@ -3,11 +3,10 @@ package iolib
 import net "net"
 import "errors"
 
-
 const MAX_DATA_SIZE = 1024
 
 type IoLibState struct {
-	conn net.Conn
+	conn       net.Conn
 	connClosed bool
 }
 
@@ -16,9 +15,9 @@ func NewLibState(endpoint string) (l *IoLibState, err error) {
 	if err != nil {
 		return nil, err
 	}
-	state := &IoLibState {
-		conn: conn,
-		connClosed: false,
+	state := &IoLibState{ //argot:ignore
+		conn:       conn,
+		connClosed: false, //argot:ignore
 	}
 	return state, nil
 }
@@ -51,6 +50,6 @@ func (l *IoLibState) Recv() (data []byte, err error) {
 }
 
 func (l *IoLibState) Close() {
-	l.connClosed = true
+	l.connClosed = true //argot:ignore
 	l.conn.Close()
 }
