@@ -18,7 +18,7 @@ RUN apt-get update && \
     git
 
 # install go
-ENV GO_VERSION="1.21.5"
+ENV GO_VERSION="1.23.1"
 RUN mkdir tmp && \
     cd tmp && \
     wget "https://go.dev/dl/go$GO_VERSION.linux-amd64.tar.gz" && \
@@ -29,6 +29,9 @@ RUN mkdir tmp && \
 # add Go to path:
 ENV PATH="${PATH}:/usr/local/go/bin"
 RUN go env -w GOBIN="/usr/local/go/bin"
+
+# bypass Go proxy
+RUN go env -w GOPROXY=direct
 
 # `/.local/bin` is the installation location of Tamarin and its dependencies
 RUN mkdir -p /.local/bin
@@ -59,21 +62,12 @@ ENV LANG="en_US.UTF-8"
 ENV LANGUAGE="en_US:en"
 ENV LC_ALL="en_US.UTF-8"
 
-# copy argot
-RUN mkdir ar-go-tools && mkdir argot-proofs
+# copy argot source code
+RUN mkdir ar-go-tools
 COPY ar-go-tools ./ar-go-tools
-COPY argot-proofs ./argot-proofs
 
-# install argot dependencies
-RUN cd ./argot-proofs/dependencies && \
-    go install golang.org/x/vuln/cmd/govulncheck && \
-    go install github.com/fzipp/gocyclo/cmd/gocyclo && \
-    go install github.com/gordonklaus/ineffassign && \
-    go install golang.org/x/lint/golint && \
-    go install golang.org/x/tools/cmd/deadcode
-
-# compile argot
-RUN cd ./ar-go-tools && make release
+# install argot binary: this puts the "argot" command on the PATH
+RUN cd ./ar-go-tools && make argot-install
 
 
 RUN mkdir dh-orig && mkdir ssm-agent-orig

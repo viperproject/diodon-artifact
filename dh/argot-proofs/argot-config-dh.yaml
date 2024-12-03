@@ -1,12 +1,18 @@
 options:
+  project-root: ../implementation # root is the DH Go implementation directory
+  reports-dir: ../argot-proofs/argot-reports
   log-level: 3 # log at info level (3), debug level is 4 and trace is 5
-  coverage-filter: (github.com/aws/amazon-ssm-agent)
   use-escape-analysis: true
-  escape-config: "escape-config.json"
+  escape-config: ../argot-proofs/escape-config.json
   report-paths: true
-  silence-warn: true
+  silence-warn: false # TODO fix escape warning for (*encoding/base64.Encoding).DecodeString during taint analysis
   analysis-options:
     max-alarms: 2
+
+targets:
+  - name: dh
+    files:
+      - main.go
 
 pointer-config:
   # The following function's effect on aliasing is ignored; it creates too many false positives.
@@ -17,87 +23,43 @@ pointer-config:
 
 immutability-problems:
   # All methods with the core invariant
-  - values:
-      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
-        method: SendStreamDataMessage$
-        context: 0 # argument value to track
-        # type: .*(IDataChannel|dataChannel)
-      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
-        method: SendAgentSessionStateMessage$
+  - tag: diodon-dh-core-invariant
+    description: "Diodon: DH core invariant maintenance proof"
+    severity: HIGH
+    targets:
+      - dh
+    values:
+      - package: dh-gobra/initiator
+        method: ProduceHsMsg1
         context: 0
-        # type: .*(IDataChannel|dataChannel)
-      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
-        method: SkipHandshake$
+      - package: dh-gobra/initiator
+        method: ProduceHsMsg2
         context: 0
-        # type: .*(IDataChannel|dataChannel)
-      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
-        method: PerformHandshake$
-        context: 0
-        # type: .*(IDataChannel|dataChannel)
-      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
-        method: GetClientVersion$
-        context: 0
-        # type: .*(IDataChannel|dataChannel)
-      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
-        method: GetInstanceId$
-        context: 0
-        # type: .*(IDataChannel|dataChannel)
-      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
-        method: GetRegion$
-        context: 0
-        # type: .*(IDataChannel|dataChannel)
-      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
-        method: IsActive$
-        context: 0
-        # type: .*(IDataChannel|dataChannel)
-      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
-        method: GetSeparateOutputPayload$
-        context: 0
-        # type: .*(IDataChannel|dataChannel)
-      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
-        method: SetSeparateOutputPayload$
-        context: 0
-        # type: .*(IDataChannel|dataChannel)
-      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
-        method: PrepareToCloseChannel$
-        context: 0
-        # type: .*(IDataChannel|dataChannel)
-      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
-        method: Close$
-        context: 0
-        # type: .*(IDataChannel|dataChannel)
     filters:
-      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+      - package: dh-gobra/initiator
+        method: .*
+      - package: dh-gobra/library
         method: .*
 
 dataflow-problems:
   summarize-on-demand: true
   user-specs:
-    - agent-specs.json
-    - sdk-specs.json
-    - std-specs.json
+    - ../argot-proofs/std-specs.json
   field-sensitive-funcs:
-    - .*/messageservice/interactor.*
-    - .*/session/crypto.*
-    - .*/session/datachannel.*
-    - .*/session/datastream.*
-    - .*/session/plugins/port.*
-    - .*/session/plugins/sessionplugin.*
-    - .*/session/plugins/standardstream.*
-    - .*/session/retry.*
-    - .*/session/shell.*
-    - .*aws-sdk-go/service/kms.*
+    - .*
 
   taint-tracking:
-    - tag: diodon-io-independence
-      description: "Diodon: SSM Agent I/O independence proof"
+    - tag: diodon-dh-io-independence
+      description: "Diodon: DH I/O independence proof"
+      targets:
+        - dh
       severity: HIGH
       filters:
         - type: error$ # TODO is this ok?
       fail-on-implicit-flow: true # handle information flow
       sources:
-        - package: crypto/elliptic$
-          method: GenerateKey$
+        - package: command-line-arguments
+          method: parsePrivateKey$
       sinks:
         - interface: T$
           package: .*log$

@@ -1,7 +1,7 @@
 [submodule "implementation"]
 	path = ssm-agent/implementation
 	url = https://github.com/ArquintL/amazon-ssm-agent
-	branch = diodon
+	branch = update-diodon
 [submodule "ar-go-tools"]
 	path = ar-go-tools
 	url = https://github.com/awslabs/ar-go-tools
