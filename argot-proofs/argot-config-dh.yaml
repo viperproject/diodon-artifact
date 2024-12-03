@@ -1,11 +1,18 @@
 options:
+  project-root: ../dh/implementation # root is the DH Go implementation directory
+  reports-dir: ../../argot-reports # make this directory relative to diodon-artifact
   log-level: 3 # log at info level (3), debug level is 4 and trace is 5
   use-escape-analysis: true
-  escape-config: "escape-config.json"
+  escape-config: ../../argot-proofs/escape-config.json
   report-paths: true
   silence-warn: false
   analysis-options:
     max-alarms: 2
+
+targets:
+  - name: dh
+    files:
+      - main.go
 
 pointer-config:
   # The following function's effect on aliasing is ignored; it creates too many false positives.
@@ -16,7 +23,12 @@ pointer-config:
 
 immutability-problems:
   # All methods with the core invariant
-  - values:
+  - tag: diodon-dh-core-invariant
+    description: "Diodon: DH core invariant maintenance proof"
+    severity: HIGH
+    targets:
+      - dh
+    values:
       - package: dh-gobra/initiator
         method: ProduceHsMsg1
         context: 0
@@ -30,8 +42,8 @@ immutability-problems:
 dataflow-problems:
   summarize-on-demand: true
   user-specs:
-    - sdk-specs.json
-    - std-specs.json
+    - ../../argot-proofs/sdk-specs.json
+    - ../../argot-proofs/std-specs.json
   field-sensitive-funcs:
     - .*
 
@@ -39,6 +51,8 @@ dataflow-problems:
     - tag: diodon-dh-io-independence
       description: "Diodon: DH I/O independence proof"
       severity: HIGH
+      targets:
+        - dh
       filters:
         - type: error$ # TODO is this ok?
       fail-on-implicit-flow: true # handle information flow

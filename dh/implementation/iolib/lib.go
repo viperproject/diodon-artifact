@@ -15,9 +15,9 @@ func NewLibState(endpoint string) (l *IoLibState, err error) {
 	if err != nil {
 		return nil, err
 	}
-	state := &IoLibState{ //argot:ignore
+	state := &IoLibState{ //argot:ignore diodon-dh-core-invariant
 		conn:       conn,
-		connClosed: false, //argot:ignore
+		connClosed: false, //argot:ignore diodon-dh-core-invariant
 	}
 	return state, nil
 }
@@ -50,6 +50,6 @@ func (l *IoLibState) Recv() (data []byte, err error) {
 }
 
 func (l *IoLibState) Close() {
-	l.connClosed = true //argot:ignore
+	l.connClosed = true //argot:ignore diodon-dh-core-invariant
 	l.conn.Close()
 }

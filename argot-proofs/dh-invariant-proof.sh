@@ -34,6 +34,5 @@ IMMUTABILITY_LOG_FILE="$REPORT_DIR"/immutability-log
 echo "Running immutability analysis on DH implementation in directory $(pwd)"
 echo "Saving log to ${IMMUTABILITY_LOG_FILE}"
 
-"$ARGOT_BIN" immutability -config "$PROOF_DIR"/argot-config-dh.yaml \
-    "$IMPL_DIR"/main.go
+"$ARGOT_BIN" immutability -config "$PROOF_DIR"/argot-config-dh.yaml
 # >"$IMMUTABILITY_LOG_FILE" 2>&1 # redirect stdout and stderr to log file
