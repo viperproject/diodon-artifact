@@ -109,7 +109,7 @@ jobs:
         run: docker load --input /tmp/image.tar
 
       - name: ${{ matrix.name }}
-        run: docker run --entrypoint "/bin/bash" ${{ needs.Build.outputs.IMAGE_TAG }} -c "cp -r dh-orig/. dh/; cp -r ssm-agent-orig/. ssm-agent/; ${{ matrix.command }}"
+        run: docker run --entrypoint "/bin/bash" ${{ needs.Build.outputs.IMAGE_TAG }} -c "cp -r /dh-orig/. dh/; cp -r /ssm-agent-orig/. ssm-agent/; ${{ matrix.command }}"
 
 
   Test-SSM-Agent:
@@ -147,7 +147,7 @@ jobs:
         run: docker load --input /tmp/image.tar
 
       - name: ${{ matrix.name }}
-        run: docker run --entrypoint "/bin/bash" ${{ needs.Build.outputs.IMAGE_TAG }} -c "cp -r dh-orig/. dh/; cp -r ssm-agent-orig/. ssm-agent/; ${{ matrix.command }}"
+        run: docker run --entrypoint "/bin/bash" ${{ needs.Build.outputs.IMAGE_TAG }} -c "cp -r /dh-orig/. dh/; cp -r /ssm-agent-orig/. ssm-agent/; ${{ matrix.command }}"
 
 
   Publish:
