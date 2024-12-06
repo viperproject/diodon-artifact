@@ -83,7 +83,7 @@ jobs:
       fail-fast: false
       matrix:
         # name: ["Verify DH protocol model", "Verify DH core", "Verify DH I/O independence", "Verify DH core assumptions"]
-        name: ["Verify DH protocol model", "Verify DH core"]
+        name: ["Verify DH protocol model", "Verify DH core", "Verify DH I/O independence"]
         include:
           - name: "Verify DH protocol model"
             command: "/gobra/dh/verify-model.sh"
@@ -91,9 +91,9 @@ jobs:
           - name: "Verify DH core"
             command: "/gobra/dh/verify-core.sh"
             timeout-minutes: 5
-          # - name: "Verify DH I/O independence"
-          #   command: "/gobra/dh/verify-io-independence.sh"
-          #   timeout-minutes: 3
+          - name: "Verify DH I/O independence"
+            command: "/gobra/dh/verify-io-independence.sh"
+            timeout-minutes: 3
           # - name: "Verify DH core assumptions"
           #   command: "/gobra/dh/verify-core-assumptions.sh"
           #   timeout-minutes: 3
@@ -121,7 +121,7 @@ jobs:
       fail-fast: false
       matrix:
         # name: ["Verify SSM Agent protocol model", "Verify SSM Agent core", "Verify SSM Agent I/O independence", "Verify SSM Agent core assumptions"]
-        name: ["Verify SSM Agent protocol model"]
+        name: ["Verify SSM Agent protocol model", "Verify SSM Agent core", "Verify SSM Agent I/O independence"]
         include:
           - name: "Verify SSM Agent protocol model"
             command: "/gobra/ssm-agent/verify-model.sh"
@@ -129,10 +129,9 @@ jobs:
           - name: "Verify SSM Agent core"
             command: "/gobra/ssm-agent/verify-core.sh"
             timeout-minutes: 15
-          # TODO renable once these tasks are fixed
-          # - name: "Verify SSM Agent I/O independence"
-          #   command: "/gobra/ssm-agent/verify-io-independence.sh"
-          #   timeout-minutes: 10
+          - name: "Verify SSM Agent I/O independence"
+            command: "/gobra/ssm-agent/verify-io-independence.sh"
+            timeout-minutes: 10
           # - name: "Verify SSM Agent core assumptions"
           #   command: "/gobra/ssm-agent/verify-core-assumptions.sh"
           #   timeout-minutes: 10
