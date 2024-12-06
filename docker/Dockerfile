@@ -88,8 +88,14 @@ RUN rm -r tutorial-examples
 
 RUN mkdir dh && mkdir ssm-agent
 
-# disable entry point specified by the Gobra base container:
-# ENTRYPOINT []
-ENTRYPOINT cp -r dh-orig/. dh/ && \
-    cp -r ssm-agent-orig/. ssm-agent/ && \
-    /bin/bash
+# disable entry point specified by the Gobra image and make sure to setup the directories
+# by creating the following shell script and setting it as the image's entrypoint:
+COPY --chmod=755 <<EOT /entrypoint.sh
+#!/usr/bin/env bash
+set -e
+cp -r dh-orig/. dh/
+cp -r ssm-agent-orig/. ssm-agent/
+/bin/bash
+EOT
+
+ENTRYPOINT ["/entrypoint.sh"]
