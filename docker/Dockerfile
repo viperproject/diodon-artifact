@@ -70,17 +70,17 @@ COPY ar-go-tools ./ar-go-tools
 RUN cd ./ar-go-tools && make argot-install
 
 
-RUN mkdir dh-orig && mkdir ssm-agent-orig
+RUN mkdir /dh-orig && mkdir /ssm-agent-orig
 
 # copy dh
-COPY dh ./dh-orig
+COPY dh /dh-orig
 
 # copy ssm-agent
-COPY ssm-agent ./ssm-agent-orig
+COPY ssm-agent /ssm-agent-orig
 
 # copy shell scripts
-COPY docker/dh/*.sh ./dh-orig
-COPY docker/ssm-agent/*.sh ./ssm-agent-orig
+COPY docker/dh/*.sh /dh-orig
+COPY docker/ssm-agent/*.sh /ssm-agent-orig
 
 # remove some unneeded folders that come with the base image:
 RUN rm -r evaluation
@@ -93,8 +93,8 @@ RUN mkdir dh && mkdir ssm-agent
 COPY --chmod=755 <<EOT /entrypoint.sh
 #!/usr/bin/env bash
 set -e
-cp -r dh-orig/. dh/
-cp -r ssm-agent-orig/. ssm-agent/
+cp -r /dh-orig/. dh/
+cp -r /ssm-agent-orig/. ssm-agent/
 /bin/bash
 EOT
 
