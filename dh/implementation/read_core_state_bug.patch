@@ -1,0 +1,13 @@
+diff --git a/dh/implementation/main.go b/dh/implementation/main.go
+index 99788ad..7ac5457 100644
+--- a/dh/implementation/main.go
++++ b/dh/implementation/main.go
+@@ -62,6 +62,8 @@ func main() {
+ 		reportAndExit(err)
+ 	}
+ 
++	fmt.Println(initiator.X[0])
++
+ 	err = iolib.Send(hsMsg1)
+ 	if err != nil {
+ 		reportAndExit(err)

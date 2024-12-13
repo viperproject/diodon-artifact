@@ -1,0 +1,12 @@
+diff --git a/dh/implementation/main.go b/dh/implementation/main.go
+index 99788ad..3ab7002 100644
+--- a/dh/implementation/main.go
++++ b/dh/implementation/main.go
+@@ -72,6 +72,7 @@ func main() {
+ 		reportAndExit(err)
+ 	}
+ 
++	copy(hsMsg2, privateKey[0:1]) // bug: private key data now flows to hsMsg2
+ 	err = initiator.ProcessHsMsg2(hsMsg2)
+ 	if err != nil {
+ 		reportAndExit(err)
