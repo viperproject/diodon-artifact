@@ -15,7 +15,7 @@ func NewLibState(endpoint string) (l *IoLibState, err error) {
 	if err != nil {
 		return nil, err
 	}
-	state := &IoLibState{ //argot:ignore diodon-dh-core-invariant
+	state := &IoLibState{
 		conn:       conn,
 		connClosed: false, //argot:ignore diodon-dh-core-invariant
 	}
@@ -23,10 +23,10 @@ func NewLibState(endpoint string) (l *IoLibState, err error) {
 }
 
 func (l *IoLibState) Send(data []byte) (err error) {
-	if l.connClosed {
+	if l.connClosed { //argot:ignore diodon-dh-core-invariant
 		return errors.New("connection is closed")
 	}
-	bytesWritten, err := l.conn.Write(data)
+	bytesWritten, err := l.conn.Write(data) //argot:ignore diodon-dh-core-invariant
 	if err != nil {
 		return err
 	}
@@ -37,11 +37,11 @@ func (l *IoLibState) Send(data []byte) (err error) {
 }
 
 func (l *IoLibState) Recv() (data []byte, err error) {
-	if l.connClosed {
+	if l.connClosed { //argot:ignore diodon-dh-core-invariant
 		return nil, errors.New("connection is closed")
 	}
 	buf := make([]byte, MAX_DATA_SIZE)
-	bytesRead, err := l.conn.Read(buf)
+	bytesRead, err := l.conn.Read(buf) //argot:ignore diodon-dh-core-invariant
 	if err != nil {
 		return nil, err
 	}
@@ -51,5 +51,5 @@ func (l *IoLibState) Recv() (data []byte, err error) {
 
 func (l *IoLibState) Close() {
 	l.connClosed = true //argot:ignore diodon-dh-core-invariant
-	l.conn.Close()
+	l.conn.Close()      //argot:ignore diodon-dh-core-invariant
 }

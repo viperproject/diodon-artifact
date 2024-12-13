@@ -61,7 +61,7 @@ func main() {
 	if err != nil {
 		reportAndExit(err)
 	}
-	fmt.Println(initiator.X[0]) // TODO just for testing: remove
+	// fmt.Println(initiator.X[0]) // TODO just for testing: remove
 
 	err = iolib.Send(hsMsg1)
 	if err != nil {
