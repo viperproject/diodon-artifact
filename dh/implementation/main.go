@@ -47,7 +47,7 @@ func main() {
 	privateKey := parsePrivateKey(config)
 	peerPublicKey := parsePublicKey(config)
 
-	initiator, err := initiator.NewInitiator(privateKey, peerPublicKey)
+	initor, err := initiator.NewInitiator(privateKey, peerPublicKey)
 	if err != nil {
 		reportAndExit(err)
 	}
@@ -57,7 +57,7 @@ func main() {
 		reportAndExit(err)
 	}
 
-	hsMsg1, err := initiator.ProduceHsMsg1()
+	hsMsg1, err := initor.ProduceHsMsg1()
 	if err != nil {
 		reportAndExit(err)
 	}
@@ -72,12 +72,12 @@ func main() {
 		reportAndExit(err)
 	}
 
-	err = initiator.ProcessHsMsg2(hsMsg2)
+	err = initor.ProcessHsMsg2(hsMsg2)
 	if err != nil {
 		reportAndExit(err)
 	}
 
-	hsMsg3, err := initiator.ProduceHsMsg3()
+	hsMsg3, err := initor.ProduceHsMsg3()
 	if err != nil {
 		reportAndExit(err)
 	}
@@ -92,7 +92,7 @@ func main() {
 	fmt.Println("Enter a payload to be sent:")
 	for scanner.Scan() {
 		line := scanner.Text()
-		requestMsg, err := initiator.ProduceTransportMsg([]byte(line))
+		requestMsg, err := initor.ProduceTransportMsg([]byte(line))
 		if err != nil {
 			reportAndExit(err)
 		}
@@ -105,7 +105,7 @@ func main() {
 		if err != nil {
 			reportAndExit(err)
 		}
-		responsePayload, err := initiator.ProcessTransportMsg(responseMsg)
+		responsePayload, err := initor.ProcessTransportMsg(responseMsg)
 		if err != nil {
 			reportAndExit(err)
 		}
