@@ -6,10 +6,10 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"net"
 	"os"
 
 	"dh-gobra/initiator"
-	"dh-gobra/iolib"
 )
 
 type Config struct {
@@ -36,6 +36,8 @@ func parseArgs() Config {
 	return config
 }
 
+const MAX_DATA_SIZE = 1024
+
 func main() {
 	// parse args
 	config := parseArgs()
@@ -52,7 +54,7 @@ func main() {
 		reportAndExit(err)
 	}
 
-	iolib, err := iolib.NewLibState(config.PeerEndpoint)
+	conn, err := net.Dial("udp", config.PeerEndpoint)
 	if err != nil {
 		reportAndExit(err)
 	}
@@ -61,19 +63,15 @@ func main() {
 	if err != nil {
 		reportAndExit(err)
 	}
-
-	err = iolib.Send(hsMsg1)
-	if err != nil {
+	if _, err := conn.Write(hsMsg1); err != nil {
 		reportAndExit(err)
 	}
 
-	hsMsg2, err := iolib.Recv()
-	if err != nil {
+	hsMsg2 := make([]byte, MAX_DATA_SIZE)
+	if _, err := conn.Read(hsMsg2); err != nil {
 		reportAndExit(err)
 	}
-
-	err = initor.ProcessHsMsg2(hsMsg2)
-	if err != nil {
+	if err := initor.ProcessHsMsg2(hsMsg2); err != nil {
 		reportAndExit(err)
 	}
 
@@ -81,9 +79,7 @@ func main() {
 	if err != nil {
 		reportAndExit(err)
 	}
-
-	err = iolib.Send(hsMsg3)
-	if err != nil {
+	if _, err := conn.Write(hsMsg3); err != nil {
 		reportAndExit(err)
 	}
 
@@ -96,13 +92,12 @@ func main() {
 		if err != nil {
 			reportAndExit(err)
 		}
-		err = iolib.Send(requestMsg)
-		if err != nil {
+		if _, err := conn.Write(requestMsg); err != nil {
 			reportAndExit(err)
 		}
 
-		responseMsg, err := iolib.Recv()
-		if err != nil {
+		responseMsg := make([]byte, MAX_DATA_SIZE)
+		if _, err := conn.Read(responseMsg); err != nil {
 			reportAndExit(err)
 		}
 		responsePayload, err := initor.ProcessTransportMsg(responseMsg)
@@ -113,10 +108,7 @@ func main() {
 		fmt.Println("Enter a payload to be sent:")
 	}
 
-	iolib.Close()
-	if err == nil {
-		os.Exit(0)
-	} else {
+	if err := conn.Close(); err != nil {
 		reportAndExit(err)
 	}
 }

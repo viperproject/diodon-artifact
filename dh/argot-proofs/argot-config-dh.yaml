@@ -51,11 +51,6 @@ immutability-problems:
       # core: verified by Gobra
       - package: dh-gobra/library
         method: .*
-      # imprecision in the pointer analysis causes it to report that IoLibState
-      # may alias Initiator when it does not in practice, leading to lots of
-      # false-positives
-      - package: dh-gobra/iolib
-        type: IoLibState
 
 dataflow-problems:
   summarize-on-demand: true
