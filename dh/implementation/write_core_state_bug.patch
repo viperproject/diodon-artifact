@@ -1,8 +1,8 @@
 diff --git a/dh/implementation/initiator/initiator.go b/dh/implementation/initiator/initiator.go
-index b8632f5..7b334ce 100644
+index 53a5c19..7217466 100644
 --- a/dh/implementation/initiator/initiator.go
 +++ b/dh/implementation/initiator/initiator.go
-@@ -35,6 +35,15 @@ type Initiator struct {
+@@ -36,6 +36,15 @@ type Initiator struct {
  	//@ ghost YT tm.Term
  }
  
@@ -11,24 +11,24 @@ index b8632f5..7b334ce 100644
 +// therefore is unsafe to call in the Application.
 +// It leaks a pointer to the initiator state which can be used to modify
 +// the Core state outside of the Core.
-+func (i *Initiator) GetState() *InitiatorState {
++func (i *Initiator) GetStatePtr() *InitiatorState {
 +	return &i.initiatorState
 +}
 +
  type InitiatorState int
+ 
  const (
- 	Erroneous InitiatorState = 0
 diff --git a/dh/implementation/main.go b/dh/implementation/main.go
-index 99788ad..197320a 100644
+index a6f6fc1..51e3d86 100644
 --- a/dh/implementation/main.go
 +++ b/dh/implementation/main.go
-@@ -62,6 +62,9 @@ func main() {
+@@ -87,6 +87,9 @@ func main() {
  		reportAndExit(err)
  	}
  
-+	state := initiator.GetState()
-+	*state = 0
++	state := initor.GetStatePtr()
++	*state = initiator.Erroneous
 +
- 	err = iolib.Send(hsMsg1)
- 	if err != nil {
- 		reportAndExit(err)
+ 	// handshake is now over
+ 	scanner := bufio.NewScanner(os.Stdin)
+ 	fmt.Println("Enter a payload to be sent:")
