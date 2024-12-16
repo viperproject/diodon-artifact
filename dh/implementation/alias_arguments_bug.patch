@@ -1,0 +1,40 @@
+diff --git a/dh/implementation/initiator/initiator.go b/dh/implementation/initiator/initiator.go
+index 53a5c19..45a5887 100644
+--- a/dh/implementation/initiator/initiator.go
++++ b/dh/implementation/initiator/initiator.go
+@@ -524,9 +524,12 @@ func (i *Initiator) ProcessTransportMsg(msgData []byte) (payload []byte, err err
+ 	return
+ }
+ 
++// Bug change: argument is now a pointer to a slice so it can be aliased
+ // @ preserves i.Inv() && Mem(payload)
+ // @ ensures   err == nil ==> Mem(msgData)
+-func (i *Initiator) ProduceTransportMsg(payload []byte) (msgData []byte, err error) {
++func (i *Initiator) ProduceTransportMsg(p *[]byte) (msgData []byte, err error) {
++	payload := *p
++
+ 	//@ unfold i.Inv()
+ 	if i.initiatorState != HandshakeCompleted {
+ 		err = NewError("Invalid state")
+diff --git a/dh/implementation/main.go b/dh/implementation/main.go
+index a6f6fc1..4352661 100644
+--- a/dh/implementation/main.go
++++ b/dh/implementation/main.go
+@@ -92,7 +92,8 @@ func main() {
+ 	fmt.Println("Enter a payload to be sent:")
+ 	for scanner.Scan() {
+ 		line := scanner.Text()
+-		requestMsg, err := initor.ProduceTransportMsg([]byte(line))
++		_ = line
++		requestMsg, err := initor.ProduceTransportMsg(&initor.X)
+ 		if err != nil {
+ 			reportAndExit(err)
+ 		}
+@@ -105,6 +106,7 @@ func main() {
+ 		if err != nil {
+ 			reportAndExit(err)
+ 		}
++
+ 		responsePayload, err := initor.ProcessTransportMsg(responseMsg)
+ 		if err != nil {
+ 			reportAndExit(err)
