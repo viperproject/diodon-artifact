@@ -33,7 +33,16 @@ immutability-problems:
         method: ProduceHsMsg1
         context: 0
       - package: dh-gobra/initiator
-        method: ProduceHsMsg2
+        method: ProcessHsMsg2
+        context: 0
+      - package: dh-gobra/initiator
+        method: ProduceHsMsg3
+        context: 0
+      - package: dh-gobra/initiator
+        method: ProcessTransportMsg
+        context: 0
+      - package: dh-gobra/initiator
+        method: ProduceTransportMsg
         context: 0
     filters:
       # core: verified by Gobra
