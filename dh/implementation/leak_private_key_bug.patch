@@ -1,7 +1,7 @@
-diff --git a/dh/implementation/main.go b/dh/implementation/main.go
+diff --git a/main.go b/main.go
 index a6f6fc1..3801eca 100644
---- a/dh/implementation/main.go
-+++ b/dh/implementation/main.go
+--- a/main.go
++++ b/main.go
 @@ -72,6 +72,8 @@ func main() {
  		reportAndExit(err)
  	}

@@ -1,7 +1,7 @@
-diff --git a/dh/implementation/initiator/initiator.go b/dh/implementation/initiator/initiator.go
+diff --git a/initiator/initiator.go b/initiator/initiator.go
 index 53a5c19..7217466 100644
---- a/dh/implementation/initiator/initiator.go
-+++ b/dh/implementation/initiator/initiator.go
+--- a/initiator/initiator.go
++++ b/initiator/initiator.go
 @@ -36,6 +36,15 @@ type Initiator struct {
  	//@ ghost YT tm.Term
  }
@@ -18,10 +18,10 @@ index 53a5c19..7217466 100644
  type InitiatorState int
  
  const (
-diff --git a/dh/implementation/main.go b/dh/implementation/main.go
+diff --git a/main.go b/main.go
 index a6f6fc1..626a4ff 100644
---- a/dh/implementation/main.go
-+++ b/dh/implementation/main.go
+--- a/main.go
++++ b/main.go
 @@ -87,6 +87,9 @@ func main() {
  		reportAndExit(err)
  	}

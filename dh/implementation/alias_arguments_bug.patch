@@ -1,7 +1,7 @@
-diff --git a/dh/implementation/initiator/initiator.go b/dh/implementation/initiator/initiator.go
+diff --git a/initiator/initiator.go b/initiator/initiator.go
 index 53a5c19..45a5887 100644
---- a/dh/implementation/initiator/initiator.go
-+++ b/dh/implementation/initiator/initiator.go
+--- a/initiator/initiator.go
++++ b/initiator/initiator.go
 @@ -524,9 +524,12 @@ func (i *Initiator) ProcessTransportMsg(msgData []byte) (payload []byte, err err
  	return
  }
@@ -16,10 +16,10 @@ index 53a5c19..45a5887 100644
  	//@ unfold i.Inv()
  	if i.initiatorState != HandshakeCompleted {
  		err = NewError("Invalid state")
-diff --git a/dh/implementation/main.go b/dh/implementation/main.go
+diff --git a/main.go b/main.go
 index a6f6fc1..4352661 100644
---- a/dh/implementation/main.go
-+++ b/dh/implementation/main.go
+--- a/main.go
++++ b/main.go
 @@ -92,7 +92,8 @@ func main() {
  	fmt.Println("Enter a payload to be sent:")
  	for scanner.Scan() {
