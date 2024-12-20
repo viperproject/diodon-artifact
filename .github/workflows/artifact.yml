@@ -93,23 +93,17 @@ jobs:
         include:
           - name: "Verify DH protocol model"
             command: "/gobra/dh/verify-model.sh"
-            timeout-minutes: 3
           - name: "Verify DH core"
             command: "/gobra/dh/verify-core.sh"
-            timeout-minutes: 5
           - name: "Verify DH I/O independence"
             command: "/gobra/dh/verify-io-independence.sh"
-            timeout-minutes: 3
           - name: "Verify DH I/O independence bugs"
             command: "/gobra/dh/verify-io-independence-bug.sh"
-            timeout-minutes: 3
           - name: "Verify DH core assumptions"
             command: "/gobra/dh/verify-core-assumptions.sh"
-            timeout-minutes: 3
           - name: "Verify DH core assumptions bugs"
             command: "/gobra/dh/verify-core-assumptions-bug.sh"
-            timeout-minutes: 3
-    timeout-minutes: ${{ matrix.timeout-minutes }}
+    timeout-minutes: 5
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
@@ -143,23 +137,17 @@ jobs:
         include:
           - name: "Verify SSM Agent protocol model"
             command: "/gobra/ssm-agent/verify-model.sh"
-            timeout-minutes: 15
           - name: "Verify SSM Agent core"
             command: "/gobra/ssm-agent/verify-core.sh"
-            timeout-minutes: 15
           - name: "Verify SSM Agent I/O independence"
             command: "/gobra/ssm-agent/verify-io-independence.sh"
-            timeout-minutes: 10
           - name: "Verify SSM Agent I/O independence bugs"
             command: "/gobra/ssm-agent/verify-io-independence-bug.sh"
-            timeout-minutes: 10
           - name: "Verify SSM Agent core assumptions"
             command: "/gobra/ssm-agent/verify-core-assumptions.sh"
-            timeout-minutes: 10
           - name: "Verify SSM Agent core assumptions bugs"
             command: "/gobra/ssm-agent/verify-core-assumptions-bug.sh"
-            timeout-minutes: 10
-    timeout-minutes: ${{ matrix.timeout-minutes }}
+    timeout-minutes: 15
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
