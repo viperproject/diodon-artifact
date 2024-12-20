@@ -30,11 +30,3 @@ index a6f6fc1..4352661 100644
  		if err != nil {
  			reportAndExit(err)
  		}
-@@ -105,6 +106,7 @@ func main() {
- 		if err != nil {
- 			reportAndExit(err)
- 		}
-+
- 		responsePayload, err := initor.ProcessTransportMsg(responseMsg)
- 		if err != nil {
- 			reportAndExit(err)
