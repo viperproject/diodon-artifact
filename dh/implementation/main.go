@@ -49,9 +49,9 @@ func main() {
 	privateKey := parsePrivateKey(config)
 	peerPublicKey := parsePublicKey(config)
 
-	initor, err := initiator.NewInitiator(privateKey, peerPublicKey)
-	if err != nil {
-		reportAndExit(err)
+	initor, success := initiator.NewInitiator(privateKey, peerPublicKey)
+	if !success {
+		reportAndExit(errors.New("Initiator allocation failed"))
 	}
 
 	conn, err := net.Dial("udp", config.PeerEndpoint)
@@ -59,9 +59,9 @@ func main() {
 		reportAndExit(err)
 	}
 
-	hsMsg1, err := initor.ProduceHsMsg1()
-	if err != nil {
-		reportAndExit(err)
+	hsMsg1, success := initor.ProduceHsMsg1()
+	if !success {
+		reportAndExit(errors.New("Producing handshake msg 1 failed"))
 	}
 	if _, err := conn.Write(hsMsg1); err != nil {
 		reportAndExit(err)
@@ -73,13 +73,14 @@ func main() {
 		reportAndExit(err)
 	}
 	hsMsg2 = hsMsg2[:bytesRead]
-	if err := initor.ProcessHsMsg2(hsMsg2); err != nil {
-		reportAndExit(err)
+	success = initor.ProcessHsMsg2(hsMsg2)
+	if !success {
+		reportAndExit(errors.New("Processing handshake msg 2 failed"))
 	}
 
-	hsMsg3, err := initor.ProduceHsMsg3()
-	if err != nil {
-		reportAndExit(err)
+	hsMsg3, success := initor.ProduceHsMsg3()
+	if !success {
+		reportAndExit(errors.New("Producing handshake msg 3 failed"))
 	}
 	if _, err := conn.Write(hsMsg3); err != nil {
 		reportAndExit(err)
@@ -90,9 +91,9 @@ func main() {
 	fmt.Println("Enter a payload to be sent:")
 	for scanner.Scan() {
 		line := scanner.Text()
-		requestMsg, err := initor.ProduceTransportMsg([]byte(line))
-		if err != nil {
-			reportAndExit(err)
+		requestMsg, success := initor.ProduceTransportMsg([]byte(line))
+		if !success {
+			reportAndExit(errors.New("Producing transport msg failed"))
 		}
 		if _, err := conn.Write(requestMsg); err != nil {
 			reportAndExit(err)
@@ -104,9 +105,9 @@ func main() {
 			reportAndExit(err)
 		}
 		responseMsg = responseMsg[:bytesRead]
-		responsePayload, err := initor.ProcessTransportMsg(responseMsg)
-		if err != nil {
-			reportAndExit(err)
+		responsePayload, success := initor.ProcessTransportMsg(responseMsg)
+		if !success {
+			reportAndExit(errors.New("Processing transport msg failed"))
 		}
 		fmt.Printf("Received: %s\n", string(responsePayload))
 		fmt.Println("Enter a payload to be sent:")

@@ -122,7 +122,7 @@ func (l *LibState) DhSharedSecret(dhSecret, dhHalfKey []byte) (res []byte, err e
 //@ trusted
 //@ preserves acc(l.Mem(), 1/16)
 //@ preserves acc(Mem(data), 1/16) && acc(Mem(sk), 1/16)
-//@ ensures err == nil ==> Mem(res)
+//@ ensures err == nil ==> Mem(res) && res != nil
 //@ ensures err == nil ==> Abs(res) == signB(Abs(data), Abs(sk))
 func (l *LibState) Sign(data []byte, sk []byte) (res []byte, err error) {
 	if len(sk) != 64 {
@@ -191,7 +191,7 @@ func (l *LibState) Encrypt(plaintext []byte, key []byte /*@, ghost keyT tm.Term 
 //@ requires acc(Mem(key), 1/16)
 //@ requires Abs(key) == gamma(keyT)
 //@ ensures  acc(Mem(key), 1/16)
-//@ ensures  err == nil ==> Mem(res)
+//@ ensures  err == nil ==> Mem(res) && res != nil
 //@ ensures  err == nil ==> Abs(ciphertext) == sencB(Abs(res), gamma(keyT))
 func (l *LibState) Decrypt(ciphertext []byte, key []byte /*@, ghost keyT tm.Term @*/) (res []byte, err error) {
 	if len(ciphertext) < chacha20poly1305.Overhead + chacha20poly1305.NonceSize {

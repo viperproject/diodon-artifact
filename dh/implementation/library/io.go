@@ -1,6 +1,5 @@
 package library
 
-import errors "errors"
 import fmt "fmt"
 //@ import . "dh-gobra/verification/bytes"
 //@ import . "dh-gobra/verification/place"
@@ -16,12 +15,6 @@ import fmt "fmt"
 //@ ensures  token(t1) && t1 == old(get_e_OutFact_placeDst(t, rid, m))
 func (l *LibState) Declassify(data []byte /*@, ghost t Place, ghost rid tm.Term, ghost m tm.Term @*/) (/*@ ghost t1 Place @*/) {
 	return
-}
-
-//@ trusted
-//@ ensures err != nil
-func NewError(msg string) (err error) {
-	return errors.New(msg)
 }
 
 //@ trusted
