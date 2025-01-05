@@ -102,7 +102,12 @@ dataflow-problems:
           method: parsePrivateKey$
         - package: dh-gobra/library
           method: createNonce
+      sanitizers:
+        - package: command-line-arguments
+          method: sanitizeStr
       sinks:
+        - package: dh-gobra/initiator
+          method: GetInFact
         - interface: T$
           package: .*log$
         - method: Info.*$

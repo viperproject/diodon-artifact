@@ -54,7 +54,7 @@ func main() {
 		reportAndExit(errors.New("Initiator allocation failed"))
 	}
 
-	conn, err := net.Dial("udp", config.PeerEndpoint)
+	conn, err := net.Dial("udp", sanitizeStr(config.PeerEndpoint))
 	if err != nil {
 		reportAndExit(err)
 	}
@@ -146,4 +146,8 @@ func parsePublicKey(config Config) (publicKey [32]byte) {
 	copy(publicKey[:], publicKeySlice)
 
 	return publicKey
+}
+
+func sanitizeStr(s string) string {
+	return s
 }
