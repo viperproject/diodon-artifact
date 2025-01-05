@@ -55,9 +55,7 @@ func (l *LibState) Setup( /*@ ghost t Place, ghost rid tm.Term @*/ ) (idA, idB u
 // @ ensures  err == nil ==> token(t1) && t1 == old(get_e_FrFact_placeDst(t, rid))
 // @ ensures  err != nil ==> t1 == t && token(t) && e_FrFact(t, rid) && get_e_FrFact_r1(t, rid) == old(get_e_FrFact_r1(t, rid)) && get_e_FrFact_placeDst(t, rid) == old(get_e_FrFact_placeDst(t, rid))
 func (l *LibState) CreateNonce( /*@ ghost t Place, ghost rid tm.Term @*/ ) (nonce []byte, err error /*@, ghost t1 Place @*/) {
-	var nonceBuf [NonceLength]byte
-	io.ReadFull(rand.Reader, nonceBuf[:])
-	return nonceBuf[:], nil
+	return createNonce(NonceLength)
 }
 
 // @ trusted
@@ -170,8 +168,7 @@ func (l *LibState) Open(signedData []byte, pk []byte /*@, ghost skT tm.Term @*/)
 // @ ensures err == nil ==> Mem(res)
 // @ ensures err == nil ==> Abs(res) == sencB(Abs(plaintext), gamma(keyT))
 func (l *LibState) Encrypt(plaintext []byte, key []byte /*@, ghost keyT tm.Term @*/) (res []byte, err error) {
-	nonce := make([]byte, chacha20poly1305.NonceSize)
-	_, err = io.ReadFull(rand.Reader, nonce)
+	nonce, err := createNonce(chacha20poly1305.NonceSize)
 	if err != nil {
 		return
 	}
@@ -271,4 +268,14 @@ func setZero(arr []byte) {
 	for i := range arr {
 		arr[i] = 0
 	}
+}
+
+func createNonce(nonceSize int) ([]byte, error) {
+	nonce := make([]byte, nonceSize)
+	_, err := io.ReadFull(rand.Reader, nonce)
+	if err != nil {
+		return nil, err
+	}
+
+	return nonce, nil
 }
