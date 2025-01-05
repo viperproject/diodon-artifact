@@ -68,9 +68,11 @@ func main() {
 	}
 
 	hsMsg2 := make([]byte, MAX_DATA_SIZE)
-	if _, err := conn.Read(hsMsg2); err != nil {
+	bytesRead, err := conn.Read(hsMsg2)
+	if err != nil {
 		reportAndExit(err)
 	}
+	hsMsg2 = hsMsg2[:bytesRead]
 	if err := initor.ProcessHsMsg2(hsMsg2); err != nil {
 		reportAndExit(err)
 	}
@@ -97,9 +99,11 @@ func main() {
 		}
 
 		responseMsg := make([]byte, MAX_DATA_SIZE)
-		if _, err := conn.Read(responseMsg); err != nil {
+		bytesRead, err := conn.Read(responseMsg);
+		if err != nil {
 			reportAndExit(err)
 		}
+		responseMsg = responseMsg[:bytesRead]
 		responsePayload, err := initor.ProcessTransportMsg(responseMsg)
 		if err != nil {
 			reportAndExit(err)
