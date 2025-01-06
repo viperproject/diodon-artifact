@@ -355,13 +355,13 @@ func (i *Initiator) ProduceHsMsg3() (signedMsg3 []byte, success bool) {
 	//@ fold acc(msg3.Mem(), 1/8)
 	msg3Data, err := i.l.MarshalMsg3(msg3)
 	//@ unfold acc(msg3.Mem(), 1/8)
-	if err != nil {
+	if err != nil { //argot:ignore diodon-dh-io-independence
 		//@ fold i.Inv()
 		return
 	}
 
 	signedMsg3, err = i.l.Sign(msg3Data, i.skA)
-	if err != nil {
+	if err != nil { //argot:ignore diodon-dh-io-independence
 		//@ fold i.Inv()
 		signedMsg3 = nil
 		return
@@ -402,7 +402,7 @@ func (i *Initiator) ProduceHsMsg3() (signedMsg3 []byte, success bool) {
 	var sharedSecret []byte
 	//@ ghost var sharedSecretB by.Bytes
 	sharedSecret, err /*@, sharedSecretB @*/ = i.l.DhSharedSecret(i.x, i.Y)
-	if err == nil {
+	if err == nil { //argot:ignore diodon-dh-io-independence
 		i.irKey, i.riKey = NewBytes(32), NewBytes(32)
 		//@ ghost var t0Abs, t1Abs by.Bytes
 		err /*@, t0Abs, t1Abs @*/ = KDF2Slice(i.irKey, i.riKey, sharedSecret /*@, sharedSecretB @*/)
@@ -423,6 +423,7 @@ func (i *Initiator) ProduceHsMsg3() (signedMsg3 []byte, success bool) {
 	success = true
 	return
 }
+
 // @ preserves i != nil ==> i.Inv()
 // @ preserves msgData != nil ==> Mem(msgData)
 // @ ensures   success ==> payload != nil

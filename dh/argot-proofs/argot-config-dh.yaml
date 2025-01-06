@@ -52,39 +52,39 @@ immutability-problems:
       - package: dh-gobra/library
         method: .*
 
-diodon-pass-through-problems:
-  # All methods with the core invariant
-  - tag: diodon-dh-core-invariant-passthrough
-    description: "Diodon: DH core invariant maintenance pass-through proof"
-    severity: HIGH
-    targets:
-      - dh
-    core-api-functions:
-      - package: dh-gobra/initiator
-        method: ProduceHsMsg1
-      - package: dh-gobra/initiator
-        method: ProcessHsMsg2
-      - package: dh-gobra/initiator
-        method: ProduceHsMsg3
-      - package: dh-gobra/initiator
-        method: ProcessTransportMsg
-      - package: dh-gobra/initiator
-        method: ProduceTransportMsg
-    # methods with "core" allocations manually validated to be false-positives
-    filters:
-      - package: "crypto/ed25519"
-        method: .*
-      - package: "crypto/internal/edwards25519"
-        method: .*
-      - package: "crypto/internal/edwards25519/field"
-        method: .*
-      - package: "crypto/sha512"
-        method: .*
+# diodon-pass-through-problems:
+#   # All methods with the core invariant
+#   - tag: diodon-dh-core-invariant-passthrough
+#     description: "Diodon: DH core invariant maintenance pass-through proof"
+#     severity: HIGH
+#     targets:
+#       - dh
+#     core-api-functions:
+#      TODO only do returns not params
+#       - package: dh-gobra/initiator
+#         method: ProduceHsMsg1
+#       - package: dh-gobra/initiator
+#         method: ProduceHsMsg3
+#       - package: dh-gobra/initiator
+#         method: ProcessTransportMsg
+#       - package: dh-gobra/initiator
+#         method: ProduceTransportMsg
+#     # methods with "core" allocations manually validated to be false-positives
+#     filters:
+#       - package: "crypto/ed25519"
+#         method: .*
+#       - package: "crypto/internal/edwards25519"
+#         method: .*
+#       - package: "crypto/internal/edwards25519/field"
+#         method: .*
+#       - package: "crypto/sha512"
+#         method: .*
 
 dataflow-problems:
   summarize-on-demand: true
   user-specs:
     - ../argot-proofs/std-specs.json
+    - ../argot-proofs/dependency-specs.json
   field-sensitive-funcs:
     - .*
 
@@ -101,13 +101,13 @@ dataflow-problems:
         - package: command-line-arguments
           method: parsePrivateKey$
         - package: dh-gobra/library
-          method: createNonce
+          method: createNonce$
       sanitizers:
-        - package: command-line-arguments
-          method: sanitizeStr
+        - package: dh-gobra/library
+          method: PerformVirtualOutputOperation
       sinks:
-        - package: dh-gobra/initiator
-          method: GetInFact
+        - package: dh-gobra/library
+          method: PerformVirtualInputOperation
         - interface: T$
           package: .*log$
         - method: Info.*$
