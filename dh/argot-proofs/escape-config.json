@@ -1,5 +1,10 @@
 {
     "functions": {
+        "dh-gobra/library.createNonce": "noop",
+        "command-line-arguments.parsePrivateKey": "noop",
+        "(*math/big.Int).Exp": "summarize",
+        "(*math/big.Int).SetBytes": "summarize",
+        "(*math/big.Int).FillBytes": "summarize",
         "encoding/json.Marshal": "reflect:JsonMarshal",
         "encoding/json.Unmarshal": "reflect:JsonUnmarshal",
         "reflect.ValueOf": "reflect:ValueOf",
@@ -99,9 +104,9 @@
         "crypto/internal/alias.InexactOverlap": "summarize",
         "(*io.multiWriter).Write": "noop",
         "fmt.Errorf": "noop",
-        "(*encoding/base64.Encoding).DecodeString": "noop",
+        "(*encoding/base64.Encoding).DecodeString": "summarize",
         "(*github.com/go-git/go-git/v5/plumbing/format/idxfile.Encoder).Write": "noop"
     },
-    "pkg-filter": "(dh-gobra.*)|(github.com/aws/amazon-ssm-agent.*)|(command-line-arguments)|(encoding/base64)|(sync)|(bytes)|(unicode)|(crypto/internal)|(crypto/aes)|(crypto/cipher)|(crypto/sha512)|(crypto/sha1)|(crypto/sha256)|(crypto/md5)|(crypto/subtle)|(hash/crc32)|(github.com/go-git/go-git/v5/plumbing.*)",
+    "pkg-filter": "(dh-gobra.*)|(github.com/aws/amazon-ssm-agent.*)|(command-line-arguments)|(encoding/base64)|(sync)|(bytes)|(unicode)|(crypto/internal)|(crypto/aes)|(crypto/cipher)|(crypto/sha512)|(crypto/sha1)|(crypto/sha256)|(crypto/md5)|(crypto/subtle)|(hash/crc32)|(math/big)|(github.com/go-git/go-git/v5/plumbing.*)",
     "default-summarize": false
 }
