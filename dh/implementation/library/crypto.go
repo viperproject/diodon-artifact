@@ -169,7 +169,7 @@ func (l *LibState) Open(signedData []byte, pk []byte /*@, ghost skT tm.Term @*/)
 // @ ensures err == nil ==> Abs(res) == sencB(Abs(plaintext), gamma(keyT))
 func (l *LibState) Encrypt(plaintext []byte, key []byte /*@, ghost keyT tm.Term @*/) (res []byte, err error) {
 	nonce, err := createNonce(chacha20poly1305.NonceSize)
-	if err != nil {
+	if err != nil { //argot:ignore diodon-dh-io-independence
 		return
 	}
 	aead, err := chacha20poly1305.New(key)

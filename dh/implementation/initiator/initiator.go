@@ -1,6 +1,8 @@
 package initiator
 
-import . "dh-gobra/library"
+import (
+	. "dh-gobra/library"
+)
 
 //@ import arb "dh-gobra/verification/arb"
 //@ import by "dh-gobra/verification/bytes"
@@ -160,7 +162,7 @@ func NewInitiator(privateKey [64]byte, peerPublicKey [32]byte) (i *Initiator, su
 // @ ensures   success ==> msg != nil
 // @ ensures   msg != nil ==> Mem(msg)
 func (i *Initiator) ProduceHsMsg1() (msg []byte, success bool) {
-	if i == nil {
+	if i == nil { //argot:ignore diodon-dh-io-independence
 		return
 	}
 	//@ unfold i.Inv()
@@ -230,7 +232,7 @@ func (i *Initiator) ProduceHsMsg1() (msg []byte, success bool) {
 	//@ unfold io.phiRG_Alice_4(t2, ridT, s2)
 	//@ assert io.e_OutFact(t2, ridT, XT)
 	/*@ t3 := @*/
-	PerformVirtualOutputOperation(msg /*@, t2, ridT, XT @*/)
+	msg = PerformVirtualOutputOperation(msg /*@, t2, ridT, XT @*/)
 	//@ s3 := s2 setminus mset[ft.Fact]{ ft.OutFact_Alice(ridT, XT) }
 	//@ fold ProducedHsMsg1Pred(ridT, i.idA, i.idB, i.skAT, i.skBT, i.xT, s3)
 	i.initiatorState = ProducedHsMsg1
@@ -244,7 +246,7 @@ func (i *Initiator) ProduceHsMsg1() (msg []byte, success bool) {
 // @ preserves i != nil ==> i.Inv()
 // @ preserves msg != nil ==> Mem(msg)
 func (i *Initiator) ProcessHsMsg2(msg []byte) (success bool) {
-	if i == nil || msg == nil {
+	if i == nil || msg == nil { //argot:ignore diodon-dh-io-independence
 		return
 	}
 	//@ unfold i.Inv()
@@ -341,7 +343,7 @@ func (i *Initiator) ProcessHsMsg2(msg []byte) (success bool) {
 // @ ensures   success ==> signedMsg3 != nil
 // @ ensures   signedMsg3 != nil ==> Mem(signedMsg3)
 func (i *Initiator) ProduceHsMsg3() (signedMsg3 []byte, success bool) {
-	if i == nil {
+	if i == nil { //argot:ignore diodon-dh-io-independence
 		return
 	}
 	//@ unfold i.Inv()
@@ -385,7 +387,7 @@ func (i *Initiator) ProduceHsMsg3() (signedMsg3 []byte, success bool) {
 	//@ msgT := tm.sign(tm.tuple5(tm.integer32(Msg3Tag), tm.integer32(i.idA), tm.integer32(i.idB), i.YT, XT), i.skAT)
 	//@ assert acc(io.e_OutFact(t0, ridT, msgT))
 	/*@ t1 := @*/
-	PerformVirtualOutputOperation(signedMsg3 /*@, t0, ridT, msgT @*/)
+	signedMsg3 = PerformVirtualOutputOperation(signedMsg3 /*@, t0, ridT, msgT @*/)
 	//@ s1 := s0 setminus mset[ft.Fact]{ ft.OutFact_Alice(ridT, msgT) }
 	//@ fold ProcessedHsMsg2Pred(ridT, i.idA, i.idB, i.skAT, i.skBT, i.xT, i.YT, s1)
 	//@ )
@@ -429,7 +431,7 @@ func (i *Initiator) ProduceHsMsg3() (signedMsg3 []byte, success bool) {
 // @ ensures   success ==> payload != nil
 // @ ensures   payload != nil ==> Mem(payload)
 func (i *Initiator) ProcessTransportMsg(msgData []byte) (payload []byte, success bool) {
-	if i == nil || msgData == nil {
+	if i == nil || msgData == nil { //argot:ignore diodon-dh-io-independence
 		return
 	}
 	//@ unfold i.Inv()
@@ -496,7 +498,7 @@ func (i *Initiator) ProcessTransportMsg(msgData []byte) (payload []byte, success
 	//@ unfold io.phiRG_Alice_4(t2, ridT, s2)
 	//@ assert acc(io.e_OutFact(t2, ridT, payloadT))
 	/*@ t3 := @*/
-	PerformVirtualOutputOperation(payload /*@, t2, ridT, payloadT @*/)
+	payload = PerformVirtualOutputOperation(payload /*@, t2, ridT, payloadT @*/)
 	//@ s3 := s2 setminus mset[ft.Fact]{ ft.OutFact_Alice(ridT, payloadT) }
 
 	//@ i.token = t3
@@ -512,7 +514,7 @@ func (i *Initiator) ProcessTransportMsg(msgData []byte) (payload []byte, success
 // @ ensures   success ==> msgData != nil
 // @ ensures   msgData != nil ==> Mem(msgData)
 func (i *Initiator) ProduceTransportMsg(payload []byte) (msgData []byte, success bool) {
-	if i == nil || payload == nil {
+	if i == nil || payload == nil { //argot:ignore diodon-dh-io-independence
 		return
 	}
 	//@ unfold i.Inv()
@@ -574,7 +576,7 @@ func (i *Initiator) ProduceTransportMsg(payload []byte) (msgData []byte, success
 	//@ unfold io.phiRG_Alice_4(t2, ridT, s2)
 	//@ assert io.e_OutFact(t2, ridT, msgDataT)
 	/*@ t3 := @*/
-	PerformVirtualOutputOperation(msgData /*@, t2, ridT, msgDataT @*/)
+	msgData = PerformVirtualOutputOperation(msgData /*@, t2, ridT, msgDataT @*/)
 	//@ s3 := s2 setminus mset[ft.Fact]{ ft.OutFact_Alice(ridT, msgDataT) }
 
 	//@ i.token = t3

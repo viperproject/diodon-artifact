@@ -54,7 +54,7 @@ func main() {
 		reportAndExit(errors.New("Initiator allocation failed"))
 	}
 
-	conn, err := net.Dial("udp", sanitizeStr(config.PeerEndpoint))
+	conn, err := net.Dial("udp", sanitizeStr(config.PeerEndpoint)) // NOTE sanitizer is needed here due to taint analysis imprecision
 	if err != nil {
 		reportAndExit(err)
 	}

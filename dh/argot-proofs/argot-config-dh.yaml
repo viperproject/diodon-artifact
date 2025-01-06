@@ -2,7 +2,7 @@ options:
   project-root: ../implementation # root is the DH Go implementation directory
   reports-dir: ../argot-proofs/argot-reports
   log-level: 3 # log at info level (3), debug level is 4 and trace is 5
-  use-escape-analysis: false
+  use-escape-analysis: false # TODO re-enable
   escape-config: ../argot-proofs/escape-config.json
   report-paths: true
   silence-warn: false # TODO fix escape warning for (*encoding/base64.Encoding).DecodeString during taint analysis
