@@ -3,7 +3,7 @@ options:
   reports-dir: ../argot-proofs/argot-reports
   log-level: 3 # log at info level (3), debug level is 4 and trace is 5
   coverage-filter: (github.com/aws/amazon-ssm-agent)
-  use-escape-analysis: false # TODO re-enable once escape analysis is fixed
+  use-escape-analysis: true
   escape-config: ../argot-proofs/escape-config.json
   report-paths: true
   silence-warn: true
