@@ -100,7 +100,7 @@ func main() {
 		}
 
 		responseMsg := make([]byte, MAX_DATA_SIZE)
-		bytesRead, err := conn.Read(responseMsg);
+		bytesRead, err := conn.Read(responseMsg)
 		if err != nil {
 			reportAndExit(err)
 		}
