@@ -2,7 +2,7 @@ options:
   project-root: ../implementation # root is the DH Go implementation directory
   reports-dir: ../argot-proofs/argot-reports
   log-level: 3 # log at info level (3), debug level is 4 and trace is 5
-  use-escape-analysis: true
+  use-escape-analysis: false
   escape-config: ../argot-proofs/escape-config.json
   report-paths: true
   silence-warn: false # TODO fix escape warning for (*encoding/base64.Encoding).DecodeString during taint analysis
@@ -52,34 +52,6 @@ immutability-problems:
       - package: dh-gobra/library
         method: .*
 
-# diodon-pass-through-problems:
-#   # All methods with the core invariant
-#   - tag: diodon-dh-core-invariant-passthrough
-#     description: "Diodon: DH core invariant maintenance pass-through proof"
-#     severity: HIGH
-#     targets:
-#       - dh
-#     core-api-functions:
-#      TODO only do returns not params
-#       - package: dh-gobra/initiator
-#         method: ProduceHsMsg1
-#       - package: dh-gobra/initiator
-#         method: ProduceHsMsg3
-#       - package: dh-gobra/initiator
-#         method: ProcessTransportMsg
-#       - package: dh-gobra/initiator
-#         method: ProduceTransportMsg
-#     # methods with "core" allocations manually validated to be false-positives
-#     filters:
-#       - package: "crypto/ed25519"
-#         method: .*
-#       - package: "crypto/internal/edwards25519"
-#         method: .*
-#       - package: "crypto/internal/edwards25519/field"
-#         method: .*
-#       - package: "crypto/sha512"
-#         method: .*
-
 dataflow-problems:
   summarize-on-demand: true
   user-specs:
@@ -95,7 +67,7 @@ dataflow-problems:
         - dh
       severity: HIGH
       filters:
-        - type: error$ # TODO is this ok?
+        - type: error$ # We do not consider errors as tainted
       fail-on-implicit-flow: true # handle information flow
       sources:
         - package: command-line-arguments
@@ -105,6 +77,8 @@ dataflow-problems:
       sanitizers:
         - package: dh-gobra/library
           method: PerformVirtualOutputOperation
+        - package: command-line-arguments
+          method: sanitizeStr$
       sinks:
         - package: dh-gobra/library
           method: PerformVirtualInputOperation
