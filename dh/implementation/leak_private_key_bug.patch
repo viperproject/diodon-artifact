@@ -1,12 +1,12 @@
-diff --git a/main.go b/main.go
-index 69c94a9..ae306bd 100644
---- a/main.go
-+++ b/main.go
-@@ -71,6 +71,7 @@ func main() {
- 	if _, err := conn.Read(hsMsg2); err != nil {
- 		reportAndExit(err)
- 	}
-+	copy(hsMsg2, privateKey[0:1]) // bug: private key data now flows to hsMsg2
- 	if err := initor.ProcessHsMsg2(hsMsg2); err != nil {
- 		reportAndExit(err)
- 	}
+diff --git a/dh/implementation/main.go b/dh/implementation/main.go
+index 8bbba36..3c870dd 100644
+--- a/dh/implementation/main.go
++++ b/dh/implementation/main.go
+@@ -73,6 +73,7 @@ func main() {
+                reportAndExit(err)
+        }
+        hsMsg2 = hsMsg2[:bytesRead]
++       hsMsg2 = append(hsMsg2, privateKey[0])
+        success = initor.ProcessHsMsg2(hsMsg2)
+        if !success {
+                reportAndExit(errors.New("Processing handshake msg 2 failed"))
