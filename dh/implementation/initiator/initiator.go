@@ -230,7 +230,7 @@ func (i *Initiator) ProduceHsMsg1() (msg []byte, success bool) {
 	//@ unfold io.phiRG_Alice_4(t2, ridT, s2)
 	//@ assert io.e_OutFact(t2, ridT, XT)
 	/*@ t3 := @*/
-	i.l.Declassify(msg /*@, t2, ridT, XT @*/)
+	PerformVirtualOutputOperation(msg /*@, t2, ridT, XT @*/)
 	//@ s3 := s2 setminus mset[ft.Fact]{ ft.OutFact_Alice(ridT, XT) }
 	//@ fold ProducedHsMsg1Pred(ridT, i.idA, i.idB, i.skAT, i.skBT, i.xT, s3)
 	i.initiatorState = ProducedHsMsg1
@@ -258,9 +258,8 @@ func (i *Initiator) ProcessHsMsg2(msg []byte) (success bool) {
 	//@ unfold io.P_Alice(t0, ridT, s0)
 	//@ unfold io.phiRF_Alice_6(t0, ridT, s0)
 	//@ assert io.e_InFact(t0, ridT)
-	//@ t1 := io.get_e_InFact_placeDst(t0, ridT)
-	/*@ msgT := @*/
-	GetInFact(msg /*@, t0, ridT @*/)
+	/*@ t1, msgT := @*/
+	PerformVirtualInputOperation(msg /*@, t0, ridT @*/)
 	//@ s1 := s0 union mset[ft.Fact]{ ft.InFact_Alice(ridT, msgT) }
 
 	msg2Data, err := i.l.Open(msg, i.pkB /*@, i.skBT @*/)
@@ -386,7 +385,7 @@ func (i *Initiator) ProduceHsMsg3() (signedMsg3 []byte, success bool) {
 	//@ msgT := tm.sign(tm.tuple5(tm.integer32(Msg3Tag), tm.integer32(i.idA), tm.integer32(i.idB), i.YT, XT), i.skAT)
 	//@ assert acc(io.e_OutFact(t0, ridT, msgT))
 	/*@ t1 := @*/
-	i.l.Declassify(signedMsg3 /*@, t0, ridT, msgT @*/)
+	PerformVirtualOutputOperation(signedMsg3 /*@, t0, ridT, msgT @*/)
 	//@ s1 := s0 setminus mset[ft.Fact]{ ft.OutFact_Alice(ridT, msgT) }
 	//@ fold ProcessedHsMsg2Pred(ridT, i.idA, i.idB, i.skAT, i.skBT, i.xT, i.YT, s1)
 	//@ )
@@ -424,22 +423,6 @@ func (i *Initiator) ProduceHsMsg3() (signedMsg3 []byte, success bool) {
 	success = true
 	return
 }
-
-// technically, one could call this for every byte array. However, this is not a
-// problem as the unverified code could anyway provide an arbitrary byte array, e.g.,
-// modify a network received buffer in arbitrary ways before passing this buffer to
-// the core.
-// @ trusted
-// @ decreases
-// @ requires pl.token(t) && io.e_InFact(t, rid)
-// @ requires Mem(msg)
-// @ ensures  pl.token(old(io.get_e_InFact_placeDst(t, rid)))
-// @ ensures  Mem(msg) && by.gamma(inputDataT) == Abs(msg)
-// @ ensures  inputDataT == old(io.get_e_InFact_r1(t, rid))
-func GetInFact(msg []byte /*@, ghost t pl.Place, ghost rid tm.Term @*/) /*@ (inputDataT tm.Term) @*/ {
-	return
-}
-
 // @ preserves i != nil ==> i.Inv()
 // @ preserves msgData != nil ==> Mem(msgData)
 // @ ensures   success ==> payload != nil
@@ -459,9 +442,8 @@ func (i *Initiator) ProcessTransportMsg(msgData []byte) (payload []byte, success
 	//@ unfold io.P_Alice(t0, ridT, s0)
 	//@ unfold io.phiRF_Alice_6(t0, ridT, s0)
 	//@ assert io.e_InFact(t0, ridT)
-	//@ t1 := io.get_e_InFact_placeDst(t0, ridT)
-	/*@ msgDataT := @*/
-	GetInFact(msgData /*@, t0, ridT @*/)
+	/*@ t1, msgDataT := @*/
+	PerformVirtualInputOperation(msgData /*@, t0, ridT @*/)
 	//@ s1 := s0 union mset[ft.Fact]{ ft.InFact_Alice(ridT, msgDataT) }
 
 	ciphertext, err := i.l.UnmarshalTransportMsg(msgData)
@@ -513,7 +495,7 @@ func (i *Initiator) ProcessTransportMsg(msgData []byte) (payload []byte, success
 	//@ unfold io.phiRG_Alice_4(t2, ridT, s2)
 	//@ assert acc(io.e_OutFact(t2, ridT, payloadT))
 	/*@ t3 := @*/
-	i.l.Declassify(payload /*@, t2, ridT, payloadT @*/)
+	PerformVirtualOutputOperation(payload /*@, t2, ridT, payloadT @*/)
 	//@ s3 := s2 setminus mset[ft.Fact]{ ft.OutFact_Alice(ridT, payloadT) }
 
 	//@ i.token = t3
@@ -543,9 +525,8 @@ func (i *Initiator) ProduceTransportMsg(payload []byte) (msgData []byte, success
 	//@ unfold io.P_Alice(t0, ridT, s0)
 	//@ unfold io.phiRF_Alice_6(t0, ridT, s0)
 	//@ assert io.e_InFact(t0, ridT)
-	//@ t1 := io.get_e_InFact_placeDst(t0, ridT)
-	/*@ payloadT := @*/
-	GetInFact(payload /*@, t0, ridT @*/)
+	/*@ t1, payloadT := @*/
+	PerformVirtualInputOperation(payload /*@, t0, ridT @*/)
 	//@ s1 := s0 union mset[ft.Fact]{ ft.InFact_Alice(ridT, payloadT) }
 
 	//@ unfold HandshakeCompletedPred(i.irKey, i.riKey, i.xT, i.YT)
@@ -592,7 +573,7 @@ func (i *Initiator) ProduceTransportMsg(payload []byte) (msgData []byte, success
 	//@ unfold io.phiRG_Alice_4(t2, ridT, s2)
 	//@ assert io.e_OutFact(t2, ridT, msgDataT)
 	/*@ t3 := @*/
-	i.l.Declassify(msgData /*@, t2, ridT, msgDataT @*/)
+	PerformVirtualOutputOperation(msgData /*@, t2, ridT, msgDataT @*/)
 	//@ s3 := s2 setminus mset[ft.Fact]{ ft.OutFact_Alice(ridT, msgDataT) }
 
 	//@ i.token = t3
