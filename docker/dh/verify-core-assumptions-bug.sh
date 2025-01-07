@@ -12,8 +12,7 @@ SCRIPT_DIR=$(realpath "$PWD")
 # Verify that the core invariant is not maintained when a pointer allocated in
 # the core is written to in the app without passing through one of the core api
 # function's return parameters.
-# TODO re-enable
-# /bin/bash "$SCRIPT_DIR/argot-proofs/dh-passthru-bug.sh"
+/bin/bash "$SCRIPT_DIR/argot-proofs/dh-passthru-bug.sh"
 
 # TODO Verify that a core instance escapes the goroutine in which it is created
 # /bin/bash "$SCRIPT_DIR/argot-proofs/dh-concurrency-bug.sh"

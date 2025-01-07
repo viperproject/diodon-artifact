@@ -1,8 +1,8 @@
-diff --git a/dh/implementation/initiator/initiator.go b/dh/implementation/initiator/initiator.go
-index 53a5c19..8204aeb 100644
---- a/dh/implementation/initiator/initiator.go
-+++ b/dh/implementation/initiator/initiator.go
-@@ -15,6 +15,10 @@ import . "dh-gobra/library"
+diff --git a/initiator/initiator.go b/initiator/initiator.go
+index 5eea667..dcdc5c1 100644
+--- a/initiator/initiator.go
++++ b/initiator/initiator.go
+@@ -17,6 +17,14 @@ import (
  //@ import pub "dh-gobra/verification/pub"
  //@ import fresh "dh-gobra/verification/fresh"
  
@@ -10,31 +10,37 @@ index 53a5c19..8204aeb 100644
 +// Global variable that stores an alias to a slice allocated in the Core
 +var Global *[]byte
 +
++func init() {
++	Global = &[]byte{}
++}
++
  type Initiator struct {
  	initiatorState InitiatorState
  	l              *LibState
-@@ -200,6 +204,9 @@ func (i *Initiator) ProduceHsMsg1() (msg []byte, err error) {
- 		return
- 	}
+@@ -240,6 +248,11 @@ func (i *Initiator) ProduceHsMsg1() (msg []byte, success bool) {
+ 	//@ i.absState = s3
+ 	//@ fold i.Inv()
+ 	success = true
++
++	// bug: Global leaks permissions to a slice allocated in the Core
++	// that has permissions in the return value of this Core API function
++	Global = &msg
++
+ 	return
+ }
  
-+	// bug: Global aliases a slice allocated in the core
-+	Global = &i.X
-+
- 	//@ unfold io.P_Alice(t1, ridT, s1)
- 	//@ unfold io.phiR_Alice_0(t1, ridT, s1)
- 	//@ idAT := tm.integer32(i.idA)
-diff --git a/dh/implementation/main.go b/dh/implementation/main.go
-index 69c94a9..f94c2d9 100644
---- a/dh/implementation/main.go
-+++ b/dh/implementation/main.go
+diff --git a/main.go b/main.go
+index 8bbba36..8315a5c 100644
+--- a/main.go
++++ b/main.go
 @@ -63,6 +63,11 @@ func main() {
- 	if err != nil {
- 		reportAndExit(err)
+ 	if !success {
+ 		reportAndExit(errors.New("Producing handshake msg 1 failed"))
  	}
 +
-+	// bug: write in the Application to a heap location allocated in the Core
++	// bug: access in the Application to a heap location allocated in the Core
 +	// that does not pass through the Core API function's return value
-+	(*initiator.Global)[0] = 0x0
++	fmt.Println(*initiator.Global)
 +
  	if _, err := conn.Write(hsMsg1); err != nil {
  		reportAndExit(err)

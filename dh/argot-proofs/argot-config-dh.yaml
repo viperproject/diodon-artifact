@@ -52,6 +52,34 @@ immutability-problems:
       - package: dh-gobra/library
         method: .*
 
+diodon-pass-through-problems:
+  - tag: diodon-dh-core-invariant-passthrough
+    description: "Diodon: DH core invariant maintenance pass-through proof"
+    severity: HIGH
+    targets:
+      - dh
+    app-functions:
+      - package: dh-gobra.*
+        method: .*
+    core-functions:
+      - package: dh-gobra/initiator
+        method: .*
+      - package: dh-gobra/library
+        method: .*
+    core-api-function-returned-values:
+      - package: dh-gobra/initiator
+        method: ProduceHsMsg1
+        return-indices: [0]
+      - package: dh-gobra/initiator
+        method: ProduceHsMsg3
+        return-indices: [0]
+      - package: dh-gobra/initiator
+        method: ProcessTransportMsg
+        return-indices: [0]
+      - package: dh-gobra/initiator
+        method: ProduceTransportMsg
+        return-indices: [0]
+
 dataflow-problems:
   summarize-on-demand: true
   user-specs:
