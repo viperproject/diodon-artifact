@@ -17,7 +17,6 @@ cd "$AGENT_DIR" || exit
 for PATCH in $PATCHES; do
     echo "Applying bug patch: $PATCH"
     git apply "$PATCH" || exit
-    git diff
 
     echo "Running taint analysis on DH implementation in directory $(pwd)"
     if "$ARGOT_BIN" taint -config "$SCRIPT_DIR"/argot-config-dh.yaml; then

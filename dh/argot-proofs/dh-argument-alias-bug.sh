@@ -19,7 +19,6 @@ cd "$AGENT_DIR" || exit
 
 echo "Applying bug patch: $PATCH"
 git apply "$PATCH" || exit
-git diff
 
 echo "Running argument alias analysis on DH implementation in directory $(pwd)"
 if "$ARGOT_BIN" alias -config "$SCRIPT_DIR"/argot-config-dh.yaml; then

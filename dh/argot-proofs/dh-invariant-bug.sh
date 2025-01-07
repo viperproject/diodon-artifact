@@ -20,7 +20,6 @@ cd "$AGENT_DIR" || exit
 for PATCH in $PATCHES; do
     echo "Applying bug patch: $PATCH"
     git apply "$PATCH" || exit
-    git diff
 
     echo "Running immutability analysis on DH implementation in directory $(pwd)"
 
