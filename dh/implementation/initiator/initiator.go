@@ -370,13 +370,11 @@ func (i *Initiator) ProduceHsMsg3() (signedMsg3 []byte, success bool) {
 	}
 
 	//@ requires acc(i, 1/2) && acc(i.l.Mem(), 1/2)
-	//@ requires acc(Mem(signedMsg3), 1/2) && Abs(signedMsg3) == by.signB(ay.tuple5B(ay.integer32B(Msg3Tag), ay.integer32B(i.idA), ay.integer32B(i.idB), by.gamma(i.YT), by.expB(ay.generatorB(), by.gamma(i.xT))), by.gamma(i.skAT))
+	//@ requires Mem(signedMsg3) && signedMsg3 != nil && Abs(signedMsg3) == by.signB(ay.tuple5B(ay.integer32B(Msg3Tag), ay.integer32B(i.idA), ay.integer32B(i.idB), by.gamma(i.YT), by.expB(ay.generatorB(), by.gamma(i.xT))), by.gamma(i.skAT))
 	//@ requires pl.token(t0) && io.P_Alice(t0, ridT, s0)
 	//@ requires HasHsMsg3OutFact(ridT, i.idA, i.idB, i.YT, i.xT, i.skAT, s0)
 	//@ requires ProcessedHsMsg2Pred(ridT, i.idA, i.idB, i.skAT, i.skBT, i.xT, i.YT, s0)
 	//@ ensures  acc(i, 1/2) && acc(i.l.Mem(), 1/2)
-	// due to the workaround for sanitization, we obtain a different slice to which `signedMsg3` points:
-	// ensures  acc(Mem(signedMsg3), 1/2) && signedMsg3 != nil
 	//@ ensures  Mem(signedMsg3) && signedMsg3 != nil && Abs(signedMsg3) == before(Abs(signedMsg3))
 	//@ ensures  pl.token(t1) && io.P_Alice(t1, ridT, s1)
 	//@ ensures  ProcessedHsMsg2Pred(ridT, i.idA, i.idB, i.skAT, i.skBT, i.xT, i.YT, s1)
@@ -408,8 +406,7 @@ func (i *Initiator) ProduceHsMsg3() (signedMsg3 []byte, success bool) {
 	sharedSecret, err /*@, sharedSecretB @*/ = i.l.DhSharedSecret(i.x, i.Y)
 	if err == nil { //argot:ignore diodon-dh-io-independence
 		i.irKey, i.riKey = NewBytes(32), NewBytes(32)
-		//@ ghost var t0Abs, t1Abs by.Bytes
-		err /*@, t0Abs, t1Abs @*/ = KDF2Slice(i.irKey, i.riKey, sharedSecret /*@, sharedSecretB @*/)
+		err = KDF2Slice(i.irKey, i.riKey, sharedSecret)
 		if err == nil {
 			i.l.PrintKeys(i.irKey, i.riKey)
 			//@ fold HandshakeCompletedPred(i.irKey, i.riKey, i.xT, i.YT)

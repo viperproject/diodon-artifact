@@ -221,12 +221,10 @@ func Equals(s1, s2 []byte) (res bool) {
 // which is a bug.
 // @ trusted
 // @ decreases
-// @ requires  Mem(t0) && Mem(t1)
-// @ requires  acc(Mem(key), 1/16) && keyAbs == Abs(key)
-// @ ensures   Mem(t0) && t0Abs == Abs(t0) && Mem(t1) && t1Abs == Abs(t1)
-// @ ensures   err == nil ==> kdf1B(keyAbs) == t0Abs
-// @ ensures   err == nil ==> kdf2B(keyAbs) == t1Abs
-func KDF2Slice(t0, t1 []byte, key []byte /*@, ghost keyAbs Bytes @*/) (err error /*@, ghost t0Abs Bytes, ghost t1Abs Bytes @*/) {
+// @ preserves Mem(t0) && Mem(t1) && acc(Mem(key), 1/16)
+// @ ensures   err == nil ==> kdf1B(Abs(key)) == Abs(t0)
+// @ ensures   err == nil ==> kdf2B(Abs(key)) == Abs(t1)
+func KDF2Slice(t0, t1 []byte, key []byte) (err error) {
 	if len(t0) != 32 || len(t1) != 32 {
 		err = errors.New("invalid argument length")
 		return
@@ -240,7 +238,7 @@ func KDF2Slice(t0, t1 []byte, key []byte /*@, ghost keyAbs Bytes @*/) (err error
 }
 
 // @ trusted
-// @ preserves Mem(sum) && Mem(key) && Mem(in0)
+// @ preserves Mem(sum) && acc(Mem(key), 1/32) && acc(Mem(in0), 1/32)
 func HMAC1Slice(sum []byte, key, in0 []byte) {
 	mac := hmac.New(func() hash.Hash {
 		h, _ := blake2s.New256(nil)

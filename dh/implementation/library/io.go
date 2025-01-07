@@ -10,12 +10,14 @@ import fmt "fmt"
 // calling this function results in a proof obligations that the necessary I/O permission
 // for performing an output operation are present. Thus, we can treat this function as
 // sanitizing `data`
+// technically, fractional permissions for `data` is sufficient. However, we express the specification
+// in a way that it does not matter for callers whether this function copies the slice of bytes or returns
+// the same one.
 // @ trusted
-// @ requires acc(Mem(data), 1/16)
+// @ requires Mem(data) && data != nil
 // @ requires token(t) && e_OutFact(t, rid, m) && gamma(m) == Abs(data)
-// @ ensures  acc(Mem(data), 1/16)
 // @ ensures  token(t1) && t1 == old(get_e_OutFact_placeDst(t, rid, m))
-// @ ensures  Mem(res) && Abs(data) == Abs(res) && res != nil // added due to the workaround for the data flow analysis' imprecision
+// @ ensures  Mem(res) && Abs(res) == old(Abs(data)) && res != nil
 func PerformVirtualOutputOperation(data []byte /*@, ghost t Place, ghost rid tm.Term, ghost m tm.Term @*/) (res []byte /*@, ghost t1 Place @*/) {
 	// due to an imprecision in the data flow analysis, we have to copy the slice instead of directly returning `data`
 	// otherwise, the data flow analysis considers the result tainted despite configuring this function as a sanitizer
