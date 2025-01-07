@@ -231,8 +231,8 @@ func (i *Initiator) ProduceHsMsg1() (msg []byte, success bool) {
 	//@ unfold io.P_Alice(t2, ridT, s2)
 	//@ unfold io.phiRG_Alice_4(t2, ridT, s2)
 	//@ assert io.e_OutFact(t2, ridT, XT)
-	/*@ t3 := @*/
-	msg = PerformVirtualOutputOperation(msg /*@, t2, ridT, XT @*/)
+	//@ ghost var t3 pl.Place
+	msg /*@, t3 @*/ = PerformVirtualOutputOperation(msg /*@, t2, ridT, XT @*/)
 	//@ s3 := s2 setminus mset[ft.Fact]{ ft.OutFact_Alice(ridT, XT) }
 	//@ fold ProducedHsMsg1Pred(ridT, i.idA, i.idB, i.skAT, i.skBT, i.xT, s3)
 	i.initiatorState = ProducedHsMsg1
@@ -375,7 +375,9 @@ func (i *Initiator) ProduceHsMsg3() (signedMsg3 []byte, success bool) {
 	//@ requires HasHsMsg3OutFact(ridT, i.idA, i.idB, i.YT, i.xT, i.skAT, s0)
 	//@ requires ProcessedHsMsg2Pred(ridT, i.idA, i.idB, i.skAT, i.skBT, i.xT, i.YT, s0)
 	//@ ensures  acc(i, 1/2) && acc(i.l.Mem(), 1/2)
-	//@ ensures  acc(Mem(signedMsg3), 1/2)
+	// due to the workaround for sanitization, we obtain a different slice to which `signedMsg3` points:
+	// ensures  acc(Mem(signedMsg3), 1/2) && signedMsg3 != nil
+	//@ ensures  Mem(signedMsg3) && signedMsg3 != nil && Abs(signedMsg3) == before(Abs(signedMsg3))
 	//@ ensures  pl.token(t1) && io.P_Alice(t1, ridT, s1)
 	//@ ensures  ProcessedHsMsg2Pred(ridT, i.idA, i.idB, i.skAT, i.skBT, i.xT, i.YT, s1)
 	//@ outline(
@@ -386,8 +388,8 @@ func (i *Initiator) ProduceHsMsg3() (signedMsg3 []byte, success bool) {
 	//@ XT := tm.exp(tm.generator(), i.xT)
 	//@ msgT := tm.sign(tm.tuple5(tm.integer32(Msg3Tag), tm.integer32(i.idA), tm.integer32(i.idB), i.YT, XT), i.skAT)
 	//@ assert acc(io.e_OutFact(t0, ridT, msgT))
-	/*@ t1 := @*/
-	signedMsg3 = PerformVirtualOutputOperation(signedMsg3 /*@, t0, ridT, msgT @*/)
+	//@ ghost var t1 pl.Place
+	signedMsg3 /*@, t1 @*/ = PerformVirtualOutputOperation(signedMsg3 /*@, t0, ridT, msgT @*/)
 	//@ s1 := s0 setminus mset[ft.Fact]{ ft.OutFact_Alice(ridT, msgT) }
 	//@ fold ProcessedHsMsg2Pred(ridT, i.idA, i.idB, i.skAT, i.skBT, i.xT, i.YT, s1)
 	//@ )
@@ -497,8 +499,8 @@ func (i *Initiator) ProcessTransportMsg(msgData []byte) (payload []byte, success
 	//@ unfold io.P_Alice(t2, ridT, s2)
 	//@ unfold io.phiRG_Alice_4(t2, ridT, s2)
 	//@ assert acc(io.e_OutFact(t2, ridT, payloadT))
-	/*@ t3 := @*/
-	payload = PerformVirtualOutputOperation(payload /*@, t2, ridT, payloadT @*/)
+	//@ ghost var t3 pl.Place
+	payload /*@, t3 @*/ = PerformVirtualOutputOperation(payload /*@, t2, ridT, payloadT @*/)
 	//@ s3 := s2 setminus mset[ft.Fact]{ ft.OutFact_Alice(ridT, payloadT) }
 
 	//@ i.token = t3
@@ -543,17 +545,16 @@ func (i *Initiator) ProduceTransportMsg(payload []byte) (msgData []byte, success
 		return
 	}
 
-	msgData, err = i.l.MarshalTransportMsg(ciphertext)
+	tmpMsgData, err := i.l.MarshalTransportMsg(ciphertext)
 	if err != nil {
 		//@ i.token = t1
 		//@ i.absState = s1
 		//@ fold ProcessedHsMsg2Pred(ridT, i.idA, i.idB, i.skAT, i.skBT, i.xT, i.YT, s1)
 		//@ fold i.Inv()
-		msgData = nil
 		return
 	}
 	//@ msgDataT := tm.tuple2(tm.integer32(TransMsgTag), tm.senc(payloadT, tm.kdf1(tm.exp(i.YT, i.xT))))
-	//@ assert Abs(msgData) == by.gamma(msgDataT)
+	//@ assert Abs(tmpMsgData) == by.gamma(msgDataT)
 
 	//@ idAT := tm.integer32(i.idA)
 	//@ idBT := tm.integer32(i.idB)
@@ -575,8 +576,8 @@ func (i *Initiator) ProduceTransportMsg(payload []byte) (msgData []byte, success
 	//@ unfold io.P_Alice(t2, ridT, s2)
 	//@ unfold io.phiRG_Alice_4(t2, ridT, s2)
 	//@ assert io.e_OutFact(t2, ridT, msgDataT)
-	/*@ t3 := @*/
-	msgData = PerformVirtualOutputOperation(msgData /*@, t2, ridT, msgDataT @*/)
+	//@ ghost var t3 pl.Place
+	msgData /*@, t3 @*/ = PerformVirtualOutputOperation(tmpMsgData /*@, t2, ridT, msgDataT @*/)
 	//@ s3 := s2 setminus mset[ft.Fact]{ ft.OutFact_Alice(ridT, msgDataT) }
 
 	//@ i.token = t3

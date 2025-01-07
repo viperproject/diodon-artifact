@@ -15,9 +15,11 @@ import fmt "fmt"
 // @ requires token(t) && e_OutFact(t, rid, m) && gamma(m) == Abs(data)
 // @ ensures  acc(Mem(data), 1/16)
 // @ ensures  token(t1) && t1 == old(get_e_OutFact_placeDst(t, rid, m))
-func PerformVirtualOutputOperation(data []byte /*@, ghost t Place, ghost rid tm.Term, ghost m tm.Term @*/) (res []byte /*@ , ghost t1 Place @*/) {
-	// TODO update Gobra spec
-	copy(res, data)
+// @ ensures  Mem(res) && Abs(data) == Abs(res) && res != nil // added due to the workaround for the data flow analysis' imprecision
+func PerformVirtualOutputOperation(data []byte /*@, ghost t Place, ghost rid tm.Term, ghost m tm.Term @*/) (res []byte /*@, ghost t1 Place @*/) {
+	// due to an imprecision in the data flow analysis, we have to copy the slice instead of directly returning `data`
+	// otherwise, the data flow analysis considers the result tainted despite configuring this function as a sanitizer
+	res = append([]byte(nil), data...)
 	return
 }
 
