@@ -130,7 +130,7 @@ jobs:
             "Verify SSM Agent protocol model",
             "Verify SSM Agent core",
             "Verify SSM Agent I/O independence",
-            "Verify SSM Agent I/O bugs",
+            "Verify SSM Agent I/O independence bugs",
             "Verify SSM Agent core assumptions",
             "Verify SSM Agent core assumptions bugs",
           ]
