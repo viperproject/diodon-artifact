@@ -271,8 +271,8 @@ func setZero(arr []byte) {
 // @ trusted
 // @ ensures err == nil ==> Mem(nonce)
 func createNonce(nonceSize int) (nonce []byte, err error) {
-	nonce := make([]byte, nonceSize)
-	_, err := io.ReadFull(rand.Reader, nonce)
+	nonce = make([]byte, nonceSize)
+	_, err = io.ReadFull(rand.Reader, nonce)
 	if err != nil {
 		return nil, err
 	}
