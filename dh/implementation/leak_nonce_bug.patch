@@ -1,5 +1,5 @@
 diff --git a/initiator/initiator.go b/initiator/initiator.go
-index f91430c..e9d5179 100644
+index f91430c..0aa983f 100644
 --- a/initiator/initiator.go
 +++ b/initiator/initiator.go
 @@ -38,6 +38,12 @@ type Initiator struct {
