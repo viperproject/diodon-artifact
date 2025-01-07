@@ -112,6 +112,10 @@ dataflow-problems:
         - package: crypto/elliptic$
           method: GenerateKey$
       sinks:
+        - package: .*/iosanitization
+          method: PerformVirtualInputOperation
+        - package: .*/iosanitization
+          method: PerformVirtualInputOperationAgentMessage
         - interface: T$
           package: .*log$
         - method: Info.*$
