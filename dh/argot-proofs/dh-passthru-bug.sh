@@ -19,6 +19,7 @@ cd "$AGENT_DIR" || exit
 
 echo "Applying bug patch: $PATCH"
 git apply "$PATCH" || exit
+git diff
 
 echo "Running pass-through analysis on DH implementation in directory $(pwd)"
 if "$ARGOT_BIN" diodon-passthru -config "$SCRIPT_DIR"/argot-config-dh.yaml; then
