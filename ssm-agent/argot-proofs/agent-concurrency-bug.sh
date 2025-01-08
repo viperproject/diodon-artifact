@@ -19,7 +19,7 @@ fi
 cd "$AGENT_DIR" || exit 1
 
 echo "Applying bug patch: $PATCH"
-git apply "$PATCH" || exit 1
+patch -s -p1 < "$PATCH" || exit 1
 
 echo "Running concurrency analysis on SSM agent in directory $(pwd)"
 
@@ -30,18 +30,18 @@ if grep -Fq 'Parameter inputData of (*github.com/aws/amazon-ssm-agent/agent/sess
 else
     echo "Expected analysis to fail with specific error message"
     echo "Reverting bug patch: $PATCH"
-    git apply --reverse "$PATCH" || exit 1
+    patch -sR -p1 < "$PATCH" || exit 1
     exit 1
 fi
 
 echo "Reverting bug patch: $PATCH"
-git apply --reverse "$PATCH" || exit 1
+patch -sR -p1 < "$PATCH" || exit 1
 
 
 ### Second patch
 PATCH=$PATCH2
 echo "Applying bug patch: $PATCH"
-git apply "$PATCH" || exit 1
+patch -s -p1 < "$PATCH" || exit 1
 
 echo "Running concurrency analysis on SSM agent in directory $(pwd)"
 
@@ -52,12 +52,12 @@ if grep -Fq 'Parameter inputData of (*github.com/aws/amazon-ssm-agent/agent/sess
 else
     echo "Expected analysis to fail with specific error message"
     echo "Reverting bug patch: $PATCH"
-    git apply --reverse "$PATCH" || exit 1
+    patch -sR -p1 < "$PATCH" || exit 1
     exit 1
 fi
 
 echo "Reverting bug patch: $PATCH"
-git apply --reverse "$PATCH" || exit 1
+patch -sR -p1 < "$PATCH" || exit 1
 
 echo "Success"
 exit 0

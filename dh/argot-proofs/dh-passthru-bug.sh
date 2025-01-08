@@ -19,15 +19,15 @@ cd "$AGENT_DIR" || exit
 
 for PATCH in $PATCHES; do
     echo "Applying bug patch: $PATCH"
-    git apply "$PATCH" || exit
+    patch -s -p1 < "$PATCH" || exit
 
     echo "Running pass-through analysis on DH implementation in directory $(pwd)"
     if "$ARGOT_BIN" diodon-passthru -config "$SCRIPT_DIR"/argot-config-dh.yaml; then
         echo "Expected analysis to fail"
-        git apply --reverse "$PATCH"
+        patch -sR -p1 < "$PATCH"
         exit 1
     fi
 
     echo "Reverting bug patch: $PATCH"
-    git apply --reverse "$PATCH" || exit
+    patch -sR -p1 < "$PATCH" || exit
 done
