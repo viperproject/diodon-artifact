@@ -81,6 +81,82 @@ immutability-problems:
       - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: .*
 
+diodon-pass-through-problems:
+  - tag: diodon-agent-core-invariant-passthrough
+    description: "Diodon: SSM Agent core invariant maintenance pass-through proof"
+    targets:
+      - ssm-session-worker
+    app-functions:
+      - package: github.com/aws/amazon-ssm-agent.*
+        method: .*
+    core-functions:
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: .*
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel/cryptolib$
+        method: .*
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel/iosanitization$
+        method: .*
+    core-api-function-returned-values:
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: NewDataChannel$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: SendStreamDataMessage$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: SendAgentSessionStateMessage$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: SkipHandshake$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: PerformHandshake$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: GetClientVersion$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: GetInstanceId$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: GetRegion$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: IsActive$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: GetSeparateOutputPayload$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: SetSeparateOutputPayload$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: PrepareToCloseChannel$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: Close$
+    core-alloc-filters:
+      - package: github.com/gorilla/websocket
+        method: DialContext
+      - package: github.com/gorilla/websocket
+        method: NextReader
+    app-access-filters:
+      - package: github.com/aws/amazon-ssm-agent/agent/log
+        method: .*
+      - package: golang.org/x/crypto.*
+        method: .*
+      - package: internal/byteorder
+        method: .*
+      - package: crypto/md5
+        method: .*
+      - package: crypto/sha256
+        method: .*
+      - package: crypto/sha512
+        method: .*
+    no-leak-functions:
+      - package: github.com/aws/amazon-ssm-agent/agent/log
+        method: .*
+      - package: testing
+        method: .*
+      - package: github.com/stretchr/testify
+        method: .*
+      - package: github.com/aws/aws-sdk-go/aws/credentials/stscred
+        method: RetrieveWithContext
+      - package: github.com/aws/aws-sdk-go/aws
+        method: Copy
+      - package: github.com/aws/amazon-ssm-agent/common/identity/credentialproviders/ssmec2roleprovider
+        method: isEC2InstanceRegistered
+      # - package: github.com/cenkalti/backoff/v4
+      #   method: RetryNotifyWithTimer
+
 dataflow-problems:
   summarize-on-demand: true
   user-specs:
