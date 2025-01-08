@@ -10,7 +10,7 @@ SCRIPT_DIR=$(realpath "$PWD")
 /bin/bash "$SCRIPT_DIR/argot-proofs/agent-invariant-proof.sh"
 
 # Verify that each core instance does not escape the goroutine in which it is created
-/bin/bash "$SCRIPT_DIR/argot-proofs/agent-concurrency-proof.sh"
+/bin/bash "$SCRIPT_DIR/argot-proofs/agent-concurrency-proof-fix.sh"
 
 # Verify that no arguments to core functions alias each other
 /bin/bash "$SCRIPT_DIR/argot-proofs/agent-argument-alias-proof.sh"
