@@ -103,7 +103,7 @@ jobs:
             command: "/gobra/dh/verify-core-assumptions.sh"
           - name: "Verify DH core assumptions bugs"
             command: "/gobra/dh/verify-core-assumptions-bug.sh"
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
@@ -147,7 +147,7 @@ jobs:
             command: "/gobra/ssm-agent/verify-core-assumptions.sh"
           - name: "Verify SSM Agent core assumptions bugs"
             command: "/gobra/ssm-agent/verify-core-assumptions-bug.sh"
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
