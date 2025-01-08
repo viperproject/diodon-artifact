@@ -68,6 +68,9 @@ diodon-pass-through-problems:
         method: .*
     core-api-function-returned-values:
       - package: dh-gobra/initiator
+        method: NewInitiator
+        return-indices: [0]
+      - package: dh-gobra/initiator
         method: ProduceHsMsg1
         return-indices: [0]
       - package: dh-gobra/initiator
