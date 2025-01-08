@@ -97,6 +97,7 @@
         "(*crypto/aes.gcmAsm).Seal": "summarize",
         "(*crypto/cipher.gcm).Seal": "summarize",
         "crypto/internal/alias.InexactOverlap": "summarize",
+        "(*os.File).Write": "noop",
         "(*io.multiWriter).Write": "noop",
         "fmt.Errorf": "noop",
         "(*github.com/go-git/go-git/v5/plumbing/format/idxfile.Encoder).Write": "noop"
