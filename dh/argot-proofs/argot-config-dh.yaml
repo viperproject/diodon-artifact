@@ -61,6 +61,8 @@ diodon-pass-through-problems:
     app-functions:
       - package: dh-gobra.*
         method: .*
+      - package: command-line-arguments
+        method: .*
     core-functions:
       - package: dh-gobra/initiator
         method: .*
@@ -82,6 +84,9 @@ diodon-pass-through-problems:
       - package: dh-gobra/initiator
         method: ProduceTransportMsg
         return-indices: [0]
+    app-access-filters:
+      - package: internal/byteorder
+        method: BeUint64
 
 dataflow-problems:
   summarize-on-demand: true
