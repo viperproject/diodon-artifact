@@ -1,7 +1,7 @@
 {
     "functions": {
-        "dh-gobra/library.createNonce": "noop",
-        "command-line-arguments.parsePrivateKey": "noop",
+        "dh-gobra/library.createNonce": "summarize",
+        "command-line-arguments.parsePrivateKey": "summarize",
         "(*math/big.Int).Exp": "summarize",
         "(*math/big.Int).SetBytes": "summarize",
         "(*math/big.Int).FillBytes": "summarize",
