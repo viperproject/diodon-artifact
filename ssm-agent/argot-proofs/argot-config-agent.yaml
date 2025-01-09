@@ -187,11 +187,16 @@ dataflow-problems:
       sources:
         - package: crypto/elliptic$
           method: GenerateKey$
+      # NOTE We don't have any explicit sanitizers here because the functions in
+      # the iosanitization package which perform I/O output operations are
+      # pre-summarized as having no data flow in the file agent-specs.json
       sinks:
         - package: .*/iosanitization
           method: PerformVirtualInputOperation
         - package: .*/iosanitization
           method: PerformVirtualInputOperationAgentMessage
+        - package: github.com/gorilla/websocket
+          method: WriteMessage
         - interface: T$
           package: .*log$
         - method: Info.*$
