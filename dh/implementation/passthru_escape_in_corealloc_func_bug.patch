@@ -1,5 +1,5 @@
 diff --git a/initiator/initiator.go b/initiator/initiator.go
-index 5eea667..85dca5c 100644
+index 5eea667..25057d9 100644
 --- a/initiator/initiator.go
 +++ b/initiator/initiator.go
 @@ -110,7 +110,9 @@ func (i *Initiator) getIdB() uint32 {
@@ -9,7 +9,7 @@ index 5eea667..85dca5c 100644
 -func NewInitiator(privateKey [64]byte, peerPublicKey [32]byte) (i *Initiator, success bool) {
 +//
 +// DIODON ARTIFACT ONLY: f is a callback into the App
-+func NewInitiator(privateKey [64]byte, peerPublicKey [32]byte, f func(b *byte)) (i *Initiator, success bool) {
++func NewInitiator(privateKey [64]byte, peerPublicKey [32]byte, b **Initiator) (i *Initiator, success bool) {
  	// pick an arbitrary rid for this protocol session and inhale the IO specification for
  	// the SSM agent and the chosen protocol session:
  	//@ t0, rid, s0 := arb.GetArbPlace(), arb.GetArbTerm(), mset[ft.Fact]{}
@@ -18,23 +18,22 @@ index 5eea667..85dca5c 100644
  	}
  
 +	// bug: leak Core-controlled memory to the App via a callback
-+	f(&privateKey[0])
++	*b = i
 +
  	i.initiatorState = Initialized
  	i.l = l
  	i.idA = idA
 diff --git a/main.go b/main.go
-index 8bbba36..ac644bc 100644
+index 816f2e7..bcf5df9 100644
 --- a/main.go
 +++ b/main.go
-@@ -49,7 +49,9 @@ func main() {
+@@ -49,7 +49,8 @@ func main() {
  	privateKey := parsePrivateKey(config)
  	peerPublicKey := parsePublicKey(config)
  
 -	initor, success := initiator.NewInitiator(privateKey, peerPublicKey)
-+	initor, success := initiator.NewInitiator(privateKey, peerPublicKey, func(b *byte) {
-+		fmt.Println(*b) // bug: access memory allocated in the CoreAlloc function without permission
-+	})
++	var bb *initiator.Initiator
++	initor, success := initiator.NewInitiator(privateKey, peerPublicKey, &bb)
  	if !success {
  		reportAndExit(errors.New("Initiator allocation failed"))
  	}
