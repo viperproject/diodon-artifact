@@ -1,19 +1,22 @@
 package main
 
-import "bufio"
-import "encoding/base64"
-import "errors"
-import "flag"
-import "fmt"
-import "os"
-import "dh-gobra/initiator"
-import "dh-gobra/iolib"
+import (
+	"bufio"
+	"encoding/base64"
+	"errors"
+	"flag"
+	"fmt"
+	"net"
+	"os"
+
+	"dh-gobra/initiator"
+)
 
 type Config struct {
-	IsInitiator            bool
-	PrivateKey             string
-	PeerEndpoint           string // <address>:<port>, e.g. "127.0.0.1:57654" (IPv4) or "[::1]:57950" (IPv6)
-	PeerPublicKey          string
+	IsInitiator   bool
+	PrivateKey    string
+	PeerEndpoint  string // <address>:<port>, e.g. "127.0.0.1:57654" (IPv4) or "[::1]:57950" (IPv6)
+	PeerPublicKey string
 }
 
 func parseArgs() Config {
@@ -25,13 +28,15 @@ func parseArgs() Config {
 	flag.Parse()
 
 	config := Config{
-		IsInitiator:            *isInitiatorPtr,
-		PrivateKey:             *privateKeyPtr,
-		PeerEndpoint:           *peerEndpointPtr,
-		PeerPublicKey:          *peerPublicKeyPtr,
+		IsInitiator:   *isInitiatorPtr,
+		PrivateKey:    *privateKeyPtr,
+		PeerEndpoint:  *peerEndpointPtr,
+		PeerPublicKey: *peerPublicKeyPtr,
 	}
 	return config
 }
+
+const MAX_DATA_SIZE = 1024
 
 func main() {
 	// parse args
@@ -41,49 +46,44 @@ func main() {
 		reportAndExit(errors.New("responder is currently not implemented"))
 	}
 
-	privateKey, peerPublicKey, err := parseKeys(config)
-	if err != nil {
-		reportAndExit(err)
+	privateKey := parsePrivateKey(config)
+	peerPublicKey := parsePublicKey(config)
+
+	initor, success := initiator.NewInitiator(privateKey, peerPublicKey)
+	if !success {
+		reportAndExit(errors.New("Initiator allocation failed"))
 	}
 
-	initiator, err := initiator.NewInitiator(privateKey, peerPublicKey)
+	conn, err := net.Dial("udp", sanitizeStr(config.PeerEndpoint)) // NOTE sanitizer is needed here due to taint analysis imprecision
 	if err != nil {
-		reportAndExit(err)
+		reportAndExit(errors.New("Failed to create udp peer endpoint connection"))
 	}
 
-	iolib, err := iolib.NewLibState(config.PeerEndpoint)
-	if err != nil {
-		reportAndExit(err)
+	hsMsg1, success := initor.ProduceHsMsg1()
+	if !success {
+		reportAndExit(errors.New("Producing handshake msg 1 failed"))
+	}
+	if _, err := conn.Write(hsMsg1); err != nil {
+		reportAndExit(errors.New("Failed to write handshake msg 1 to connection"))
 	}
 
-	hsMsg1, err := initiator.ProduceHsMsg1()
+	hsMsg2 := make([]byte, MAX_DATA_SIZE)
+	bytesRead, err := conn.Read(hsMsg2)
 	if err != nil {
-		reportAndExit(err)
+		reportAndExit(errors.New("Failed to read handshake msg 2 from connection"))
+	}
+	hsMsg2 = hsMsg2[:bytesRead]
+	success = initor.ProcessHsMsg2(hsMsg2)
+	if !success {
+		reportAndExit(errors.New("Processing handshake msg 2 failed"))
 	}
 
-	err = iolib.Send(hsMsg1)
-	if err != nil {
-		reportAndExit(err)
+	hsMsg3, success := initor.ProduceHsMsg3()
+	if !success {
+		reportAndExit(errors.New("Producing handshake msg 3 failed"))
 	}
-
-	hsMsg2, err := iolib.Recv()
-	if err != nil {
-		reportAndExit(err)
-	}
-
-	err = initiator.ProcessHsMsg2(hsMsg2)
-	if err != nil {
-		reportAndExit(err)
-	}
-
-	hsMsg3, err := initiator.ProduceHsMsg3()
-	if err != nil {
-		reportAndExit(err)
-	}
-
-	err = iolib.Send(hsMsg3)
-	if err != nil {
-		reportAndExit(err)
+	if _, err := conn.Write(hsMsg3); err != nil {
+		reportAndExit(errors.New("Failed to write handshake msg 3 to connection"))
 	}
 
 	// handshake is now over
@@ -91,32 +91,30 @@ func main() {
 	fmt.Println("Enter a payload to be sent:")
 	for scanner.Scan() {
 		line := scanner.Text()
-		requestMsg, err := initiator.ProduceTransportMsg([]byte(line))
-		if err != nil {
-			reportAndExit(err)
+		requestMsg, success := initor.ProduceTransportMsg([]byte(line))
+		if !success {
+			reportAndExit(errors.New("Producing transport msg failed"))
 		}
-		err = iolib.Send(requestMsg)
-		if err != nil {
-			reportAndExit(err)
+		if _, err := conn.Write(requestMsg); err != nil {
+			reportAndExit(errors.New("Failed to write request msg to connection"))
 		}
 
-		responseMsg, err := iolib.Recv()
+		responseMsg := make([]byte, MAX_DATA_SIZE)
+		bytesRead, err := conn.Read(responseMsg)
 		if err != nil {
-			reportAndExit(err)
+			reportAndExit(errors.New("Failed to read response msg from connection"))
 		}
-		responsePayload, err := initiator.ProcessTransportMsg(responseMsg)
-		if err != nil {
-			reportAndExit(err)
+		responseMsg = responseMsg[:bytesRead]
+		responsePayload, success := initor.ProcessTransportMsg(responseMsg)
+		if !success {
+			reportAndExit(errors.New("Processing transport msg failed"))
 		}
 		fmt.Printf("Received: %s\n", string(responsePayload))
 		fmt.Println("Enter a payload to be sent:")
 	}
 
-	iolib.Close()
-	if err == nil {
-		os.Exit(0)
-	} else {
-		reportAndExit(err)
+	if err := conn.Close(); err != nil {
+		reportAndExit(errors.New("failed to close connection"))
 	}
 }
 
@@ -125,20 +123,31 @@ func reportAndExit(err error) {
 	os.Exit(1)
 }
 
-func parseKeys(config Config) (privateKey [64]byte, peerPublicKey [32]byte, err error) {
+func parsePrivateKey(config Config) [64]byte {
+	var privateKey [64]byte
 	encoding := base64.StdEncoding
 	privateKeySlice, err := encoding.DecodeString(config.PrivateKey)
 	if err != nil {
-		return privateKey, peerPublicKey, err
-	}
-
-	peerPublicKeySlice, err := encoding.DecodeString(config.PeerPublicKey)
-	if err != nil {
-		return privateKey, peerPublicKey, err
+		reportAndExit(errors.New("failed to decode private key"))
 	}
 
 	copy(privateKey[:], privateKeySlice)
-	copy(peerPublicKey[:], peerPublicKeySlice)
 
-	return privateKey, peerPublicKey, nil
+	return privateKey
+}
+
+func parsePublicKey(config Config) (publicKey [32]byte) {
+	encoding := base64.StdEncoding
+	publicKeySlice, err := encoding.DecodeString(config.PeerPublicKey)
+	if err != nil {
+		reportAndExit(errors.New("failed to decode public key"))
+	}
+
+	copy(publicKey[:], publicKeySlice)
+
+	return publicKey
+}
+
+func sanitizeStr(s string) string {
+	return s
 }

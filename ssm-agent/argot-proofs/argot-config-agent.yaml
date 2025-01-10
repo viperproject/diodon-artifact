@@ -1,0 +1,413 @@
+options:
+  project-root: ../implementation # root is the SSM agent implementation directory
+  reports-dir: ../argot-proofs/argot-reports
+  log-level: 3 # log at info level (3), debug level is 4 and trace is 5
+  coverage-filter: (github.com/aws/amazon-ssm-agent)
+  use-escape-analysis: false # NOTE We disable the escape analysis here due to scalability issues
+  escape-config: ../argot-proofs/escape-config.json
+  report-paths: true
+  silence-warn: true
+  analysis-options:
+    max-alarms: 2
+
+targets:
+  - name: ssm-session-worker
+    files:
+      - agent/framework/processor/executer/outofproc/sessionworker/main.go
+
+pointer-config:
+  # The following function's effect on aliasing is ignored; it creates too many false positives.
+  # Otherwise they may cause most error values to be aliased.
+  unsafe-no-effect-functions:
+    - fmt.Errorf
+    - .*.Errorf
+
+immutability-problems:
+  # All methods with the core invariant
+  - tag: diodon-agent-core-invariant
+    description: "Diodon: SSM Agent core invariant maintenance proof"
+    targets:
+      - ssm-session-worker
+    values:
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: SendStreamDataMessage$
+        context: 0 # argument value to track
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: SendAgentSessionStateMessage$
+        context: 0
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: SkipHandshake$
+        context: 0
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: PerformHandshake$
+        context: 0
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: GetClientVersion$
+        context: 0
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: GetInstanceId$
+        context: 0
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: GetRegion$
+        context: 0
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: IsActive$
+        context: 0
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: GetSeparateOutputPayload$
+        context: 0
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: SetSeparateOutputPayload$
+        context: 0
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: PrepareToCloseChannel$
+        context: 0
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: Close$
+        context: 0
+    filters:
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: .*
+
+diodon-pass-through-problems:
+  - tag: diodon-agent-core-invariant-passthrough
+    description: "Diodon: SSM Agent core invariant maintenance pass-through proof"
+    severity: LOW # NOTE This analysis is supposed to fail due to false-positives, hence the low severity
+    targets:
+      - ssm-session-worker
+    app-functions:
+      - package: github.com/aws/amazon-ssm-agent.*
+        method: .*
+    core-functions:
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: .*
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel/cryptolib$
+        method: .*
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel/iosanitization$
+        method: .*
+    core-alloc-function:
+      package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+      method: NewDataChannel$
+      return-indices: [0]
+    core-api-functions:
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: NewDataChannel$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: SendStreamDataMessage$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: SendAgentSessionStateMessage$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: SkipHandshake$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: PerformHandshake$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: GetClientVersion$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: GetInstanceId$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: GetRegion$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: IsActive$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: GetSeparateOutputPayload$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: SetSeparateOutputPayload$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: PrepareToCloseChannel$
+      - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+        method: Close$
+
+dataflow-problems:
+  summarize-on-demand: true
+  user-specs:
+    - ../argot-proofs/agent-specs.json
+    - ../argot-proofs/sdk-specs.json
+    - ../argot-proofs/std-specs.json
+  field-sensitive-funcs:
+    - .*/messageservice/interactor.*
+    - .*/session/crypto.*
+    - .*/session/datachannel.*
+    - .*/session/datastream.*
+    - .*/session/plugins/port.*
+    - .*/session/plugins/sessionplugin.*
+    - .*/session/plugins/standardstream.*
+    - .*/session/retry.*
+    - .*/session/shell.*
+    - .*aws-sdk-go/service/kms.*
+
+  taint-tracking:
+    - tag: diodon-agent-io-independence
+      description: "Diodon: SSM Agent I/O independence proof"
+      targets:
+        - ssm-session-worker
+      severity: HIGH
+      filters:
+        - type: error$ # TODO is this ok?
+      fail-on-implicit-flow: true # handle information flow
+      sources:
+        - package: crypto/elliptic$
+          method: GenerateKey$
+      # NOTE We don't have any explicit sanitizers here because the functions in
+      # the iosanitization package which perform I/O output operations are
+      # pre-summarized as having no data flow in the file agent-specs.json
+      sinks:
+        - package: .*/iosanitization
+          method: PerformVirtualInputOperation
+        - package: .*/iosanitization
+          method: PerformVirtualInputOperationAgentMessage
+        - package: github.com/gorilla/websocket
+          method: WriteMessage
+        - interface: T$
+          package: .*log$
+        - method: Info.*$
+          package: .*log$
+        - method: Debug.*$
+          package: .*log$
+        - method: Trace.*$
+          package: .*log$
+        - method: Warn.*$
+          package: .*log$
+        - method: Warn.*$
+          package: .*log$
+        - method: Error.*$
+          package: .*log$
+        - method: Critical.*$
+          package: .*log$
+        - method: SetFlags$
+          package: log$
+        - method: SetOutput$
+          package: log$
+        - method: Dial$
+          package: net$
+        - method: DialIP$
+          package: net$
+        - method: DialTCP$
+          package: net$
+        - method: DialTimeout$
+          package: net$
+        - method: DialUDP$
+          package: net$
+        - method: DialUnix$
+          package: net$
+        - method: FileConn$
+          package: net$
+        - method: FileListener$
+          package: net$
+        - method: FilePacketConn$
+          package: net$
+        - method: Listen$
+          package: net$
+        - method: ListenIP$
+          package: net$
+        - method: ListenMulticastUDP$
+          package: net$
+        - method: ListenPacket$
+          package: net$
+        - method: ListenTCP$
+          package: net$
+        - method: ListenUDP$
+          package: net$
+        - method: ListenUnix$
+          package: net$
+        - method: ListenUnixgram$
+          package: net$
+        - method: LookupAddr$
+          package: net$
+        - method: LookupCNAME$
+          package: net$
+        - method: LookupHost$
+          package: net$
+        - method: LookupIP$
+          package: net$
+        - method: LookupMX$
+          package: net$
+        - method: LookupNS$
+          package: net$
+        - method: LookupPort$
+          package: net$
+        - method: LookupSRV$
+          package: net$
+        - method: LookupTXT$
+          package: net$
+        - method: ResolveIPAddr$
+          package: net$
+        - method: ResolveTCPAddr$
+          package: net$
+        - method: ResolveUDPAddr$
+          package: net$
+        - method: ResolveUnixAddr$
+          package: net$
+        - method: Chdir$
+          package: os$
+        - method: Chmod$
+          package: os$
+        - method: Chown$
+          package: os$
+        - method: Chtimes$
+          package: os$
+        - method: Clearenv$
+          package: os$
+        - method: Create$
+          package: os$
+        - method: CreateTemp$
+          package: os$
+        - method: DirFS$
+          package: os$
+        - method: Lchown$
+          package: os$
+        - method: Link$
+          package: os$
+        - method: Lstat$
+          package: os$
+        - method: Mkdir$
+          package: os$
+        - method: MkdirAll$
+          package: os$
+        - method: MkdirTemp$
+          package: os$
+        - method: NewFile$
+          package: os$
+        - method: Open$
+          package: os$
+        - method: OpenFile$
+          package: os$
+        - method: Pipe$
+          package: os$
+        - method: ReadDir$
+          package: os$
+        - method: ReadFile$
+          package: os$
+        - method: Readlink$
+          package: os$
+        - method: Remove$
+          package: os$
+        - method: RemoveAll$
+          package: os$
+        - method: Rename$
+          package: os$
+        - method: SameFile$
+          package: os$
+        - method: Setenv$
+          package: os$
+        - method: Stat$
+          package: os$
+        - method: Symlink$
+          package: os$
+        - method: Truncate$
+          package: os$
+        - method: Unsetenv$
+          package: os$
+        - method: WriteFile$
+          package: os$
+        - method: Chdir$
+          package: os$
+        - method: Chmod$
+          package: os$
+        - method: Chown$
+          package: os$
+        - method: Close$
+          package: os$
+        - method: Fd$
+          package: os$
+        - method: Name$
+          package: os$
+        - method: Read$
+          package: os$
+        - method: ReadAt$
+          package: os$
+        - method: ReadDir$
+          package: os$
+        - method: ReadFrom$
+          package: os$
+        - method: Readdir$
+          package: os$
+        - method: Readdirnames$
+          package: os$
+        - method: Seek$
+          package: os$
+        - method: SetDeadline$
+          package: os$
+        - method: SetReadDeadline$
+          package: os$
+        - method: SetWriteDeadline$
+          package: os$
+        - method: Stat$
+          package: os$
+        - method: Sync$
+          package: os$
+        - method: SyscallConn$
+          package: os$
+        - method: Truncate$
+          package: os$
+        - method: Write$
+          package: os$
+        - method: WriteAt$
+          package: os$
+        - method: WriteString$
+          package: os$
+        - method: IsDir$
+          package: os$
+        - method: ModTime$
+          package: os$
+        - method: Mode$
+          package: os$
+        - method: Name$
+          package: os$
+        - method: Size$
+          package: os$
+        - method: Sys$
+          package: os$
+        - method: Name$
+          package: os$
+        - method: LookPath$
+          package: os/exec$
+        - method: Open$
+          package: plugin$
+        - method: WriteHeapDump$
+          package: runtime/debug$
+        - method: .*
+          package: os$
+        - method: .*
+          package: os/exec$
+        - method: .*
+          package: net$
+        - method: .*
+          package: net/http$
+        - method: .*
+          package: unsafe$
+        - method: Breakpoint$
+          package: runtime$
+        - method: CPUProfile$
+          package: runtime$
+        - method: Goexit$
+          package: runtime$
+        - method: SetCgoTraceback$
+          package: runtime$
+        - method: UnlockOSThread$
+          package: runtime$
+        - method: SetGCPercent$
+          package: runtime/debug$
+        - method: SetMaxStack$
+          package: runtime/debug$
+        - method: SetMaxThreads$
+          package: runtime/debug$
+        - method: SetPanicOnFault$
+          package: runtime/debug$
+        - method: Read$
+          package: runtime/metrics$
+        - method: SetFinalizer$
+          package: runtime$
+        - method: .*
+          package: reflect$
+        - method: .*
+          package: runtime$
+        - method: .*
+          package: runtime/cgo$
+        - method: .*
+          package: runtime/debug$
+        - method: .*
+          package: runtime/pprof$
+        - method: .*
+          package: os/signal$
+        - method: Print.*
+          package: fmt$

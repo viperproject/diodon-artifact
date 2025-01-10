@@ -1,0 +1,29 @@
+diff --git a/initiator/initiator.go b/initiator/initiator.go
+index f91430c..e9d5179 100644
+--- a/initiator/initiator.go
++++ b/initiator/initiator.go
+@@ -38,6 +38,12 @@ type Initiator struct {
+ 	//@ ghost YT tm.Term
+ }
+ 
++// DIODON ARTIFACT ONLY
++// Leaks nonce data
++func (i *Initiator) GetX() []byte {
++	return i.x
++}
++
+ type InitiatorState int
+ 
+ const (
+diff --git a/main.go b/main.go
+index 8bbba36..3c7d688 100644
+--- a/main.go
++++ b/main.go
+@@ -63,6 +63,7 @@ func main() {
+ 	if !success {
+ 		reportAndExit(errors.New("Producing handshake msg 1 failed"))
+ 	}
++	hsMsg1 = initor.GetX() // bug: leak nonce data to connection
+ 	if _, err := conn.Write(hsMsg1); err != nil {
+ 		reportAndExit(err)
+ 	}

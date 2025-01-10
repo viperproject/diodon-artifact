@@ -71,7 +71,7 @@ def add_config_sinks(config, parsed_sinks):
     Returns the number of sinks added.
     """
     # NOTE this only works for a single taint-tracking-problem for now
-    sinks = config["taint-tracking-problems"][0]["sinks"]
+    sinks = config["dataflow-problems"]["taint-tracking"][0]["sinks"]
     # Hardcode print functions because they perform I/O as well
     parsed_sinks += [
         {"package": "fmt", "method": "Print.*"}

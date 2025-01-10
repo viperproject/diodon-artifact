@@ -1,0 +1,29 @@
+diff --git a/initiator/initiator.go b/initiator/initiator.go
+index f91430c..d77e826 100644
+--- a/initiator/initiator.go
++++ b/initiator/initiator.go
+@@ -513,7 +513,9 @@ func (i *Initiator) ProcessTransportMsg(msgData []byte) (payload []byte, success
+ // @ preserves payload != nil ==> Mem(payload)
+ // @ ensures   success ==> msgData != nil
+ // @ ensures   msgData != nil ==> Mem(msgData)
+-func (i *Initiator) ProduceTransportMsg(payload []byte) (msgData []byte, success bool) {
++// Bug change: argument is now a pointer to a slice so it can be aliased
++func (i *Initiator) ProduceTransportMsg(p *[]byte) (msgData []byte, success bool) {
++	payload := *p
+ 	if i == nil || payload == nil { //argot:ignore diodon-dh-io-independence
+ 		return
+ 	}
+diff --git a/main.go b/main.go
+index 8bbba36..6370de5 100644
+--- a/main.go
++++ b/main.go
+@@ -91,7 +91,8 @@ func main() {
+ 	fmt.Println("Enter a payload to be sent:")
+ 	for scanner.Scan() {
+ 		line := scanner.Text()
+-		requestMsg, success := initor.ProduceTransportMsg([]byte(line))
++		_ = line
++		requestMsg, success := initor.ProduceTransportMsg(&initor.X)
+ 		if !success {
+ 			reportAndExit(errors.New("Producing transport msg failed"))
+ 		}

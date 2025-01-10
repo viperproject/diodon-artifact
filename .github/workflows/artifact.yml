@@ -37,7 +37,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          submodules: 'recursive'
+          submodules: "recursive"
           token: ${{ steps.app_token.outputs.token }}
 
       - name: Image version
@@ -73,7 +73,6 @@ jobs:
         id: output_step
         run: echo "IMAGE_TAG=${{ env.IMAGE_TAG }}" >> $GITHUB_OUTPUT
 
-
   Test-DH:
     name: ${{ matrix.name }}
     runs-on: ubuntu-latest
@@ -82,22 +81,29 @@ jobs:
       # tests should not be stopped when they fail on one of the OSes:
       fail-fast: false
       matrix:
-        # name: ["Verify DH protocol model", "Verify DH core", "Verify DH I/O independence", "Verify DH core assumptions"]
-        name: ["Verify DH protocol model", "Verify DH core"]
+        name:
+          [
+            "Verify DH protocol model",
+            "Verify DH core",
+            "Verify DH I/O independence",
+            "Verify DH I/O independence bugs",
+            "Verify DH core assumptions",
+            "Verify DH core assumptions bugs",
+          ]
         include:
           - name: "Verify DH protocol model"
             command: "/gobra/dh/verify-model.sh"
-            timeout-minutes: 3
           - name: "Verify DH core"
             command: "/gobra/dh/verify-core.sh"
-            timeout-minutes: 5
-          # - name: "Verify DH I/O independence"
-          #   command: "/gobra/dh/verify-io-independence.sh"
-          #   timeout-minutes: 3
-          # - name: "Verify DH core assumptions"
-          #   command: "/gobra/dh/verify-core-assumptions.sh"
-          #   timeout-minutes: 3
-    timeout-minutes: ${{ matrix.timeout-minutes }}
+          - name: "Verify DH I/O independence"
+            command: "/gobra/dh/verify-io-independence.sh"
+          - name: "Verify DH I/O independence bugs"
+            command: "/gobra/dh/verify-io-independence-bug.sh"
+          - name: "Verify DH core assumptions"
+            command: "/gobra/dh/verify-core-assumptions.sh"
+          - name: "Verify DH core assumptions bugs"
+            command: "/gobra/dh/verify-core-assumptions-bug.sh"
+    timeout-minutes: 10
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
@@ -109,8 +115,7 @@ jobs:
         run: docker load --input /tmp/image.tar
 
       - name: ${{ matrix.name }}
-        run: docker run --entrypoint "/bin/bash" ${{ needs.Build.outputs.IMAGE_TAG }} -c "cp -r dh-orig/. dh/; cp -r ssm-agent-orig/. ssm-agent/; ${{ matrix.command }}"
-
+        run: docker run --entrypoint "/bin/bash" ${{ needs.Build.outputs.IMAGE_TAG }} -c "cp -r /dh-orig/. dh/; cp -r /ssm-agent-orig/. ssm-agent/; ${{ matrix.command }}"
 
   Test-SSM-Agent:
     name: ${{ matrix.name }}
@@ -120,23 +125,29 @@ jobs:
       # tests should not be stopped when they fail on one of the OSes:
       fail-fast: false
       matrix:
-        # name: ["Verify SSM Agent protocol model", "Verify SSM Agent core", "Verify SSM Agent I/O independence", "Verify SSM Agent core assumptions"]
-        name: ["Verify SSM Agent protocol model"]
+        name:
+          [
+            "Verify SSM Agent protocol model",
+            "Verify SSM Agent core",
+            "Verify SSM Agent I/O independence",
+            "Verify SSM Agent I/O independence bugs",
+            "Verify SSM Agent core assumptions",
+            "Verify SSM Agent core assumptions bugs",
+          ]
         include:
           - name: "Verify SSM Agent protocol model"
             command: "/gobra/ssm-agent/verify-model.sh"
-            timeout-minutes: 15
           - name: "Verify SSM Agent core"
             command: "/gobra/ssm-agent/verify-core.sh"
-            timeout-minutes: 15
-          # TODO renable once these tasks are fixed
-          # - name: "Verify SSM Agent I/O independence"
-          #   command: "/gobra/ssm-agent/verify-io-independence.sh"
-          #   timeout-minutes: 10
-          # - name: "Verify SSM Agent core assumptions"
-          #   command: "/gobra/ssm-agent/verify-core-assumptions.sh"
-          #   timeout-minutes: 10
-    timeout-minutes: ${{ matrix.timeout-minutes }}
+          - name: "Verify SSM Agent I/O independence"
+            command: "/gobra/ssm-agent/verify-io-independence.sh"
+          - name: "Verify SSM Agent I/O independence bugs"
+            command: "/gobra/ssm-agent/verify-io-independence-bug.sh"
+          - name: "Verify SSM Agent core assumptions"
+            command: "/gobra/ssm-agent/verify-core-assumptions.sh"
+          - name: "Verify SSM Agent core assumptions bugs"
+            command: "/gobra/ssm-agent/verify-core-assumptions-bug.sh"
+    timeout-minutes: 20
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
@@ -148,8 +159,7 @@ jobs:
         run: docker load --input /tmp/image.tar
 
       - name: ${{ matrix.name }}
-        run: docker run --entrypoint "/bin/bash" ${{ needs.Build.outputs.IMAGE_TAG }} -c "cp -r dh-orig/. dh/; cp -r ssm-agent-orig/. ssm-agent/; ${{ matrix.command }}"
-
+        run: docker run --entrypoint "/bin/bash" ${{ needs.Build.outputs.IMAGE_TAG }} -c "cp -r /dh-orig/. dh/; cp -r /ssm-agent-orig/. ssm-agent/; ${{ matrix.command }}"
 
   Publish:
     runs-on: ubuntu-latest
@@ -177,7 +187,6 @@ jobs:
 
       # - name: Push image
       #   run: docker push ${{ needs.Build.outputs.IMAGE_TAG }}
-
 
   Cleanup:
     runs-on: ubuntu-latest

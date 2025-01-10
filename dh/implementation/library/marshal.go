@@ -43,7 +43,7 @@ pred (m *Msg3) Mem() {
 
 //@ trusted
 //@ preserves acc(msg1.Mem(), 1/16)
-//@ ensures err == nil ==> Mem(res)
+//@ ensures err == nil ==> Mem(res) && res != nil
 //@ ensures err == nil ==> Abs(res) == (unfolding acc(msg1.Mem(), 1/16) in Abs(msg1.X))
 func (l *LibState) MarshalMsg1(msg1 *Msg1) (res []byte, err error) {
 	res = make([]byte, len(msg1.X))
@@ -92,7 +92,7 @@ func (l *LibState) MarshalMsg3(msg3 *Msg3) (res []byte, err error) {
 
 //@ trusted
 //@ preserves acc(Mem(ciphertext), 1/16)
-//@ ensures err == nil ==> Mem(res)
+//@ ensures err == nil ==> Mem(res) && res != nil
 //@ ensures err == nil ==> Abs(res) == by.tuple2B(by.integer32B(TransMsgTag), Abs(ciphertext))
 func (l *LibState) MarshalTransportMsg(ciphertext []byte) (res []byte, err error) {
 	res = make([]byte, 4)

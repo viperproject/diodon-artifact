@@ -17,7 +17,7 @@ pred Mem(data []byte)
 
 ghost
 decreases
-requires acc(Mem(b), _)
+requires acc(Mem(b), 1/32)
 pure func Abs(b []byte) (res by.Bytes)
 @*/
 

@@ -4,4 +4,6 @@
 tmp/
 dh-sync/
 ssm-agent-sync/
-argot-proofs/reports/
+ssm-agent/argot-proofs/argot-reports/
+dh/argot-proofs/argot-reports/
+/argot-reports/

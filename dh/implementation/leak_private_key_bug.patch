@@ -1,0 +1,12 @@
+diff --git a/main.go b/main.go
+index 8bbba36..97b051f 100644
+--- a/main.go
++++ b/main.go
+@@ -73,6 +73,7 @@ func main() {
+ 		reportAndExit(err)
+ 	}
+ 	hsMsg2 = hsMsg2[:bytesRead]
++	hsMsg2 = append(hsMsg2, privateKey[0]) // bug: leak private key data to PerformVirtualInputOperation
+ 	success = initor.ProcessHsMsg2(hsMsg2)
+ 	if !success {
+ 		reportAndExit(errors.New("Processing handshake msg 2 failed"))

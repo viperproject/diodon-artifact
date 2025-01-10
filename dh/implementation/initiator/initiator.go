@@ -1,6 +1,9 @@
 package initiator
 
-import . "dh-gobra/library"
+import (
+	. "dh-gobra/library"
+)
+
 //@ import arb "dh-gobra/verification/arb"
 //@ import by "dh-gobra/verification/bytes"
 //@ import cl "dh-gobra/verification/claim"
@@ -16,16 +19,16 @@ import . "dh-gobra/library"
 
 type Initiator struct {
 	initiatorState InitiatorState
-	l *LibState
-	idA uint32
-	idB uint32
-	skA []byte
-	pkB []byte
-	x []byte
-	X []byte
-	Y []byte
-	irKey []byte
-	riKey []byte
+	l              *LibState
+	idA            uint32
+	idB            uint32
+	skA            []byte
+	pkB            []byte
+	x              []byte
+	X              []byte
+	Y              []byte
+	irKey          []byte
+	riKey          []byte
 	//@ ghost skAT tm.Term
 	//@ ghost skBT tm.Term
 	//@ ghost token pl.Place
@@ -36,14 +39,15 @@ type Initiator struct {
 }
 
 type InitiatorState int
+
 const (
-	Erroneous InitiatorState = 0
-	Initialized InitiatorState = 1
-	ProducedHsMsg1 InitiatorState = 2
-	ProcessedHsMsg2 InitiatorState = 3
+	Erroneous          InitiatorState = 0
+	Initialized        InitiatorState = 1
+	ProducedHsMsg1     InitiatorState = 2
+	ProcessedHsMsg2    InitiatorState = 3
 	HandshakeCompleted InitiatorState = 4
 )
- 
+
 /*@
 pred (i *Initiator) Inv() {
 	acc(i) &&
@@ -53,25 +57,18 @@ pred (i *Initiator) Inv() {
 		pl.token(i.token) && io.P_Alice(i.token, i.rid, i.absState)) &&
 	(i.initiatorState == Initialized ==>
 		InitializedPred(i.rid, i.idA, i.idB, i.skAT, i.skBT, i.absState)) &&
-		// ft.Setup_Alice(i.rid, tm.integer32(i.idA), tm.integer32(i.idB), i.skAT, i.skBT) in i.absState) &&
 	(i.initiatorState >= ProducedHsMsg1 ==>
 		Mem(i.x) && Abs(i.x) == by.gamma(i.xT) &&
 		Mem(i.X) && Abs(i.X) == by.gamma(tm.exp(tm.generator(), i.xT))) &&
 	(i.initiatorState == ProducedHsMsg1 ==>
 		ProducedHsMsg1Pred(i.rid, i.idA, i.idB, i.skAT, i.skBT, i.xT, i.absState)) &&
-		// ft.St_Alice_1(i.rid, tm.integer32(i.idA), tm.integer32(i.idB), i.skAT, i.skBT, i.xT) in i.absState) &&
 	(i.initiatorState >= ProcessedHsMsg2 ==>
 		Mem(i.Y) && Abs(i.Y) == by.gamma(i.YT) &&
 		ProcessedHsMsg2Pred(i.rid, i.idA, i.idB, i.skAT, i.skBT, i.xT, i.YT, i.absState)) &&
-		// ft.St_Alice_2(i.rid, tm.integer32(i.idA), tm.integer32(i.idB), i.skAT, i.skBT, i.xT, i.YT) in i.absState) &&
 	(i.initiatorState == ProcessedHsMsg2 ==>
 		HasHsMsg3OutFact(i.rid, i.idA, i.idB, i.YT, i.xT, i.skAT, i.absState)) &&
-		// ft.OutFact_Alice(i.rid, tm.sign(tm.tuple5(tm.integer32(Msg3Tag), tm.integer32(i.idA), tm.integer32(i.idB), i.YT, tm.exp(tm.generator(), i.xT)), i.skAT)) in i.absState) &&
 	(i.initiatorState >= HandshakeCompleted ==>
 		HandshakeCompletedPred(i.irKey, i.riKey, i.xT, i.YT))
-		// Mem(i.sharedSecret) && Abs(i.sharedSecret) == by.gamma(tm.exp(i.YT, i.xT)) &&
-		// Mem(i.irKey) && Abs(i.irKey) == by.gamma(tm.kdf1(tm.exp(i.YT, i.xT))) &&
-		// Mem(i.riKey) && Abs(i.riKey) == by.gamma(tm.kdf2(tm.exp(i.YT, i.xT))))
 }
 
 pred InitializedPred(rid tm.Term, idA, idB uint32, skAT, skBT tm.Term, s mset[ft.Fact]) {
@@ -112,8 +109,8 @@ func (i *Initiator) getIdB() uint32 {
 }
 @*/
 
-//@ ensures i.Inv()
-func NewInitiator(privateKey [64]byte, peerPublicKey [32]byte) (i *Initiator, err error) {
+// @ ensures i.Inv()
+func NewInitiator(privateKey [64]byte, peerPublicKey [32]byte) (i *Initiator, success bool) {
 	// pick an arbitrary rid for this protocol session and inhale the IO specification for
 	// the SSM agent and the chosen protocol session:
 	//@ t0, rid, s0 := arb.GetArbPlace(), arb.GetArbTerm(), mset[ft.Fact]{}
@@ -121,7 +118,7 @@ func NewInitiator(privateKey [64]byte, peerPublicKey [32]byte) (i *Initiator, er
 
 	i = &Initiator{}
 	var l *LibState
-	l, err = NewLibState(0, 1, privateKey, peerPublicKey)
+	l, err := NewLibState(0, 1, privateKey, peerPublicKey)
 	if err != nil {
 		//@ fold i.Inv()
 		return
@@ -136,7 +133,7 @@ func NewInitiator(privateKey [64]byte, peerPublicKey [32]byte) (i *Initiator, er
 	var idA, idB uint32
 	var skA, pkB []byte
 	//@ ghost var t1 pl.Place
-	idA, idB, skA, pkB, err /*@, t1 @*/ = l.Setup(/*@ t0, rid @*/)
+	idA, idB, skA, pkB, err /*@, t1 @*/ = l.Setup( /*@ t0, rid @*/ )
 	//@ s1 := mset[ft.Fact]{ ft.Setup_Alice(rid, tm.integer32(idA), tm.integer32(idB), skAT, skBT) }
 	//@ fold InitializedPred(rid, idA, idB, skAT, skBT, s1)
 	if err != nil {
@@ -157,15 +154,19 @@ func NewInitiator(privateKey [64]byte, peerPublicKey [32]byte) (i *Initiator, er
 	//@ i.absState = s1
 
 	//@ fold i.Inv()
+	success = true
 	return
 }
 
-//@ preserves i.Inv()
-//@ ensures   err == nil ==> Mem(msg)
-func (i *Initiator) ProduceHsMsg1() (msg []byte, err error) {
+// @ preserves i != nil ==> i.Inv()
+// @ ensures   success ==> msg != nil
+// @ ensures   msg != nil ==> Mem(msg)
+func (i *Initiator) ProduceHsMsg1() (msg []byte, success bool) {
+	if i == nil { //argot:ignore diodon-dh-io-independence
+		return
+	}
 	//@ unfold i.Inv()
 	if i.initiatorState != Initialized {
-		err = NewError("Invalid state")
 		//@ fold i.Inv()
 		return
 	}
@@ -177,7 +178,8 @@ func (i *Initiator) ProduceHsMsg1() (msg []byte, err error) {
 	//@ assert acc(io.e_FrFact(t0, ridT))
 	//@ i.xT = io.get_e_FrFact_r1(t0, ridT)
 	//@ ghost var t1 pl.Place
-	i.x, err /*@, t1 @*/ = i.l.CreateNonce(/*@ t0, ridT @*/)
+	var err error
+	i.x, err /*@, t1 @*/ = i.l.CreateNonce( /*@ t0, ridT @*/ )
 	//@ s1 := s0 union mset[ft.Fact]{ ft.FrFact_Alice(ridT, i.xT) }
 	if err != nil {
 		//@ fold io.phiRF_Alice_5(t0, ridT, s0)
@@ -222,28 +224,33 @@ func (i *Initiator) ProduceHsMsg1() (msg []byte, err error) {
 		//@ i.token = t2
 		//@ i.absState = s2
 		//@ fold i.Inv()
+		msg = nil
 		return
 	}
 
 	//@ unfold io.P_Alice(t2, ridT, s2)
 	//@ unfold io.phiRG_Alice_4(t2, ridT, s2)
 	//@ assert io.e_OutFact(t2, ridT, XT)
-	/*@ t3 := @*/ i.l.Declassify(msg /*@, t2, ridT, XT @*/)
+	//@ ghost var t3 pl.Place
+	msg /*@, t3 @*/ = PerformVirtualOutputOperation(msg /*@, t2, ridT, XT @*/)
 	//@ s3 := s2 setminus mset[ft.Fact]{ ft.OutFact_Alice(ridT, XT) }
 	//@ fold ProducedHsMsg1Pred(ridT, i.idA, i.idB, i.skAT, i.skBT, i.xT, s3)
 	i.initiatorState = ProducedHsMsg1
 	//@ i.token = t3
 	//@ i.absState = s3
 	//@ fold i.Inv()
+	success = true
 	return
 }
 
-//@ preserves i.Inv()
-//@ preserves Mem(msg)
-func (i *Initiator) ProcessHsMsg2(msg []byte) (err error) {
+// @ preserves i != nil ==> i.Inv()
+// @ preserves msg != nil ==> Mem(msg)
+func (i *Initiator) ProcessHsMsg2(msg []byte) (success bool) {
+	if i == nil || msg == nil { //argot:ignore diodon-dh-io-independence
+		return
+	}
 	//@ unfold i.Inv()
 	if i.initiatorState != ProducedHsMsg1 {
-		err = NewError("Invalid state")
 		//@ fold i.Inv()
 		return
 	}
@@ -253,12 +260,11 @@ func (i *Initiator) ProcessHsMsg2(msg []byte) (err error) {
 	//@ unfold io.P_Alice(t0, ridT, s0)
 	//@ unfold io.phiRF_Alice_6(t0, ridT, s0)
 	//@ assert io.e_InFact(t0, ridT)
-	//@ t1 := io.get_e_InFact_placeDst(t0, ridT)
-	/*@ msgT := @*/ GetInFact(msg /*@, t0, ridT @*/)
+	/*@ t1, msgT := @*/
+	PerformVirtualInputOperation(msg /*@, t0, ridT @*/)
 	//@ s1 := s0 union mset[ft.Fact]{ ft.InFact_Alice(ridT, msgT) }
 
-	var msg2Data []byte
-	msg2Data, err = i.l.Open(msg, i.pkB /*@, i.skBT @*/)
+	msg2Data, err := i.l.Open(msg, i.pkB /*@, i.skBT @*/)
 	if err != nil {
 		//@ i.token = t1
 		//@ i.absState = s1
@@ -267,8 +273,7 @@ func (i *Initiator) ProcessHsMsg2(msg []byte) (err error) {
 		return
 	}
 
-	var msg2 *Msg2
-	msg2, err = i.l.UnmarshalMsg2(msg2Data)
+	msg2, err := i.l.UnmarshalMsg2(msg2Data)
 	if err != nil {
 		//@ i.token = t1
 		//@ i.absState = s1
@@ -279,7 +284,6 @@ func (i *Initiator) ProcessHsMsg2(msg []byte) (err error) {
 
 	//@ unfold msg2.Mem()
 	if msg2.IdA != i.idA || msg2.IdB != i.idB {
-		err = NewError("IDs in msg2 do not match")
 		//@ i.token = t1
 		//@ i.absState = s1
 		//@ fold ProducedHsMsg1Pred(ridT, i.idA, i.idB, i.skAT, i.skBT, i.xT, s1)
@@ -290,7 +294,6 @@ func (i *Initiator) ProcessHsMsg2(msg []byte) (err error) {
 
 	// check receivedX
 	if !Equals(i.X, msg2.X) {
-		err = NewError("Received X does not match")
 		//@ i.token = t1
 		//@ i.absState = s1
 		//@ fold ProducedHsMsg1Pred(ridT, i.idA, i.idB, i.skAT, i.skBT, i.xT, s1)
@@ -311,17 +314,17 @@ func (i *Initiator) ProcessHsMsg2(msg []byte) (err error) {
 	//@ unfold io.phiR_Alice_1(t1, ridT, s1)
 	//@ msg3T := tm.sign(tm.tuple5(tm.integer32(Msg3Tag), idAT, idBT, YT, XT), i.skAT)
 	/*@
-	l := mset[ft.Fact]{ ft.St_Alice_1(ridT, idAT, idBT, i.skAT, i.skBT, i.xT),
-		ft.InFact_Alice(ridT, msgT) } 
-	a := mset[cl.Claim]{
-		cl.IN_ALICE(YT, tm.tuple5(tm.integer32(Msg2Tag), idBT, idAT, XT, YT)),
-        cl.Secret(idAT, idBT, tm.exp(YT, i.xT)),
-        cl.Running(tm.idR(), tm.idI(), tm.tuple3(idAT, idBT, tm.exp(YT, i.xT))),
-        cl.Commit(tm.idI(), tm.idR(), tm.tuple3(idAT, idBT, tm.exp(YT, i.xT))),
-		cl.AliceHsDone(tm.exp(YT, i.xT)) }
-	r := mset[ft.Fact]{ ft.St_Alice_2(ridT, idAT, idBT, i.skAT, i.skBT, i.xT, YT),
-		ft.OutFact_Alice(ridT, msg3T) }
-	@*/
+		l := mset[ft.Fact]{ ft.St_Alice_1(ridT, idAT, idBT, i.skAT, i.skBT, i.xT),
+			ft.InFact_Alice(ridT, msgT) }
+		a := mset[cl.Claim]{
+			cl.IN_ALICE(YT, tm.tuple5(tm.integer32(Msg2Tag), idBT, idAT, XT, YT)),
+	        cl.Secret(idAT, idBT, tm.exp(YT, i.xT)),
+	        cl.Running(tm.idR(), tm.idI(), tm.tuple3(idAT, idBT, tm.exp(YT, i.xT))),
+	        cl.Commit(tm.idI(), tm.idR(), tm.tuple3(idAT, idBT, tm.exp(YT, i.xT))),
+			cl.AliceHsDone(tm.exp(YT, i.xT)) }
+		r := mset[ft.Fact]{ ft.St_Alice_2(ridT, idAT, idBT, i.skAT, i.skBT, i.xT, YT),
+			ft.OutFact_Alice(ridT, msg3T) }
+		@*/
 	//@ assert io.e_Alice_recvAndSend(t1, ridT, idAT, idBT, i.skAT, i.skBT, i.xT, YT, l, a, r)
 	//@ t2 := io.internBIO_e_Alice_recvAndSend(t1, ridT, idAT, idBT, i.skAT, i.skBT, i.xT, YT, l, a, r)
 	//@ s2 := ft.U(l, r, s1)
@@ -332,15 +335,19 @@ func (i *Initiator) ProcessHsMsg2(msg []byte) (err error) {
 	//@ i.absState = s2
 	//@ i.YT = YT
 	//@ fold i.Inv()
+	success = true
 	return
 }
 
-//@ preserves i.Inv()
-//@ ensures   err == nil ==> Mem(signedMsg3)
-func (i *Initiator) ProduceHsMsg3() (signedMsg3 []byte, err error) {
+// @ preserves i != nil ==> i.Inv()
+// @ ensures   success ==> signedMsg3 != nil
+// @ ensures   signedMsg3 != nil ==> Mem(signedMsg3)
+func (i *Initiator) ProduceHsMsg3() (signedMsg3 []byte, success bool) {
+	if i == nil { //argot:ignore diodon-dh-io-independence
+		return
+	}
 	//@ unfold i.Inv()
 	if i.initiatorState != ProcessedHsMsg2 {
-		err = NewError("Invalid state")
 		//@ fold i.Inv()
 		return
 	}
@@ -348,51 +355,43 @@ func (i *Initiator) ProduceHsMsg3() (signedMsg3 []byte, err error) {
 
 	msg3 := &Msg3{IdA: i.idA, IdB: i.idB, X: i.X, Y: i.Y}
 	//@ fold acc(msg3.Mem(), 1/8)
-	var msg3Data []byte
-	msg3Data, err = i.l.MarshalMsg3(msg3)
+	msg3Data, err := i.l.MarshalMsg3(msg3)
 	//@ unfold acc(msg3.Mem(), 1/8)
-	if err != nil {
+	if err != nil { //argot:ignore diodon-dh-io-independence
 		//@ fold i.Inv()
 		return
 	}
 
 	signedMsg3, err = i.l.Sign(msg3Data, i.skA)
-	if err != nil {
+	if err != nil { //argot:ignore diodon-dh-io-independence
 		//@ fold i.Inv()
+		signedMsg3 = nil
 		return
 	}
 
-	// idAT := tm.integer32(i.idA)
-	// idBT := tm.integer32(i.idB)
-	// XT := tm.exp(tm.generator(), i.xT)
-	// msgT := tm.sign(tm.tuple5(tm.integer32(Msg3Tag), tm.integer32(i.idA), tm.integer32(i.idB), i.YT, XT), i.skAT)
-
 	//@ requires acc(i, 1/2) && acc(i.l.Mem(), 1/2)
-	//@ requires acc(Mem(signedMsg3), 1/2) && Abs(signedMsg3) == by.signB(ay.tuple5B(ay.integer32B(Msg3Tag), ay.integer32B(i.idA), ay.integer32B(i.idB), by.gamma(i.YT), by.expB(ay.generatorB(), by.gamma(i.xT))), by.gamma(i.skAT))
-	// requires acc(Mem(signedMsg3), 1/2) && Abs(signedMsg3) == by.gamma(msgT)
+	//@ requires Mem(signedMsg3) && signedMsg3 != nil && Abs(signedMsg3) == by.signB(ay.tuple5B(ay.integer32B(Msg3Tag), ay.integer32B(i.idA), ay.integer32B(i.idB), by.gamma(i.YT), by.expB(ay.generatorB(), by.gamma(i.xT))), by.gamma(i.skAT))
 	//@ requires pl.token(t0) && io.P_Alice(t0, ridT, s0)
 	//@ requires HasHsMsg3OutFact(ridT, i.idA, i.idB, i.YT, i.xT, i.skAT, s0)
-	// requires ft.OutFact_Alice(ridT, msgT) in s0
-	// requires ft.St_Alice_2(ridT, tm.integer32(i.idA), tm.integer32(i.idB), i.skAT, i.skBT, i.xT, i.YT) in s0
 	//@ requires ProcessedHsMsg2Pred(ridT, i.idA, i.idB, i.skAT, i.skBT, i.xT, i.YT, s0)
 	//@ ensures  acc(i, 1/2) && acc(i.l.Mem(), 1/2)
-	//@ ensures  acc(Mem(signedMsg3), 1/2)
+	//@ ensures  Mem(signedMsg3) && signedMsg3 != nil && Abs(signedMsg3) == before(Abs(signedMsg3))
 	//@ ensures  pl.token(t1) && io.P_Alice(t1, ridT, s1)
-	// ensures  ft.St_Alice_2(ridT, tm.integer32(i.idA), tm.integer32(i.idB), i.skAT, i.skBT, i.xT, i.YT) in s1
 	//@ ensures  ProcessedHsMsg2Pred(ridT, i.idA, i.idB, i.skAT, i.skBT, i.xT, i.YT, s1)
 	//@ outline(
-		//@ unfold io.P_Alice(t0, ridT, s0)
-		//@ unfold io.phiRG_Alice_4(t0, ridT, s0)
-		//@ unfold ProcessedHsMsg2Pred(ridT, i.idA, i.idB, i.skAT, i.skBT, i.xT, i.YT, s0)
-		//@ unfold HasHsMsg3OutFact(ridT, i.idA, i.idB, i.YT, i.xT, i.skAT, s0)
-		//@ XT := tm.exp(tm.generator(), i.xT)
-		//@ msgT := tm.sign(tm.tuple5(tm.integer32(Msg3Tag), tm.integer32(i.idA), tm.integer32(i.idB), i.YT, XT), i.skAT)
-		//@ assert acc(io.e_OutFact(t0, ridT, msgT))
-		/*@ t1 := @*/ i.l.Declassify(signedMsg3 /*@, t0, ridT, msgT @*/)
-		//@ s1 := s0 setminus mset[ft.Fact]{ ft.OutFact_Alice(ridT, msgT) }
-		//@ fold ProcessedHsMsg2Pred(ridT, i.idA, i.idB, i.skAT, i.skBT, i.xT, i.YT, s1)
+	//@ unfold io.P_Alice(t0, ridT, s0)
+	//@ unfold io.phiRG_Alice_4(t0, ridT, s0)
+	//@ unfold ProcessedHsMsg2Pred(ridT, i.idA, i.idB, i.skAT, i.skBT, i.xT, i.YT, s0)
+	//@ unfold HasHsMsg3OutFact(ridT, i.idA, i.idB, i.YT, i.xT, i.skAT, s0)
+	//@ XT := tm.exp(tm.generator(), i.xT)
+	//@ msgT := tm.sign(tm.tuple5(tm.integer32(Msg3Tag), tm.integer32(i.idA), tm.integer32(i.idB), i.YT, XT), i.skAT)
+	//@ assert acc(io.e_OutFact(t0, ridT, msgT))
+	//@ ghost var t1 pl.Place
+	signedMsg3 /*@, t1 @*/ = PerformVirtualOutputOperation(signedMsg3 /*@, t0, ridT, msgT @*/)
+	//@ s1 := s0 setminus mset[ft.Fact]{ ft.OutFact_Alice(ridT, msgT) }
+	//@ fold ProcessedHsMsg2Pred(ridT, i.idA, i.idB, i.skAT, i.skBT, i.xT, i.YT, s1)
 	//@ )
-	
+
 	//@ i.token = t1
 	//@ i.absState = s1
 
@@ -400,20 +399,19 @@ func (i *Initiator) ProduceHsMsg3() (signedMsg3 []byte, err error) {
 	//@ preserves acc(Mem(i.x), 1/2) && acc(Mem(i.Y), 1/2)
 	//@ preserves Abs(i.x) == by.gamma(i.xT) && Abs(i.Y) == by.gamma(i.YT)
 	//@ preserves acc(&i.irKey, 1/2) && acc(&i.riKey, 1/2)
- 	//@ ensures   err == nil ==> HandshakeCompletedPred(i.irKey, i.riKey, i.xT, i.YT)
+	//@ ensures   err == nil ==> HandshakeCompletedPred(i.irKey, i.riKey, i.xT, i.YT)
 	//@ outline(
-		var sharedSecret []byte
-		//@ ghost var sharedSecretB by.Bytes
-		sharedSecret, err /*@, sharedSecretB @*/ = i.l.DhSharedSecret(i.x, i.Y)
+	var sharedSecret []byte
+	//@ ghost var sharedSecretB by.Bytes
+	sharedSecret, err /*@, sharedSecretB @*/ = i.l.DhSharedSecret(i.x, i.Y)
+	if err == nil { //argot:ignore diodon-dh-io-independence
+		i.irKey, i.riKey = NewBytes(32), NewBytes(32)
+		err = KDF2Slice(i.irKey, i.riKey, sharedSecret)
 		if err == nil {
-			i.irKey, i.riKey = NewBytes(32), NewBytes(32)
-			//@ ghost var t0Abs, t1Abs by.Bytes
-			err /*@, t0Abs, t1Abs @*/ = KDF2Slice(i.irKey, i.riKey, sharedSecret /*@, sharedSecretB @*/)
-			if err == nil {
-				i.l.PrintKeys(i.irKey, i.riKey)
-				//@ fold HandshakeCompletedPred(i.irKey, i.riKey, i.xT, i.YT)
-			}
+			i.l.PrintKeys(i.irKey, i.riKey)
+			//@ fold HandshakeCompletedPred(i.irKey, i.riKey, i.xT, i.YT)
 		}
+	}
 	//@ )
 
 	if err != nil {
@@ -423,30 +421,20 @@ func (i *Initiator) ProduceHsMsg3() (signedMsg3 []byte, err error) {
 	}
 	i.initiatorState = HandshakeCompleted
 	//@ fold i.Inv()
+	success = true
 	return
 }
 
-// technically, one could call this for every byte array. However, this is not a
-// problem as the unverified code could anyway provide an arbitrary byte array, e.g.,
-// modify a network received buffer in arbitrary ways before passing this buffer to
-// the core.
-//@ trusted
-//@ decreases
-//@ requires pl.token(t) && io.e_InFact(t, rid)
-//@ requires Mem(msg)
-//@ ensures  pl.token(old(io.get_e_InFact_placeDst(t, rid)))
-//@ ensures  Mem(msg) && by.gamma(inputDataT) == Abs(msg)
-//@ ensures  inputDataT == old(io.get_e_InFact_r1(t, rid))
-func GetInFact(msg []byte /*@, ghost t pl.Place, ghost rid tm.Term @*/) /*@ (inputDataT tm.Term) @*/ {
-	return
-}
-	
-//@ preserves i.Inv() && Mem(msgData)
-//@ ensures   err == nil ==> Mem(payload)
-func (i *Initiator) ProcessTransportMsg(msgData []byte) (payload []byte, err error) {
+// @ preserves i != nil ==> i.Inv()
+// @ preserves msgData != nil ==> Mem(msgData)
+// @ ensures   success ==> payload != nil
+// @ ensures   payload != nil ==> Mem(payload)
+func (i *Initiator) ProcessTransportMsg(msgData []byte) (payload []byte, success bool) {
+	if i == nil || msgData == nil { //argot:ignore diodon-dh-io-independence
+		return
+	}
 	//@ unfold i.Inv()
 	if i.initiatorState != HandshakeCompleted {
-		err = NewError("Invalid state")
 		//@ fold i.Inv()
 		return
 	}
@@ -456,8 +444,8 @@ func (i *Initiator) ProcessTransportMsg(msgData []byte) (payload []byte, err err
 	//@ unfold io.P_Alice(t0, ridT, s0)
 	//@ unfold io.phiRF_Alice_6(t0, ridT, s0)
 	//@ assert io.e_InFact(t0, ridT)
-	//@ t1 := io.get_e_InFact_placeDst(t0, ridT)
-	/*@ msgDataT := @*/ GetInFact(msgData /*@, t0, ridT @*/)
+	/*@ t1, msgDataT := @*/
+	PerformVirtualInputOperation(msgData /*@, t0, ridT @*/)
 	//@ s1 := s0 union mset[ft.Fact]{ ft.InFact_Alice(ridT, msgDataT) }
 
 	ciphertext, err := i.l.UnmarshalTransportMsg(msgData)
@@ -477,6 +465,7 @@ func (i *Initiator) ProcessTransportMsg(msgData []byte) (payload []byte, err err
 		//@ fold ProcessedHsMsg2Pred(ridT, i.idA, i.idB, i.skAT, i.skBT, i.xT, i.YT, s1)
 		//@ fold HandshakeCompletedPred(i.irKey, i.riKey, i.xT, i.YT)
 		//@ fold i.Inv()
+		payload = nil
 		return
 	}
 
@@ -493,7 +482,7 @@ func (i *Initiator) ProcessTransportMsg(msgData []byte) (payload []byte, err err
 	//@ unfold io.phiR_Alice_3(t1, ridT, s1)
 	/*@
 	l := mset[ft.Fact]{ ft.St_Alice_2(ridT, idAT, idBT, i.skAT, i.skBT, i.xT, i.YT),
-		ft.InFact_Alice(ridT, msgDataT) } 
+		ft.InFact_Alice(ridT, msgDataT) }
 	a := mset[cl.Claim]{
 		cl.AliceRecvLoop(tm.exp(i.YT, i.xT)),
 		cl.AliceRecvTransMsg(payloadT, tm.kdf2(tm.exp(i.YT, i.xT))) }
@@ -507,22 +496,28 @@ func (i *Initiator) ProcessTransportMsg(msgData []byte) (payload []byte, err err
 	//@ unfold io.P_Alice(t2, ridT, s2)
 	//@ unfold io.phiRG_Alice_4(t2, ridT, s2)
 	//@ assert acc(io.e_OutFact(t2, ridT, payloadT))
-	/*@ t3 := @*/ i.l.Declassify(payload /*@, t2, ridT, payloadT @*/)
+	//@ ghost var t3 pl.Place
+	payload /*@, t3 @*/ = PerformVirtualOutputOperation(payload /*@, t2, ridT, payloadT @*/)
 	//@ s3 := s2 setminus mset[ft.Fact]{ ft.OutFact_Alice(ridT, payloadT) }
 
 	//@ i.token = t3
 	//@ i.absState = s3
 	//@ fold ProcessedHsMsg2Pred(ridT, i.idA, i.idB, i.skAT, i.skBT, i.xT, i.YT, s3)
 	//@ fold i.Inv()
+	success = true
 	return
 }
 
-//@ preserves i.Inv() && Mem(payload)
-//@ ensures   err == nil ==> Mem(msgData)
-func (i *Initiator) ProduceTransportMsg(payload []byte) (msgData []byte, err error) {
+// @ preserves i != nil ==> i.Inv()
+// @ preserves payload != nil ==> Mem(payload)
+// @ ensures   success ==> msgData != nil
+// @ ensures   msgData != nil ==> Mem(msgData)
+func (i *Initiator) ProduceTransportMsg(payload []byte) (msgData []byte, success bool) {
+	if i == nil || payload == nil { //argot:ignore diodon-dh-io-independence
+		return
+	}
 	//@ unfold i.Inv()
 	if i.initiatorState != HandshakeCompleted {
-		err = NewError("Invalid state")
 		//@ fold i.Inv()
 		return
 	}
@@ -532,8 +527,8 @@ func (i *Initiator) ProduceTransportMsg(payload []byte) (msgData []byte, err err
 	//@ unfold io.P_Alice(t0, ridT, s0)
 	//@ unfold io.phiRF_Alice_6(t0, ridT, s0)
 	//@ assert io.e_InFact(t0, ridT)
-	//@ t1 := io.get_e_InFact_placeDst(t0, ridT)
-	/*@ payloadT := @*/ GetInFact(payload /*@, t0, ridT @*/)
+	/*@ t1, payloadT := @*/
+	PerformVirtualInputOperation(payload /*@, t0, ridT @*/)
 	//@ s1 := s0 union mset[ft.Fact]{ ft.InFact_Alice(ridT, payloadT) }
 
 	//@ unfold HandshakeCompletedPred(i.irKey, i.riKey, i.xT, i.YT)
@@ -547,7 +542,7 @@ func (i *Initiator) ProduceTransportMsg(payload []byte) (msgData []byte, err err
 		return
 	}
 
-	msgData, err = i.l.MarshalTransportMsg(ciphertext)
+	tmpMsgData, err := i.l.MarshalTransportMsg(ciphertext)
 	if err != nil {
 		//@ i.token = t1
 		//@ i.absState = s1
@@ -556,7 +551,7 @@ func (i *Initiator) ProduceTransportMsg(payload []byte) (msgData []byte, err err
 		return
 	}
 	//@ msgDataT := tm.tuple2(tm.integer32(TransMsgTag), tm.senc(payloadT, tm.kdf1(tm.exp(i.YT, i.xT))))
-	//@ assert Abs(msgData) == by.gamma(msgDataT)
+	//@ assert Abs(tmpMsgData) == by.gamma(msgDataT)
 
 	//@ idAT := tm.integer32(i.idA)
 	//@ idBT := tm.integer32(i.idB)
@@ -564,7 +559,7 @@ func (i *Initiator) ProduceTransportMsg(payload []byte) (msgData []byte, err err
 	//@ unfold io.phiR_Alice_2(t1, ridT, s1)
 	/*@
 	l := mset[ft.Fact]{ ft.St_Alice_2(ridT, idAT, idBT, i.skAT, i.skBT, i.xT, i.YT),
-		ft.InFact_Alice(ridT, payloadT) } 
+		ft.InFact_Alice(ridT, payloadT) }
 	a := mset[cl.Claim]{
 		cl.AliceSendLoop(tm.exp(i.YT, i.xT)),
 		cl.AliceSendTransMsg(payloadT, tm.kdf1(tm.exp(i.YT, i.xT))) }
@@ -578,12 +573,14 @@ func (i *Initiator) ProduceTransportMsg(payload []byte) (msgData []byte, err err
 	//@ unfold io.P_Alice(t2, ridT, s2)
 	//@ unfold io.phiRG_Alice_4(t2, ridT, s2)
 	//@ assert io.e_OutFact(t2, ridT, msgDataT)
-	/*@ t3 := @*/ i.l.Declassify(msgData /*@, t2, ridT, msgDataT @*/)
+	//@ ghost var t3 pl.Place
+	msgData /*@, t3 @*/ = PerformVirtualOutputOperation(tmpMsgData /*@, t2, ridT, msgDataT @*/)
 	//@ s3 := s2 setminus mset[ft.Fact]{ ft.OutFact_Alice(ridT, msgDataT) }
 
 	//@ i.token = t3
 	//@ i.absState = s3
 	//@ fold ProcessedHsMsg2Pred(ridT, i.idA, i.idB, i.skAT, i.skBT, i.xT, i.YT, s3)
 	//@ fold i.Inv()
+	success = true
 	return
 }
