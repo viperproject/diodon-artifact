@@ -14,3 +14,7 @@ SCRIPT_DIR=$(realpath "$PWD")
 
 # Verify that no arguments to core functions alias each other
 /bin/bash "$SCRIPT_DIR/argot-proofs/agent-argument-alias-proof.sh"
+
+# Verify the pass-through conditions
+# SSM Agent passthrough proof is supposed to fail due to false-positives
+/bin/bash "$SCRIPT_DIR/argot-proofs/agent-passthru-proof.sh" || true
