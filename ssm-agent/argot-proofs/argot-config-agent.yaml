@@ -3,7 +3,7 @@ options:
   reports-dir: ../argot-proofs/argot-reports
   log-level: 3 # log at info level (3), debug level is 4 and trace is 5
   coverage-filter: (github.com/aws/amazon-ssm-agent)
-  use-escape-analysis: true
+  use-escape-analysis: false # NOTE We disable the escape analysis here due to scalability issues
   escape-config: ../argot-proofs/escape-config.json
   report-paths: true
   silence-warn: true
@@ -32,51 +32,39 @@ immutability-problems:
       - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: SendStreamDataMessage$
         context: 0 # argument value to track
-        # type: .*(IDataChannel|dataChannel)
       - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: SendAgentSessionStateMessage$
         context: 0
-        # type: .*(IDataChannel|dataChannel)
       - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: SkipHandshake$
         context: 0
-        # type: .*(IDataChannel|dataChannel)
       - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: PerformHandshake$
         context: 0
-        # type: .*(IDataChannel|dataChannel)
       - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: GetClientVersion$
         context: 0
-        # type: .*(IDataChannel|dataChannel)
       - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: GetInstanceId$
         context: 0
-        # type: .*(IDataChannel|dataChannel)
       - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: GetRegion$
         context: 0
-        # type: .*(IDataChannel|dataChannel)
       - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: IsActive$
         context: 0
-        # type: .*(IDataChannel|dataChannel)
       - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: GetSeparateOutputPayload$
         context: 0
-        # type: .*(IDataChannel|dataChannel)
       - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: SetSeparateOutputPayload$
         context: 0
-        # type: .*(IDataChannel|dataChannel)
       - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: PrepareToCloseChannel$
         context: 0
-        # type: .*(IDataChannel|dataChannel)
       - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: Close$
         context: 0
-        # type: .*(IDataChannel|dataChannel)
     filters:
       - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: .*
@@ -84,6 +72,7 @@ immutability-problems:
 diodon-pass-through-problems:
   - tag: diodon-agent-core-invariant-passthrough
     description: "Diodon: SSM Agent core invariant maintenance pass-through proof"
+    severity: LOW # NOTE This analysis is supposed to fail due to false-positives, hence the low severity
     targets:
       - ssm-session-worker
     app-functions:
@@ -96,7 +85,11 @@ diodon-pass-through-problems:
         method: .*
       - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel/iosanitization$
         method: .*
-    core-api-function-returned-values:
+    core-alloc-function:
+      package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
+      method: NewDataChannel$
+      return-indices: [0]
+    core-api-functions:
       - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: NewDataChannel$
       - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
@@ -123,39 +116,6 @@ diodon-pass-through-problems:
         method: PrepareToCloseChannel$
       - package: github.com/aws/amazon-ssm-agent/agent/session/datachannel$
         method: Close$
-    core-alloc-filters:
-      - package: github.com/gorilla/websocket
-        method: DialContext
-      - package: github.com/gorilla/websocket
-        method: NextReader
-    app-access-filters:
-      - package: github.com/aws/amazon-ssm-agent/agent/log
-        method: .*
-      - package: golang.org/x/crypto.*
-        method: .*
-      - package: internal/byteorder
-        method: .*
-      - package: crypto/md5
-        method: .*
-      - package: crypto/sha256
-        method: .*
-      - package: crypto/sha512
-        method: .*
-    no-leak-functions:
-      - package: github.com/aws/amazon-ssm-agent/agent/log
-        method: .*
-      - package: testing
-        method: .*
-      - package: github.com/stretchr/testify
-        method: .*
-      - package: github.com/aws/aws-sdk-go/aws/credentials/stscred
-        method: RetrieveWithContext
-      - package: github.com/aws/aws-sdk-go/aws
-        method: Copy
-      - package: github.com/aws/amazon-ssm-agent/common/identity/credentialproviders/ssmec2roleprovider
-        method: isEC2InstanceRegistered
-      # - package: github.com/cenkalti/backoff/v4
-      #   method: RetryNotifyWithTimer
 
 dataflow-problems:
   summarize-on-demand: true
