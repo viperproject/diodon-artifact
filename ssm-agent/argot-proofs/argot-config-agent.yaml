@@ -124,16 +124,7 @@ dataflow-problems:
     - ../argot-proofs/sdk-specs.json
     - ../argot-proofs/std-specs.json
   field-sensitive-funcs:
-    - .*/messageservice/interactor.*
-    - .*/session/crypto.*
-    - .*/session/datachannel.*
-    - .*/session/datastream.*
-    - .*/session/plugins/port.*
-    - .*/session/plugins/sessionplugin.*
-    - .*/session/plugins/standardstream.*
-    - .*/session/retry.*
-    - .*/session/shell.*
-    - .*aws-sdk-go/service/kms.*
+    - .* # all functions should be analyzed with field sensitivity
 
   taint-tracking:
     - tag: diodon-agent-io-independence
