@@ -67,12 +67,25 @@ The Docker image provides several ready-to-use scripts in the `/gobra` directory
 Replace `ssm-agent` with `dh` in the above commands to run the same proofs on the Diffie-Hellman implementation.
 
 #### Bug Patches
+Each "proof" script in the `argot-proofs` directory for the SSM Agent and DH implementation has a corresponding "bug" script that apply one or more bug patches and expect the corresponding proof to fail.
+
 The git patch files in the `ssm-agent/implementation` directory introduce bugs to the SSM Agent codebase that our verification tools identify.
 
-- `refinement_bug.patch`: caught by `verify-core.sh`
-- `logging_eph_priv_key_bug.patch`: caught by `verify-io-independence.sh`
-- `logging_shared_secret_bug.patch`: caught by `verify-io-independence.sh`
-- `alias_arguments_bug.patch`: caught by `verify-core-assumptions.sh`
-- `modify_core_state_bug.patch`: caught by `verify-core-assumptions.sh`
+- `refinement_bug.patch`: adds an extra I/O operation to send the agent secret over the network which violates the refinement of the security protocol
+- `logging_eph_priv_key_bug.patch`: logs the Core instance containing the private key field to show a violation of I/O independence
+- `logging_shared_secret_bug.patch`: logs the Core instance containing the shared secret field to show a violation of I/O independence
+- `alias_arguments_bug.patch`: leaks a pointer to a Core instance field to the App so it can be passed as an argument to a Core API function, thus resulting in non-disjoint arguments to the Core API function call
+- `write_core_state_bug.patch`: leaks a pointer to a core instance field to the App which is then modified in the App, violating the Core instance invariant
+- `read_core_state_bug.patch`: leaks a pointer to a Core instance field to the App which is then read in the App, violating the Core instance invariant
+- `concurrency_leak_core.patch`: leaks a parameter to a Core API function to a new thread spawned in the Core
+- `concurrency_leak_app.patch`: leaks a parameter to a Core API function to a new thread spawned in the App
 
-TODO make bug patches for DH
+We also have patches in the `dh/implementation` directory which introduce bugs to the DH codebase.
+
+- `leak_nonce_bug.patch`: leaks nonce data to the App via a getter method which is then written to a network connection, violating I/O independence
+- `leak_private_key_bug.patch`: leaks private key data to attacker-accessible method `PerformVirtualInputOperation`, violating I/O independence
+- `alias_arguments_bug.patch`: aliases a Core API function parameter to a Core instance field, resulting in non-disjoint arguments to the Core API function call
+- `write_core_state_bug.patch`: leaks a pointer to a Core instance field which is then written to in the App, violating the Core instance invariant
+- `read_core_state_bug.patch`: leaks a pointer to a Core instance field which is then read in the App, violating the Core instance invariant
+- `passthru_escape_in_corealloc_func_bug.patch`: leaks memory allocated in the Core allocation function to the App via a callback, violating the pass-through requirement that all memory allocated in the Core allocation function must only be accessible to the App via the function's return value
+- `passthru_escape_in_coreapi_func_bug.patch`: leak permissions to access a slice allocated in the Core via a global variable which is then accessed in the App, resulting in accessing memory allocated in the Core which does not pass through the Core API function's return value
