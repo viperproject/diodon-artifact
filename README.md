@@ -23,13 +23,13 @@ This is the artifact for the paper "The Secrets Must Not Flow: Scaling Security 
 
 
 ## Artifact Docker image
-The artifact docker image includes both the protocol model and SSM Agent implementation. Furthermore, it contains all dependencies to verify the model and implementation.
+The artifact docker image includes the protocol model and implementation for both case studies. Furthermore, it contains all dependencies to verify the model and implementation.
 
 ### Set-up
-We require an installation of Docker. The following steps have been tested on macOS 14.0 with the latest version of Docker Desktop, which is at time of writing 4.24.2 and comes with version 24.0.6 of the Docker CLI.
+We require an installation of Docker. The following steps have been tested on macOS 15.1.1 with the latest version of Docker Desktop, which is at time of writing 4.35.1 and comes with version 27.3.1 of the Docker CLI.
 
 #### Installation
-- We recommend to adapt the Docker settings to provide sufficient resources to Docker. We have tested our artifact on a 2019 16-inch MacBook Pro with 2.3 GHz 8-Core Intel Core i9 running macOS Sonoma 14.0 and configured Docker to allocate up 16 cores (which includes 8 virtual cores), 6 GB of memory, and 1 GB of swap memory. In case you are using an ARM-based Mac, enable the option "Use Rosetta for x86/amd64 emulation on Apple Silicon" in the Docker Desktop Settings, which is available on macOS 13 or newer. Measurements on an Apple M1 Pro Silicon have shown that performing this additional emulation results in 20-25\% longer verification times compared to those reported in the remainder of this artifact appendix.
+- We recommend to adapt the Docker settings to provide sufficient resources to Docker. We have tested our artifact on a 2023 MacBook Pro with a M3 Pro processor running macOS Sequoia 15.1.1 and configured Docker to allocate up 12 cores, 6 GB of memory, and 1 GB of swap memory. In case you are using an ARM-based Mac, enable the option "Use Rosetta for x86/amd64 emulation on Apple Silicon" in the Docker Desktop Settings, which is available on macOS 13 or newer. Measurements on an Apple M1 Pro Silicon have shown that performing this additional emulation results in 20-25\% longer verification times compared to those reported in the remainder of this artifact appendix.
 - Navigate to a convenient folder, in which directories can be created for the purpose of running this artifact.
 - Open a shell at this folder location.
 - Create two new folders named `dh-sync` and `ssm-agent-sync` by executing:
@@ -41,9 +41,9 @@ We require an installation of Docker. The following steps have been tested on ma
     docker run -it --platform linux/amd64 --volume $PWD/dh-sync:/gobra/dh --volume $PWD/ssm-agent-sync:/gobra/ssm-agent ghcr.io/arquintl/diodon-artifact:latest
     ```
     > ⚠️
-    > Note that this command results in the Docker container writing files to the two folders `model-sync` and `implementation-sync` on your host machine.
+    > Note that this command results in the Docker container writing files to the two folders `dh-sync` and `ssm-agent-sync` on your host machine.
     > Thus, make sure that these folders are indeed empty and previous modifications that you have made to files in these folders have been saved elsewhere!
-- The Docker command above not only starts a Docker container and provides you with a shell within this container but it also synchronizes all files constituting our artifact with the two folders `model-sync` and `implementation-sync` on your host machine. I.e., the local folders `model-sync` and `implementation-sync` are synchronized with `/gobra/model` and `/gobra/implementation` within the Docker container, respectively.
+- The Docker command above not only starts a Docker container and provides you with a shell within this container but it also synchronizes all files constituting our artifact with the two folders `dh-sync` and `ssm-agent-sync` on your host machine. I.e., the local folders `dh-sync` and `ssm-agent-sync` are synchronized with `/gobra/dh` and `/gobra/ssm-agent` within the Docker container, respectively.
 
 #### Installation: Finch
 If you prefer to use Finch instead of Docker, replace the above Docker command with the following:
