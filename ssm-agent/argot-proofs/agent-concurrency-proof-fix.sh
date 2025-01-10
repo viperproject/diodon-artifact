@@ -28,7 +28,7 @@ else
 fi
 
 if grep -F '[ERROR]' /tmp/argot-output.txt \
-   | grep -Ev 'Parameter dc of .* has escaped: argument to go at .*(/datastream\.go:(428|356)|/websocketchannel\.go:(171|222))' \
+   | grep -Ev 'Parameter dc of .* has escaped: argument to go at .*(/datastream\.go:(432|360)|/websocketchannel\.go:(171|222))' \
    | grep -v 'Parameter log of .* has escaped: argument to go at' \
    | grep -Fv '[ERROR] Analysis for ssm-session-worker failed: goroutine analysis found problems, inspect logs for more information' \
    | grep -F '[ERROR]'; then
