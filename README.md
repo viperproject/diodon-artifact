@@ -66,6 +66,12 @@ The Docker image provides several ready-to-use scripts in the `/gobra` directory
 
 Replace `ssm-agent` with `dh` in the above commands to run the same proofs on the Diffie-Hellman implementation.
 
+#### Proof Script Notes
+Some proof scripts may have unexpected output.
+
+- `ssm-agent/argot-proofs/agent-concurrency-proof.sh`: The concurrency proof for the SSM Agent has error output because we expect that the `inputData` parameter of `(*dataChannel).SendStreamDataMessage` escapes to a new thread. Applying the patch file `ssm-agent/implementation/datastream-internal-go-fix.patch` removes the goroutines and results in the proof succeeding.
+- `ssm-agent/argot-proofs/agent-passthru-proof.sh` The pass-through analysis for the SSM Agent fails due to false-positives. The [pointer analysis](https://pkg.go.dev/golang.org/x/tools/go/pointer) we use is not context-sensitive (most functions are only analyzed once) so it is impossible to precisely distinguish between Core and App calling contexts for large programs such as the SSM Agent.
+
 #### Bug Patches
 Each "proof" script in the `argot-proofs` directory for the SSM Agent and DH implementation has a corresponding "bug" script that apply one or more bug patches and expect the corresponding proof to fail.
 
