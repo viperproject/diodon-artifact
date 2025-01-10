@@ -56,7 +56,7 @@ func main() {
 
 	conn, err := net.Dial("udp", sanitizeStr(config.PeerEndpoint)) // NOTE sanitizer is needed here due to taint analysis imprecision
 	if err != nil {
-		reportAndExit(err)
+		reportAndExit(errors.New("Failed to create udp peer endpoint connection"))
 	}
 
 	hsMsg1, success := initor.ProduceHsMsg1()
@@ -64,13 +64,13 @@ func main() {
 		reportAndExit(errors.New("Producing handshake msg 1 failed"))
 	}
 	if _, err := conn.Write(hsMsg1); err != nil {
-		reportAndExit(err)
+		reportAndExit(errors.New("Failed to write handshake msg 1 to connection"))
 	}
 
 	hsMsg2 := make([]byte, MAX_DATA_SIZE)
 	bytesRead, err := conn.Read(hsMsg2)
 	if err != nil {
-		reportAndExit(err)
+		reportAndExit(errors.New("Failed to read handshake msg 2 from connection"))
 	}
 	hsMsg2 = hsMsg2[:bytesRead]
 	success = initor.ProcessHsMsg2(hsMsg2)
@@ -83,7 +83,7 @@ func main() {
 		reportAndExit(errors.New("Producing handshake msg 3 failed"))
 	}
 	if _, err := conn.Write(hsMsg3); err != nil {
-		reportAndExit(err)
+		reportAndExit(errors.New("Failed to write handshake msg 3 to connection"))
 	}
 
 	// handshake is now over
@@ -96,13 +96,13 @@ func main() {
 			reportAndExit(errors.New("Producing transport msg failed"))
 		}
 		if _, err := conn.Write(requestMsg); err != nil {
-			reportAndExit(err)
+			reportAndExit(errors.New("Failed to write request msg to connection"))
 		}
 
 		responseMsg := make([]byte, MAX_DATA_SIZE)
 		bytesRead, err := conn.Read(responseMsg)
 		if err != nil {
-			reportAndExit(err)
+			reportAndExit(errors.New("Failed to read response msg from connection"))
 		}
 		responseMsg = responseMsg[:bytesRead]
 		responsePayload, success := initor.ProcessTransportMsg(responseMsg)
@@ -114,7 +114,7 @@ func main() {
 	}
 
 	if err := conn.Close(); err != nil {
-		reportAndExit(err)
+		reportAndExit(errors.New("failed to close connection"))
 	}
 }
 

@@ -68,25 +68,24 @@ diodon-pass-through-problems:
         method: .*
       - package: dh-gobra/library
         method: .*
-    core-api-function-returned-values:
+    core-alloc-function:
+      package: dh-gobra/initiator
+      method: NewInitiator
+      return-indices: [0]
+    core-api-functions:
       - package: dh-gobra/initiator
         method: NewInitiator
-        return-indices: [0]
       - package: dh-gobra/initiator
         method: ProduceHsMsg1
-        return-indices: [0]
       - package: dh-gobra/initiator
         method: ProduceHsMsg3
-        return-indices: [0]
       - package: dh-gobra/initiator
         method: ProcessTransportMsg
-        return-indices: [0]
       - package: dh-gobra/initiator
         method: ProduceTransportMsg
-        return-indices: [0]
     app-access-filters:
-      - package: internal/byteorder
-        method: BeUint64
+      # - package: internal/byteorder
+      #   method: BeUint64
 
 dataflow-problems:
   summarize-on-demand: true
