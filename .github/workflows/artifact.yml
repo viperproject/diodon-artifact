@@ -2,6 +2,7 @@ name: Artifact
 
 on:
   push:
+  workflow_dispatch: # allow to manually trigger this workflow
 
 env:
   IMAGE_NAME: diodon-artifact
