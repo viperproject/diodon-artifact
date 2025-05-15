@@ -4,9 +4,9 @@ import tm "dh-gobra/verification/term"
 import pub "dh-gobra/verification/pub"
 import fresh "dh-gobra/verification/fresh"
 
-type Term = tm.Term
+ghost type Term = tm.Term
 
-type TermUtil domain {
+ghost type TermUtil domain {
 
     // constructors
     func tuple2(tm.Term, tm.Term) tm.Term

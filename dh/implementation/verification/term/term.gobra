@@ -6,7 +6,7 @@ import . "dh-gobra/verification/pub"
 import . "dh-gobra/verification/fresh"
 
 
-type Term domain {
+ghost type Term domain {
     func freshTerm(f Fresh) Term
     func getFreshTerm(t Term) Fresh
     axiom  {

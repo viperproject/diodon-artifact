@@ -1,5 +1,5 @@
-# Gobra commit 97f0988
-FROM ghcr.io/viperproject/gobra@sha256:8d9f2b83c49a9a19f5a27167f138f23a2c4aa6677e7e9dbf157d83a110d6a088
+# Gobra commit fddbd86
+FROM ghcr.io/viperproject/gobra:sha-fddbd86
 # FROM ghcr.io/viperproject/gobra:latest
 
 RUN apt-get update && \

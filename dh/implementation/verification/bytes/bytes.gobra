@@ -6,7 +6,7 @@ import . "dh-gobra/verification/pub"
 import . "dh-gobra/verification/term"
 
 
-type Bytes domain {
+ghost type Bytes domain {
     // TODO: Add constructors from other types e.g.
     // func msgB(string) Bytes
     
@@ -208,7 +208,7 @@ type Bytes domain {
 
 
 
-type Gamma domain {
+ghost type Gamma domain {
     func gamma(Term) Bytes
     func oneTerm(Bytes) Term
     // totality

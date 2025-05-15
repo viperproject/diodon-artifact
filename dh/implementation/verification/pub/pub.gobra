@@ -5,7 +5,7 @@ package pub
 
 
 // pub encoding ---------------
-type Pub domain {
+ghost type Pub domain {
     func const_g_pub() Pub
 
     func const_0_pub() Pub

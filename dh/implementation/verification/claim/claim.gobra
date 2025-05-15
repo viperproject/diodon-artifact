@@ -5,7 +5,7 @@ package claim
 import . "dh-gobra/verification/term"
 
 
-type Claim domain {
+ghost type Claim domain {
     func IN_ALICE(t1 Term, t2 Term) Claim
     func getIN_ALICE(f Claim) seq[Term]
     axiom  {

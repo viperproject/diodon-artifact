@@ -35,7 +35,7 @@ func PerformVirtualOutputOperation(data []byte /*@, ghost t Place, ghost rid tm.
 // @ ensures  acc(Mem(data), 1/16) && gamma(dataT) == Abs(data)
 // @ ensures  token(t1) && t1 == old(get_e_InFact_placeDst(t, rid))
 // @ ensures  dataT == old(get_e_InFact_r1(t, rid))
-func PerformVirtualInputOperation(data []byte /*@, ghost t Place, ghost rid tm.Term @*/) /*@ (ghost t1 Place, dataT tm.Term) @*/ {
+func PerformVirtualInputOperation(data []byte /*@, ghost t Place, ghost rid tm.Term @*/) /*@ (ghost t1 Place, ghost dataT tm.Term) @*/ {
 	return
 }
 

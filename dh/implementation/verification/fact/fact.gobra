@@ -7,7 +7,7 @@ import . "dh-gobra/verification/pub"
 import . "dh-gobra/verification/fresh"
 
 
-type Fact domain {
+ghost type Fact domain {
     // tag 0
     func Setup_Alice(t1 Term, t2 Term, t3 Term, t4 Term, t5 Term) Fact
     func getSetup_Alice(f Fact) seq[Term]
