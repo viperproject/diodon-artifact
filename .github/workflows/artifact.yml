@@ -25,7 +25,7 @@ jobs:
       # note that this action requires that the app is installed for the repo owner (Settings > Applications) and is configured to
       # allow access to the specified repositories.
       - name: Get token from GitHub App
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@v2
         id: app_token
         with:
           app-id: ${{ secrets.APP_ID }}
