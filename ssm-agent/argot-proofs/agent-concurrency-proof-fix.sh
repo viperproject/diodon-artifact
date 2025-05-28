@@ -20,7 +20,7 @@ echo "Running goroutine analysis on SSM agent in directory $(pwd)"
 
 "$ARGOT_BIN" goroutine -config "$SCRIPT_DIR"/argot-config-agent.yaml | tee /tmp/argot-output.txt || true
 
-if grep -F '[INFO]  Analysis took ' /tmp/argot-output.txt; then
+if grep -F '[INFO] Analysis took ' /tmp/argot-output.txt; then
     echo "Found end of results"
 else
     echo "Analysis did not complete"
