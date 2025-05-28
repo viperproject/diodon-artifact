@@ -94,5 +94,14 @@
             "ReadRune": { "Args": [[0]], "Rets": [[0, 1, 2]] },
             "UnreadRune": { "Args": [[0]], "Rets": [[0]] }
         }
+    },
+    {
+        "InterfaceId": "crypto/cipher.AEAD",
+        "Methods": {
+            "NoneSize": { "Args": [[0]], "Rets": [[0]] },
+            "Overhead": { "Args": [[0]], "Rets": [[0]] },
+            "Seal": { "Args": [[0], [1], [2], [3]], "Rets": [] },
+            "Open": { "Args": [[0], [1], [2], [3]], "Rets": [] }
+        }
     }
 ]
