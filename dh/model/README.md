@@ -7,7 +7,7 @@
 ## Prerequisite
 To verify our model of DH, you need **Tamarin**
 which can be obtained from [its website](https://tamarin-prover.github.io).
-Version 1.8.0 is known to work.
+Version 1.10.0 is known to work.
 
 
 ## Instructions
