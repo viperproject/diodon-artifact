@@ -1,5 +1,4 @@
-# Gobra commit fddbd86
-FROM ghcr.io/viperproject/gobra:sha-fddbd86
+FROM ghcr.io/viperproject/gobra:sha-72b02b1
 # FROM ghcr.io/viperproject/gobra:latest
 
 RUN apt-get update && \

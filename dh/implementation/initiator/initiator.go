@@ -72,19 +72,19 @@ pred (i *Initiator) Inv() {
 }
 
 pred InitializedPred(rid tm.Term, idA, idB uint32, skAT, skBT tm.Term, s mset[ft.Fact]) {
-	ft.Setup_Alice(rid, tm.integer32(idA), tm.integer32(idB), skAT, skBT) in s
+	ft.Setup_Alice(rid, tm.integer32(idA), tm.integer32(idB), skAT, skBT) elem s
 }
 
 pred ProducedHsMsg1Pred(rid tm.Term, idA, idB uint32, skAT, skBT, xT tm.Term, s mset[ft.Fact]) {
-	ft.St_Alice_1(rid, tm.integer32(idA), tm.integer32(idB), skAT, skBT, xT) in s
+	ft.St_Alice_1(rid, tm.integer32(idA), tm.integer32(idB), skAT, skBT, xT) elem s
 }
 
 pred ProcessedHsMsg2Pred(rid tm.Term, idA, idB uint32, skAT, skBT, xT, YT tm.Term, s mset[ft.Fact]) {
-	ft.St_Alice_2(rid, tm.integer32(idA), tm.integer32(idB), skAT, skBT, xT, YT) in s
+	ft.St_Alice_2(rid, tm.integer32(idA), tm.integer32(idB), skAT, skBT, xT, YT) elem s
 }
 
 pred HasHsMsg3OutFact(rid tm.Term, idA, idB uint32, YT, xT, skAT tm.Term, s mset[ft.Fact]) {
-	ft.OutFact_Alice(rid, tm.sign(tm.tuple5(tm.integer32(Msg3Tag), tm.integer32(idA), tm.integer32(idB), YT, tm.exp(tm.generator(), xT)), skAT)) in s
+	ft.OutFact_Alice(rid, tm.sign(tm.tuple5(tm.integer32(Msg3Tag), tm.integer32(idA), tm.integer32(idB), YT, tm.exp(tm.generator(), xT)), skAT)) elem s
 }
 
 pred HandshakeCompletedPred(irKey, riKey []byte, xT, YT tm.Term) {
