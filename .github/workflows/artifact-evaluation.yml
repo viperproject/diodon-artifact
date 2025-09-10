@@ -7,7 +7,7 @@ on:
 jobs:
   Build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 75
     steps:
       
       - name: Checkout repo
