@@ -1,4 +1,4 @@
-# Claim 1 -- Protocol Model for SSM Agent
+# Claim 1 - Protocol Model for SSM Agent
 As described in Sec. 5.1.1, we model the security protocol for establishing a remote shell session between an SSM Agent running on an AWS EC2 instance and an AWS customer in Tamarin and prove (1) secrecy for the two symmetric session keys and (2) injective agreement on the SSM Agent's and AWS customer's identities and the session keys.
 
 `run.sh` supports this claim by invoking Tamarin on the protocol model stored in `ssm-agent/model/protocol-model.spthy` and proving all lemmas stated therein.

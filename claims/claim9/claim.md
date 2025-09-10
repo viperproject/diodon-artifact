@@ -1,4 +1,4 @@
-# Claim 9 -- Soundness
+# Claim 9 - Soundness
 As described in Sec. 5.3, we deliberately introduce bugs in our case studies and check that our tools fail as expected.
 
 `run.sh` supports this claim by seeding bugs in

@@ -45,7 +45,7 @@ More specifically, our claims are as follows:
 - [Claim 5](claims/claim5/claim.md): The Protocol Model for the signed Diffie-Hellman key exchange satisfies forward secrecy & injective agreement
 - [Claim 6](claims/claim6/claim.md): The Diffie-Hellman case study satisfies I/O independence
 - [Claim 7](claims/claim7/claim.md): The Gobra program verifier successfully verifies the CORE in the Diffie-Hellman case study
-- [Claim 8](claims/claim8/claim.md): The APPLICATION in the Diffie-Hellman case study satisfies conditions (C1)--(C4) and (C6)--(C8)
+- [Claim 8](claims/claim8/claim.md): The APPLICATION in the Diffie-Hellman case study satisfies conditions (C1)-(C4) and (C6)-(C8)
 - [Claim 9](claims/claim9/claim.md): Our tools detect deliberately seeded bugs in both case studies
 
 Alternatively, we describe next how to manually run the Docker image and interact with the Docker container.
