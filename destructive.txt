@@ -1,0 +1,2 @@
+This artifact does not perform any dangerous or destructive actions.
+Note however that if one does not use the scripts in the `claims` folder and instead interacts directly with the Docker image then the content of the folders provided via `--volume` when running the provided Docker image will be overwritten.

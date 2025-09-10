@@ -70,9 +70,9 @@ rule Alice_recvAndSend:
      [ St_Alice_1(ridA, A, B, skA, skB, ~x),
        In(sign(msgIn, skB)) ]
       --[ IN_ALICE(Y, msgIn),
-          Secret(A, B, key),
-          Running('R', 'I', <A, B, key>),
-          Commit('I', 'R', <A, B, key>),
+          Secret(A, B, <kdf1(key), kdf2(key)>),
+          Running('R', 'I', <A, B, kdf1(key), kdf2(key)>),
+          Commit('I', 'R', <A, B, kdf1(key), kdf2(key)>),
           AliceHsDone(key)
         ]->
      [ St_Alice_2(ridA, A, B, skA, skB, ~x, Y),
@@ -122,7 +122,7 @@ rule Bob_recvAndSend:
        Fr(~y),
        In(X) ]
      --[ OUT_BOB(mOut),
-         Running('I', 'R', <A, B, key>)
+         Running('I', 'R', <A, B, kdf1(key), kdf2(key)>)
        ]->
      [ St_Bob_1(ridB, B, A, skB, skA, ~y, X),
        Out(sign(mOut, skB)) ]
@@ -135,8 +135,8 @@ rule Bob_recv:
   in
      [ St_Bob_1(ridB, B, A, skB, skA, ~y, X),
        In(sign(msgIn, skA)) ]
-     --[ Commit('R', 'I', <A, B, key>),
-         Secret(A, B, key),
+     --[ Commit('R', 'I', <A, B, kdf1(key), kdf2(key)>),
+         Secret(A, B, <kdf1(key), kdf2(key)>),
          BobHsDone(key) ]->
      [ St_Bob_2(ridB, B, A, skB, skA, ~y, X) ]
 

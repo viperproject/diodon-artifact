@@ -1,0 +1,14 @@
+@inproceedings{DBLP:conf/sp/ArquintKKDKM26,
+  author       = {Linard Arquint and
+                  Samarth Kishor and
+                  Jason R. Koenig and
+                  Joey Dodds and
+                  Daniel Kroening and
+                  Peter M{\"{u}}ller},
+  title        = {The Secrets Must Not Flow: Scaling Security Verification to Large
+                  Codebases},
+  booktitle    = {47th {IEEE} Symposium on Security and Privacy, {SP} 2026, San Francisco,
+                  CA, USA, May 18-21, 2026},
+  publisher    = {{IEEE}},
+  year         = {2026}
+}

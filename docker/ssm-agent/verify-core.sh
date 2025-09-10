@@ -11,7 +11,7 @@ GOBRA_REPORT_DIR="$IMPLEMENTATION_DIR/.gobra"
 
 mkdir -p "$GOBRA_REPORT_DIR"
 
-java -Xss128m -jar "$GOBRA_JAR" \
+time java -Xss128m -jar "$GOBRA_JAR" \
     --module "github.com/aws/amazon-ssm-agent" \
     --include "$IMPLEMENTATION_DIR/.verification" --include "$IMPLEMENTATION_DIR" \
     --input "$DATACHANNEL_DIR/datachannel.go" \

@@ -6,4 +6,4 @@ set -e
 PWD=$(dirname "$0")
 SCRIPT_DIR=$(realpath "$PWD")
 
-/bin/bash "$SCRIPT_DIR/argot-proofs/dh-taint-proof.sh"
+time /bin/bash "$SCRIPT_DIR/argot-proofs/dh-taint-proof.sh"

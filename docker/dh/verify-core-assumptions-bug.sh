@@ -14,8 +14,5 @@ SCRIPT_DIR=$(realpath "$PWD")
 # function's return parameters.
 /bin/bash "$SCRIPT_DIR/argot-proofs/dh-passthru-bug.sh"
 
-# TODO Verify that a core instance escapes the goroutine in which it is created
-# /bin/bash "$SCRIPT_DIR/argot-proofs/dh-concurrency-bug.sh"
-
 # Verify that arguments to a core function alias each other
 /bin/bash "$SCRIPT_DIR/argot-proofs/dh-argument-alias-bug.sh"

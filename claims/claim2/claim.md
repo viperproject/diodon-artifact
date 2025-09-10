@@ -1,0 +1,4 @@
+# Claim 2 -- I/O Independence for SSM Agent
+As described in Sec. 5.1.2, we successfully execute a taint analysis on the entire SSM Agent codebase to prove that all I/O operations within the APPLICATION are independent of protocol-relevant secrets.
+
+`run.sh` supports this claim by executing the taint analysis. The taint analysis uses the configuration `ssm-agent/argot-proofs/argot-config-agent.yaml`, in particular the configuration under key `dataflow-problems`. This configuration specifies that the analysis considers implicit flows, that the `GenerateKey` function in the `crypto/elliptic` package is a source of taint, and all functions that are treated as sinks. Since the taint analysis errors if taint flows from the source to any sink, successful execution of the analysis proves that there are no taint flows.

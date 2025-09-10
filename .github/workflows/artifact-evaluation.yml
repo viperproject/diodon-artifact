@@ -1,0 +1,58 @@
+name: Artifact Evaluation
+
+on:
+  push:
+  workflow_dispatch: # allow to manually trigger this workflow
+
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+
+      - name: Installation
+        run: ./install.sh
+
+      - name: Check that image is available locally
+        run: docker run --pull=never --platform linux/amd64 --rm --entrypoint "/bin/bash" ghcr.io/viperproject/diodon-artifact:latest -c "echo 'Success!'"
+
+      - name: Claim 1
+        run:  ./run.sh
+        working-directory: claims/claim1
+
+      - name: Claim 2
+        run:  ./run.sh
+        working-directory: claims/claim2
+
+      - name: Claim 3
+        run:  ./run.sh
+        working-directory: claims/claim3
+
+      - name: Claim 4
+        run:  ./run.sh
+        working-directory: claims/claim4
+
+      - name: Claim 5
+        run:  ./run.sh
+        working-directory: claims/claim5
+
+      - name: Claim 6
+        run:  ./run.sh
+        working-directory: claims/claim6
+
+      - name: Claim 7
+        run:  ./run.sh
+        working-directory: claims/claim7
+
+      - name: Claim 8
+        run:  ./run.sh
+        working-directory: claims/claim8
+
+      - name: Claim 9
+        run:  ./run.sh
+        working-directory: claims/claim9

@@ -1,8 +1,8 @@
 # The Secrets Must Not Flow: Scaling Security Verification to Large Codebases
 
-[![SSM Agent Verification](https://github.com/ArquintL/diodon-artifact/actions/workflows/artifact.yml/badge.svg?branch=main)](https://github.com/ArquintL/diodon-artifact/actions/workflows/artifact.yml?query=branch%3Amain)
+[![SSM Agent Verification](https://github.com/viperproject/diodon-artifact/actions/workflows/artifact.yml/badge.svg?branch=main)](https://github.com/viperproject/diodon-artifact/actions/workflows/artifact.yml?query=branch%3Amain)
 
-This is the artifact for the paper "The Secrets Must Not Flow: Scaling Security Verification to Large Codebases" containing the protocol model, the SSM Agent's codebase, a DH implementation codebase, and the static analysis tools.
+This is the artifact for the paper "The Secrets Must Not Flow: Scaling Security Verification to Large Codebases", which will appear at the IEEE Symposium on Security and Privacy (S&P), 2026. This repository contains the protocol model, the SSM Agent's codebase, a DH implementation codebase, and the static analysis tools.
 
 
 ## Structure
@@ -26,26 +26,46 @@ This is the artifact for the paper "The Secrets Must Not Flow: Scaling Security 
 The artifact docker image includes the protocol model and implementation for both case studies. Furthermore, it contains all dependencies to verify the model and implementation.
 
 ### Set-up
-We require an installation of Docker. The following steps have been tested on macOS 15.1.1 with the latest version of Docker Desktop, which is at time of writing 4.35.1 and comes with version 27.3.1 of the Docker CLI.
+We require an installation of Docker. The following steps have been tested on macOS 15.6.1 with the latest version of Docker Desktop, which is at time of writing 4.45.0 and comes with version 28.3.3 of the Docker CLI.
 
-#### Installation
-- We recommend to adapt the Docker settings to provide sufficient resources to Docker. We have tested our artifact on a 2023 MacBook Pro with a M3 Pro processor running macOS Sequoia 15.1.1 and configured Docker to allocate up 12 cores, 6 GB of memory, and 1 GB of swap memory. In case you are using an ARM-based Mac, enable the option "Use Rosetta for x86/amd64 emulation on Apple Silicon" in the Docker Desktop Settings, which is available on macOS 13 or newer. Measurements on an Apple M1 Pro Silicon have shown that performing this additional emulation results in 20-25\% longer verification times compared to those reported in the remainder of this artifact appendix.
+We recommend adapting the Docker settings to provide sufficient resources to Docker. We have tested our artifact on a 2023 MacBook Pro with a M3 Pro processor running macOS Sequoia 15.6.1 and configured Docker to allocate up 12 cores, 6 GB of memory, and 1 GB of swap memory. In case you are using an ARM-based Mac, enable the option "Use Rosetta for x86/amd64 emulation on Apple Silicon" in the Docker Desktop Settings, which is available on macOS 13 or newer.
+
+Continuous integration of this repository builds a ready-to-use Docker image labeled `ghcr.io/viperproject/diodon-artifact:latest`. Alternatively, the `install.sh` script builds a Docker image with the same label locally.
+
+### Artifact Evaluation
+The `claims` folder contains for each claim of our paper a description of the claim, a script for running an experiment supporting such a claim, and the experiment's expected output.
+Each script automatically starts and stops a Docker container.
+
+More specifically, our claims are as follows:
+- Claim 1: The Protocol Model for the SSM Agent satisfies secrecy & injective agreement
+- Claim 2: The SSM Agent case study satisfies I/O independence
+- Claim 3: The Gobra program verifier successfully verifies the CORE in the SSM Agent case study
+- Claim 4: We analyse the APPLICATION in the SSM Agent case study as stated in the paper
+- Claim 5: The Protocol Model for the signed Diffie--Hellman key exchange satisfies forward secrecy & injective agreement
+- Claim 6: The Diffie--Hellman case study satisfies I/O independence
+- Claim 7: The Gobra program verifier successfully verifies the CORE in the Diffie--Hellman case study
+- Claim 8: The APPLICATION in the Diffie--Hellman case study satisfies conditions (C1)--(C4) and (C6)--(C8)
+- Claim 9: Our tools detect deliberately seeded bugs in both case studies
+
+Alternatively, we describe next how to manually run the Docker image and interact with the Docker container.
+
+### Directly Using the Docker Image
 - Navigate to a convenient folder, in which directories can be created for the purpose of running this artifact.
 - Open a shell at this folder location.
 - Create two new folders named `dh-sync` and `ssm-agent-sync` by executing:
 	```
     mkdir dh-sync && mkdir ssm-agent-sync
     ```
-- Download and start the Docker image containing our artifact by executing the following command:
+- Download and start the Docker image containing our artifact by executing the following command (alternatively, `install.sh` builds a Docker image locally that can be run in the same way):
     ```
-    docker run -it --platform linux/amd64 --volume $PWD/dh-sync:/gobra/dh --volume $PWD/ssm-agent-sync:/gobra/ssm-agent ghcr.io/arquintl/diodon-artifact:latest
+    docker run -it --platform linux/amd64 --volume $PWD/dh-sync:/gobra/dh --volume $PWD/ssm-agent-sync:/gobra/ssm-agent ghcr.io/viperproject/diodon-artifact:latest
     ```
     > ⚠️
     > Note that this command results in the Docker container writing files to the two folders `dh-sync` and `ssm-agent-sync` on your host machine.
     > Thus, make sure that these folders are indeed empty and previous modifications that you have made to files in these folders have been saved elsewhere!
 - The Docker command above not only starts a Docker container and provides you with a shell within this container but it also synchronizes all files constituting our artifact with the two folders `dh-sync` and `ssm-agent-sync` on your host machine. I.e., the local folders `dh-sync` and `ssm-agent-sync` are synchronized with `/gobra/dh` and `/gobra/ssm-agent` within the Docker container, respectively.
 
-#### Installation: Finch
+#### Directly Using the Docker Image: Finch
 If you prefer to use Finch instead of Docker, replace the above Docker command with the following:
 
 ``` shell
