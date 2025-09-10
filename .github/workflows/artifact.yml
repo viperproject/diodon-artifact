@@ -20,26 +20,10 @@ jobs:
           REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           echo "IMAGE_ID=ghcr.io/$REPO_OWNER/${{ env.IMAGE_NAME }}" >> $GITHUB_ENV
 
-      # it seems that `GITHUB_TOKEN` can't be configured to have read permissions to private repositories of the same user/organization
-      # using a GitHub App seems to be the best workaround: https://github.com/orgs/community/discussions/25516
-      # note that this action requires that the app is installed for the repo owner (Settings > Applications) and is configured to
-      # allow access to the specified repositories.
-      - name: Get token from GitHub App
-        uses: actions/create-github-app-token@v2
-        id: app_token
-        with:
-          app-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.APP_PEM }}
-          # owner is required, otherwise the creds will fail the checkout step
-          owner: ${{ github.repository_owner }}
-          repositories: "diodon-artifact,amazon-ssm-agent,ar-go-tools"
-
-      # repo checkout will only work if `app_token` provides access to the current repo and all its submodules.
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
           submodules: "recursive"
-          token: ${{ steps.app_token.outputs.token }}
 
       - name: Image version
         run: |
