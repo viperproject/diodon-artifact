@@ -14,7 +14,7 @@ As described in Sec. 5.3, we deliberately introduce bugs in our case studies and
         - letting a parameter escape the current thread in the APPLICATION
     - 1 bug violating condition (C7)
         - using a parameter that alias a CORE instance's internal memory
-- the Diffie--Hellman case study:
+- the Diffie-Hellman case study:
     - 1 bug violating CORE refinement
         - including the DH secret key instead of public key in a message in the CORE violates the protocol model
     - 2 bugs violating I/O independence

@@ -1,4 +1,4 @@
-name: Artifact Evaluation
+name: Artifact Claims
 
 on:
   push:

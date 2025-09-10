@@ -1,4 +1,4 @@
-name: Artifact
+name: Artifact Image
 
 on:
   push:

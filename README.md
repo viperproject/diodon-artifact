@@ -1,6 +1,7 @@
 # The Secrets Must Not Flow: Scaling Security Verification to Large Codebases
 
-[![SSM Agent Verification](https://github.com/viperproject/diodon-artifact/actions/workflows/artifact.yml/badge.svg?branch=main)](https://github.com/viperproject/diodon-artifact/actions/workflows/artifact.yml?query=branch%3Amain)
+[![Artifact Image](https://github.com/viperproject/diodon-artifact/actions/workflows/artifact.yml/badge.svg?branch=main)](https://github.com/viperproject/diodon-artifact/actions/workflows/artifact.yml?query=branch%3Amain)
+[![Artifact Claims](https://github.com/viperproject/diodon-artifact/actions/workflows/artifact-evaluation.yml/badge.svg?branch=main)](https://github.com/viperproject/diodon-artifact/actions/workflows/artifact-evaluation.yml?query=branch%3Amain)
 
 This is the artifact for the paper "The Secrets Must Not Flow: Scaling Security Verification to Large Codebases", which will appear at the IEEE Symposium on Security and Privacy (S&P), 2026. This repository contains the protocol model, the SSM Agent's codebase, a DH implementation codebase, and the static analysis tools.
 
@@ -37,15 +38,15 @@ The `claims` folder contains for each claim of our paper a description of the cl
 Each script automatically starts and stops a Docker container.
 
 More specifically, our claims are as follows:
-- Claim 1: The Protocol Model for the SSM Agent satisfies secrecy & injective agreement
-- Claim 2: The SSM Agent case study satisfies I/O independence
-- Claim 3: The Gobra program verifier successfully verifies the CORE in the SSM Agent case study
-- Claim 4: We analyse the APPLICATION in the SSM Agent case study as stated in the paper
-- Claim 5: The Protocol Model for the signed Diffie--Hellman key exchange satisfies forward secrecy & injective agreement
-- Claim 6: The Diffie--Hellman case study satisfies I/O independence
-- Claim 7: The Gobra program verifier successfully verifies the CORE in the Diffie--Hellman case study
-- Claim 8: The APPLICATION in the Diffie--Hellman case study satisfies conditions (C1)--(C4) and (C6)--(C8)
-- Claim 9: Our tools detect deliberately seeded bugs in both case studies
+- [Claim 1](claims/claim1/claim.md): The Protocol Model for the SSM Agent satisfies secrecy & injective agreement
+- [Claim 2](claims/claim2/claim.md): The SSM Agent case study satisfies I/O independence
+- [Claim 3](claims/claim3/claim.md): The Gobra program verifier successfully verifies the CORE in the SSM Agent case study
+- [Claim 4](claims/claim4/claim.md): We analyse the APPLICATION in the SSM Agent case study as stated in the paper
+- [Claim 5](claims/claim5/claim.md): The Protocol Model for the signed Diffie-Hellman key exchange satisfies forward secrecy & injective agreement
+- [Claim 6](claims/claim6/claim.md): The Diffie-Hellman case study satisfies I/O independence
+- [Claim 7](claims/claim7/claim.md): The Gobra program verifier successfully verifies the CORE in the Diffie-Hellman case study
+- [Claim 8](claims/claim8/claim.md): The APPLICATION in the Diffie-Hellman case study satisfies conditions (C1)--(C4) and (C6)--(C8)
+- [Claim 9](claims/claim9/claim.md): Our tools detect deliberately seeded bugs in both case studies
 
 Alternatively, we describe next how to manually run the Docker image and interact with the Docker container.
 
