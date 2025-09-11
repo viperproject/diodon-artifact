@@ -6,6 +6,11 @@
                 "Args": [[0], [0, 1], [0, 1, 2]],
                 "Rets": [[0], [0], [0]],
                 "Comment": "Taint flows to condition but this function is cryptographically secure"
+            },
+            "Open": {
+                "Args": [[0], [0, 1], [0, 1, 2]],
+                "Rets": [[0], [0], [0]],
+                "Comment": "Need predefined summary to avoid precision loss"
             }
         }
     },

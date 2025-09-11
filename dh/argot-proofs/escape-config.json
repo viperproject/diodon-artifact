@@ -96,6 +96,7 @@
         "(*net.TCPConn).Read": "noop",
         "(*net.UDPConn).Read": "noop",
         "(*net.UnixConn).Read": "noop",
+        "bytes.Equal": "noop",
         "(*bytes.Buffer).Write": "summarize",
         "encoding/binary.Write": "summarize",
         "(*bytes.Buffer).Bytes": "summarize",
