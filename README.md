@@ -23,8 +23,8 @@ This is the artifact for the paper "The Secrets Must Not Flow: Scaling Security 
 - `dh/argot-proofs` contains the scripts used to verify the DH implementation with Argot.
 
 
-## Artifact Docker image
-The artifact docker image includes the protocol model and implementation for both case studies. Furthermore, it contains all dependencies to verify the model and implementation.
+## Artifact Docker Image
+This repository builds and provides a docker image that includes the protocol model and implementation for both case studies. Furthermore, it contains all dependencies to verify the model and implementation.
 
 ### Set-up
 We require an installation of Docker. The following steps have been tested on macOS 15.6.1 with the latest version of Docker Desktop, which is at time of writing 4.45.0 and comes with version 28.3.3 of the Docker CLI.
@@ -35,7 +35,7 @@ Continuous integration of this repository builds a ready-to-use Docker image lab
 
 ### Artifact Evaluation
 The `claims` folder contains for each claim of our paper a description of the claim, a script for running an experiment supporting such a claim, and the experiment's expected output.
-Each script automatically starts and stops a Docker container.
+Each script automatically starts and stops a Docker container based on the Docker image mentioned above. If this image is not available locally (by running `install.sh`, the image will automatically be downloaded.)
 
 More specifically, our claims are as follows:
 - [Claim 1](claims/claim1/claim.md): The Protocol Model for the SSM Agent satisfies secrecy & injective agreement
@@ -50,7 +50,9 @@ More specifically, our claims are as follows:
 
 Alternatively, we describe next how to manually run the Docker image and interact with the Docker container.
 
+
 ### Directly Using the Docker Image
+> Note that the interactions described in the following are subsumed by our claims such that the rest of this README can be ignored for artifact evaluation.
 - Navigate to a convenient folder, in which directories can be created for the purpose of running this artifact.
 - Open a shell at this folder location.
 - Create two new folders named `dh-sync` and `ssm-agent-sync` by executing:
