@@ -1,4 +1,4 @@
-The CORE's verification with Gobra should succeed with output similar to the following:
+The script terminates successfully (exit code 0) indicating that the CORE's verification with Gobra succeeded. Its output should look similarly to the following:
 
 ```
 Gobra 1.1-SNAPSHOT (@)

@@ -1,4 +1,4 @@
-The immutability analysis succeeds, the escape analysis finds at most one escaping CORE instance and escaping logger objects, the pointer analysis checking non-aliasing of parameters (i.e., condition (C7)) succeeds, and the pass-through analysis fails due to false-positives.
+The script terminates successfully (exit code 0), which implies that the immutability analysis succeeded, the escape analysis found at most one escaping CORE instance and escaping logger objects, the pointer analysis checking non-aliasing of parameters (i.e., condition (C7)) succeeded, and the pass-through analysis failed due to false-positives.
 This expected result is indicated by observing output that ends in the following:
 
 ```

@@ -1,4 +1,4 @@
-The immutability, escape, pointer, and pass-through analyses succeed, which is indicated by observing output that ends in the following:
+The script terminates successfully (exit code 0) implying that the immutability, escape, pointer, and pass-through analyses succeeded, which is indicated by observing output that ends in the following:
 
 ```
 real    0m35.169s

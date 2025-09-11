@@ -1,4 +1,4 @@
-The taint analysis should succeed with output ending similarly to the following:
+The script terminates successfully (exit code 0) indicating that the taint analysis succeeded with output ending similarly to the following:
 
 ```
 [INFO].dh Taint analysis took 3.7608 s

@@ -1,4 +1,4 @@
-The output should end in the following lines, which state that all lemmas were successfully verified.
+The script terminates successfully (exit code 0) and its output should end in the following lines, which state that all lemmas were successfully verified.
 
 ```
 /* All wellformedness checks were successful. */
