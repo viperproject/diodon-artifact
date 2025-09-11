@@ -21,7 +21,7 @@ jobs:
           echo "IMAGE_ID=ghcr.io/$REPO_OWNER/${{ env.IMAGE_NAME }}" >> $GITHUB_ENV
 
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: "recursive"
 
@@ -91,7 +91,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: ${{ env.IMAGE_WORKFLOW_ARTIFACT_NAME }}
           path: /tmp
@@ -135,7 +135,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: ${{ env.IMAGE_WORKFLOW_ARTIFACT_NAME }}
           path: /tmp
@@ -155,7 +155,7 @@ jobs:
       packages: write
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: ${{ env.IMAGE_WORKFLOW_ARTIFACT_NAME }}
           path: /tmp
