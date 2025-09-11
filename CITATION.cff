@@ -21,6 +21,8 @@ authors:
     orcid: "https://orcid.org/0000-0001-7001-2566"
 title: "The Secrets Must Not Flow: Scaling Security Verification to Large Codebases (artifact)"
 url: "https://github.com/viperproject/diodon-artifact"
+version: v1.0.0
+doi: 10.5281/zenodo.17099764
 preferred-citation:
   type: conference-paper
   authors:

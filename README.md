@@ -5,6 +5,9 @@
 
 This is the artifact for the paper "The Secrets Must Not Flow: Scaling Security Verification to Large Codebases", which will appear at the IEEE Symposium on Security and Privacy (S&P), 2026. This repository contains the protocol model, the SSM Agent's codebase, a DH implementation codebase, and the static analysis tools.
 
+> **Note to artifact reviewers:**
+> We will publish this repository (including all submodules) after artifact evaluation on [Zenodo](https://zenodo.org).
+> Section [Artifact Evaluation](#artifact-evaluation) describes the initial setup and provides pointers to our claims.
 
 ## Structure
 - `ar-go-tools` contains the static analysis tools (Argot) to analyze the implementations.
