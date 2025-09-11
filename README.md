@@ -9,6 +9,14 @@ This is the artifact for the paper "The Secrets Must Not Flow: Scaling Security 
 > We will publish this repository (including all submodules) after artifact evaluation on [Zenodo](https://zenodo.org).
 > Section [Artifact Evaluation](#artifact-evaluation) describes the initial setup and provides pointers to our claims.
 
+## Initialization
+
+The `ar-go-tools` and `ssm-agent` directories are git submodules. They must be initialized before proceeding.
+
+``` shell
+git submodule update --init --recursive -- ar-go-tools ssm-agent
+```
+
 ## Structure
 - `ar-go-tools` contains the static analysis tools (Argot) to analyze the implementations.
 - `docker` contains the Dockerfile to build a Docker image containing all tools, the model, and the implementations, allowing seamless verification and, thus, reproduction of our results.
