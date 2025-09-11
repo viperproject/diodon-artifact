@@ -14,7 +14,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: "recursive"
 
@@ -46,10 +46,10 @@ jobs:
         claimnr: [1,2,3,4,5,6,7,8,9]
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: ${{ env.IMAGE_WORKFLOW_ARTIFACT_NAME }}
           path: /tmp
