@@ -44,12 +44,12 @@ preferred-citation:
       orcid: "https://orcid.org/0000-0001-7001-2566"
   title: "The Secrets Must Not Flow: Scaling Security Verification to Large Codebases"
   conference:
-    - name: "47th IEEE Symposium on Security and Privacy, SP 2026"
-    - city: San Francisco
-    - region: CA
-    - country: USA
-    - date-start: 2026-05-18
-    - date-end: 2026-05-21
+    name: 47th IEEE Symposium on Security and Privacy, SP 2026
+    city: San Francisco
+    region: CA
+    country: US
+    date-start: 2026-05-18
+    date-end: 2026-05-21
   publisher:
-    - name: IEEE
+    name: IEEE
   year: 2026
