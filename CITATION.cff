@@ -1,0 +1,55 @@
+cff-version: 1.2.0
+message: "If you use our techniques, tools or software, please cite it as below."
+authors:
+  - family-names: Arquint
+    given-names: Linard
+    orcid: "https://orcid.org/0000-0002-6230-8014"
+  - family-names: Kishor
+    given-names: Samarth
+    orcid: "https://orcid.org/0009-0005-3795-3117"
+  - family-names: Koenig
+    given-names: Jason R.
+    orcid: "https://orcid.org/0000-0002-5611-4408"
+  - family-names: Dodds
+    given-names: Joey
+    orcid: "https://orcid.org/0009-0004-1534-6968"
+  - family-names: Kroening
+    given-names: Daniel
+    orcid: "https://orcid.org/0000-0002-6681-5283"
+  - family-names: Müller
+    given-names: Peter
+    orcid: "https://orcid.org/0000-0001-7001-2566"
+title: "The Secrets Must Not Flow: Scaling Security Verification to Large Codebases (artifact)"
+url: "https://github.com/viperproject/diodon-artifact"
+preferred-citation:
+  type: conference-paper
+  authors:
+    - family-names: Arquint
+      given-names: Linard
+      orcid: "https://orcid.org/0000-0002-6230-8014"
+    - family-names: Kishor
+      given-names: Samarth
+      orcid: "https://orcid.org/0009-0005-3795-3117"
+    - family-names: Koenig
+      given-names: Jason R.
+      orcid: "https://orcid.org/0000-0002-5611-4408"
+    - family-names: Dodds
+      given-names: Joey
+      orcid: "https://orcid.org/0009-0004-1534-6968"
+    - family-names: Kroening
+      given-names: Daniel
+      orcid: "https://orcid.org/0000-0002-6681-5283"
+    - family-names: Müller
+      given-names: Peter
+      orcid: "https://orcid.org/0000-0001-7001-2566"
+  title: "The Secrets Must Not Flow: Scaling Security Verification to Large Codebases"
+  conference:
+    - name: "47th IEEE Symposium on Security and Privacy, SP 2026"
+    - city: San Francisco
+    - region: CA
+    - country: USA
+    - date-start: 2026-05-18
+    - date-end: 2026-05-21
+  publisher:
+    - name: IEEE
+  year: 2026
