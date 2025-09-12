@@ -1,4 +1,4 @@
-The script terminates successfully (exit code 0) indicating that the taint analysis succeeded and its output ends similarly to the following:
+The script terminates successfully (exit code 0) indicating that the taint analysis succeeded, and its output ends similarly to the following:
 
 ```
 [INFO].ssm-session-worker Taint analysis took 9.6177 s
