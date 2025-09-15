@@ -3,7 +3,7 @@
 [![Artifact Image](https://github.com/viperproject/diodon-artifact/actions/workflows/artifact.yml/badge.svg?branch=main)](https://github.com/viperproject/diodon-artifact/actions/workflows/artifact.yml?query=branch%3Amain)
 [![Artifact Claims](https://github.com/viperproject/diodon-artifact/actions/workflows/artifact-evaluation.yml/badge.svg?branch=main)](https://github.com/viperproject/diodon-artifact/actions/workflows/artifact-evaluation.yml?query=branch%3Amain)
 
-This is the artifact for the paper "The Secrets Must Not Flow: Scaling Security Verification to Large Codebases", which will appear at the IEEE Symposium on Security and Privacy (S&P), 2026. This repository contains the protocol model, the SSM Agent's codebase, a DH implementation codebase, and the static analysis tools.
+This is the artifact for the paper "The Secrets Must Not Flow: Scaling Security Verification to Large Codebases", which will appear at the IEEE Symposium on Security and Privacy (S&P), 2026. This repository contains the protocol model, the forked SSM Agent's codebase, a DH implementation codebase, and the static analysis tools.
 
 > **Note to artifact reviewers:**
 > We will publish this repository (including all submodules) after artifact evaluation on [Zenodo](https://zenodo.org).
@@ -22,6 +22,8 @@ git submodule update --init --recursive -- ar-go-tools ssm-agent
 - `docker` contains the Dockerfile to build a Docker image containing all tools, the model, and the implementations, allowing seamless verification and, thus, reproduction of our results.
 
 ### SSM Agent
+Whenever we refer to the SSM Agent, we mean the fork of the SSM Agent codebase that implements the novel protocol for establishing encrypted interactive shell sessions.
+
 - `ssm-agent/model` contains the Tamarin model of the protocol used by the SSM Agent to establish interactive shell sessions
 - `ssm-agent/implementation` contains the entire SSM Agent codebase.
     - `ssm-agent/implementation/agent/session/datachannel` contains the Go package representing the CORE.
