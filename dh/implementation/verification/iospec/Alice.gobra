@@ -44,9 +44,9 @@ pred phiR_Alice_1(tami_p Place, tami_rid Term, ghost tami_s mset[Fact]) {
                             InFact_Alice(ridA, sign(format5(pubTerm(const_0_pub()), B, A, exp(pubTerm(const_g_pub()), x), Y), skB))} &&
              tami_ap == mset[Claim] {
                             IN_ALICE(Y, format5(pubTerm(const_0_pub()), B, A, exp(pubTerm(const_g_pub()), x), Y)),
-                            Secret(A, B, exp(Y, x)),
-                            Running(pubTerm(const_R_pub()), pubTerm(const_I_pub()), pair(A, pair(B, exp(Y, x)))),
-                            Commit(pubTerm(const_I_pub()), pubTerm(const_R_pub()), pair(A, pair(B, exp(Y, x)))),
+                            Secret(A, B, pair(kdf1(exp(Y, x)), kdf2(exp(Y, x)))),
+                            Running(pubTerm(const_R_pub()), pubTerm(const_I_pub()), pair(A, pair(B, pair(kdf1(exp(Y, x)), kdf2(exp(Y, x)))))),
+                            Commit(pubTerm(const_I_pub()), pubTerm(const_R_pub()), pair(A, pair(B, pair(kdf1(exp(Y, x)), kdf2(exp(Y, x)))))),
                             AliceHsDone(exp(Y, x))} &&
              tami_rp == mset[Fact] {
                             St_Alice_2(ridA, A, B, skA, skB, x, Y),

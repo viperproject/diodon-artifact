@@ -318,9 +318,9 @@ func (i *Initiator) ProcessHsMsg2(msg []byte) (success bool) {
 			ft.InFact_Alice(ridT, msgT) }
 		a := mset[cl.Claim]{
 			cl.IN_ALICE(YT, tm.tuple5(tm.integer32(Msg2Tag), idBT, idAT, XT, YT)),
-	        cl.Secret(idAT, idBT, tm.exp(YT, i.xT)),
-	        cl.Running(tm.idR(), tm.idI(), tm.tuple3(idAT, idBT, tm.exp(YT, i.xT))),
-	        cl.Commit(tm.idI(), tm.idR(), tm.tuple3(idAT, idBT, tm.exp(YT, i.xT))),
+	        cl.Secret(idAT, idBT, am.pair(tm.kdf1(tm.exp(YT, i.xT)), tm.kdf2(tm.exp(YT, i.xT)))),
+	        cl.Running(tm.idR(), tm.idI(), tm.tuple4(idAT, idBT, tm.kdf1(tm.exp(YT, i.xT)), tm.kdf2(tm.exp(YT, i.xT)))),
+	        cl.Commit(tm.idI(), tm.idR(), tm.tuple4(idAT, idBT, tm.kdf1(tm.exp(YT, i.xT)), tm.kdf2(tm.exp(YT, i.xT)))),
 			cl.AliceHsDone(tm.exp(YT, i.xT)) }
 		r := mset[ft.Fact]{ ft.St_Alice_2(ridT, idAT, idBT, i.skAT, i.skBT, i.xT, YT),
 			ft.OutFact_Alice(ridT, msg3T) }

@@ -17,6 +17,10 @@ ghost type TermUtil domain {
     axiom { 
         forall x1, x2, x3 tm.Term :: {tuple3(x1, x2, x3)} tuple3(x1, x2, x3) == tm.pair(x1,tm.pair(x2,x3))
     }
+    func tuple4(tm.Term, tm.Term, tm.Term, tm.Term) tm.Term
+    axiom { 
+        forall x1, x2, x3, x4 tm.Term :: {tuple4(x1, x2, x3, x4)} tuple4(x1, x2, x3, x4) == tm.pair(x1,tm.pair(x2,tm.pair(x3,x4)))
+    }
     func tuple5(tm.Term, tm.Term, tm.Term, tm.Term, tm.Term) tm.Term
     axiom { 
         forall x1, x2, x3, x4, x5 tm.Term :: {tuple5(x1, x2, x3, x4, x5)} tuple5(x1, x2, x3, x4, x5) == tm.format5(x1, x2, x3, x4, x5)

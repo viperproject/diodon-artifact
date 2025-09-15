@@ -30,7 +30,7 @@ pred phiR_Bob_0(tami_p Place, tami_rid Term, ghost tami_s mset[Fact]) {
                             InFact_Bob(ridB, X)} &&
              tami_ap == mset[Claim] {
                             OUT_BOB(format5(pubTerm(const_0_pub()), B, A, X, exp(pubTerm(const_g_pub()), y))),
-                            Running(pubTerm(const_I_pub()), pubTerm(const_R_pub()), pair(A, pair(B, exp(X, y))))} &&
+                            Running(pubTerm(const_I_pub()), pubTerm(const_R_pub()), pair(A, pair(B, pair(kdf1(exp(X, y)), kdf2(exp(X, y))))))} &&
              tami_rp == mset[Fact] {
                             St_Bob_1(ridB, B, A, skB, skA, y, X),
                             OutFact_Bob(ridB, sign(format5(pubTerm(const_0_pub()), B, A, X, exp(pubTerm(const_g_pub()), y)), skB))}) ==>
@@ -45,8 +45,8 @@ pred phiR_Bob_1(tami_p Place, tami_rid Term, ghost tami_s mset[Fact]) {
                             St_Bob_1(ridB, B, A, skB, skA, y, X),
                             InFact_Bob(ridB, sign(format5(pubTerm(const_1_pub()), A, B, exp(pubTerm(const_g_pub()), y), X), skA))} &&
              tami_ap == mset[Claim] {
-                            Commit(pubTerm(const_R_pub()), pubTerm(const_I_pub()), pair(A, pair(B, exp(X, y)))),
-                            Secret(A, B, exp(X, y)),
+                            Commit(pubTerm(const_R_pub()), pubTerm(const_I_pub()), pair(A, pair(B, pair(kdf1(exp(X, y)), kdf2(exp(X, y)))))),
+                            Secret(A, B, pair(kdf1(exp(X, y)), kdf2(exp(X, y)))),
                             BobHsDone(exp(X, y))} &&
              tami_rp == mset[Fact] {
                             St_Bob_2(ridB, B, A, skB, skA, y, X)}) ==>
