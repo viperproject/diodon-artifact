@@ -55,6 +55,8 @@ Continuous integration of this repository builds a ready-to-use Docker image lab
 The `claims` folder contains for each claim of our paper a description of the claim, a script for running an experiment supporting such a claim, and the experiment's expected output.
 Each script automatically starts and stops a Docker container based on the Docker image mentioned above. If this image is not available locally (by running `install.sh`, the image will automatically be downloaded.)
 
+Note that the execution times in the paper's Fig. 9 and in Sec. 5 were obtained by running the tools natively (i.e., without using a Docker image and virtualization) on an Apple M3 Pro processor. Each claim's `run.sh` script mentions the execution time that we observed on the very same hardware but using our Docker image.
+
 More specifically, our claims are as follows:
 - [Claim 1](claims/claim1/claim.md): The Protocol Model for the SSM Agent satisfies secrecy & injective agreement
 - [Claim 2](claims/claim2/claim.md): The SSM Agent case study satisfies I/O independence
