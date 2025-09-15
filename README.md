@@ -8,26 +8,29 @@ This is the artifact for the paper "The Secrets Must Not Flow: Scaling Security 
 > **Note to artifact reviewers:**
 > We will publish this repository (including all submodules) after artifact evaluation on [Zenodo](https://zenodo.org).
 > Section [Artifact Evaluation](#artifact-evaluation) describes the initial setup and provides pointers to our claims.
+> You can also find this artifact on GitHub, for, e.g., rendering of our Markdown files: [`viperproject/diodon-artifact`](https://github.com/viperproject/diodon-artifact).
+
 
 ## Initialization
-
-The `ar-go-tools` and `ssm-agent` directories are git submodules. They must be initialized before proceeding.
-
+The `ar-go-tools` and `ssm-agent` directories are git submodules, which must be initialized before proceeding if you cloned this repository.
 ``` shell
 git submodule update --init --recursive -- ar-go-tools ssm-agent
 ```
+
 
 ## Structure
 - `ar-go-tools` contains the static analysis tools (Argot) to analyze the implementations.
 - `docker` contains the Dockerfile to build a Docker image containing all tools, the model, and the implementations, allowing seamless verification and, thus, reproduction of our results.
 
+
 ### SSM Agent
-Whenever we refer to the SSM Agent, we mean the fork of the SSM Agent codebase that implements the novel protocol for establishing encrypted interactive shell sessions.
+Whenever we refer to the SSM Agent, we mean the fork of the SSM Agent codebase that implements the protocol for establishing encrypted interactive shell sessions.
 
 - `ssm-agent/model` contains the Tamarin model of the protocol used by the SSM Agent to establish interactive shell sessions
 - `ssm-agent/implementation` contains the entire SSM Agent codebase.
     - `ssm-agent/implementation/agent/session/datachannel` contains the Go package representing the CORE.
 - `ssm-agent/argot-proofs` contains the scripts used to verify the SSM Agent with Argot.
+
 
 ### Diffie-Hellman (DH) Implementation
 - `dh/model` contains the Tamarin model of the protocol used by the DH implementation to perform a DH key exchange
@@ -39,12 +42,14 @@ Whenever we refer to the SSM Agent, we mean the fork of the SSM Agent codebase t
 ## Artifact Docker Image
 This repository builds and provides a docker image that includes the protocol model and implementation for both case studies. Furthermore, it contains all dependencies to verify the model and implementation.
 
+
 ### Set-up
 We require an installation of Docker. The following steps have been tested on macOS 15.6.1 with the latest version of Docker Desktop, which is at time of writing 4.45.0 and comes with version 28.3.3 of the Docker CLI.
 
 We recommend adapting the Docker settings to provide sufficient resources to Docker. We have tested our artifact on a 2023 MacBook Pro with a M3 Pro processor running macOS Sequoia 15.6.1 and configured Docker to allocate up 12 cores, 6 GB of memory, and 1 GB of swap memory. In case you are using an ARM-based Mac, enable the option "Use Rosetta for x86/amd64 emulation on Apple Silicon" in the Docker Desktop Settings, which is available on macOS 13 or newer.
 
 Continuous integration of this repository builds a ready-to-use Docker image labeled `ghcr.io/viperproject/diodon-artifact:latest`. Alternatively, the `install.sh` script builds a Docker image with the same label locally.
+
 
 ### Artifact Evaluation
 The `claims` folder contains for each claim of our paper a description of the claim, a script for running an experiment supporting such a claim, and the experiment's expected output.
@@ -79,7 +84,8 @@ Alternatively, we describe next how to manually run the Docker image and interac
     > ⚠️
     > Note that this command results in the Docker container writing files to the two folders `dh-sync` and `ssm-agent-sync` on your host machine.
     > Thus, make sure that these folders are indeed empty and previous modifications that you have made to files in these folders have been saved elsewhere!
-- The Docker command above not only starts a Docker container and provides you with a shell within this container but it also synchronizes all files constituting our artifact with the two folders `dh-sync` and `ssm-agent-sync` on your host machine. I.e., the local folders `dh-sync` and `ssm-agent-sync` are synchronized with `/gobra/dh` and `/gobra/ssm-agent` within the Docker container, respectively.
+- The Docker command above not only starts a Docker container and provides you with a shell within this container, but it also synchronizes all files constituting our artifact with the two folders `dh-sync` and `ssm-agent-sync` on your host machine. I.e., the local folders `dh-sync` and `ssm-agent-sync` are synchronized with `/gobra/dh` and `/gobra/ssm-agent` within the Docker container, respectively.
+
 
 #### Directly Using the Docker Image: Finch
 If you prefer to use Finch instead of Docker, replace the above Docker command with the following:
@@ -93,6 +99,7 @@ $ finch run -it --volume $PWD/dh-sync:/gobra/dh --volume $PWD/ssm-agent-sync:/go
 $ finch vm stop # stop the vm when you're done using the container
 ```
 
+
 #### Usage
 The Docker image provides several ready-to-use scripts in the `/gobra` directory:
 - `ssm-agent/verify-model.sh`: Verifies the protocol model using Tamarin
@@ -102,11 +109,13 @@ The Docker image provides several ready-to-use scripts in the `/gobra` directory
 
 Replace `ssm-agent` with `dh` in the above commands to run the same proofs on the Diffie-Hellman implementation.
 
+
 #### Proof Script Notes
 Some proof scripts may have unexpected output.
 
 - `ssm-agent/argot-proofs/agent-concurrency-proof.sh`: The concurrency proof for the SSM Agent has error output because we expect that the `inputData` parameter of `(*dataChannel).SendStreamDataMessage` escapes to a new thread. Applying the patch file `ssm-agent/implementation/datastream-internal-go-fix.patch` removes the goroutines and results in the proof succeeding.
 - `ssm-agent/argot-proofs/agent-passthru-proof.sh` The pass-through analysis for the SSM Agent fails due to false-positives. The [pointer analysis](https://pkg.go.dev/golang.org/x/tools/go/pointer) we use is not context-sensitive (most functions are only analyzed once) so it is impossible to precisely distinguish between Core and App calling contexts for large programs such as the SSM Agent.
+
 
 #### Bug Patches
 Each "proof" script in the `argot-proofs` directory for the SSM Agent and DH implementation has a corresponding "bug" script that apply one or more bug patches and expect the corresponding proof to fail.
@@ -116,7 +125,7 @@ The git patch files in the `ssm-agent/implementation` directory introduce bugs t
 - `refinement_bug.patch`: adds an extra I/O operation to send the agent secret over the network which violates the refinement of the security protocol
 - `logging_eph_priv_key_bug.patch`: logs the Core instance containing the private key field to show a violation of I/O independence
 - `logging_shared_secret_bug.patch`: logs the Core instance containing the shared secret field to show a violation of I/O independence
-- `alias_arguments_bug.patch`: leaks a pointer to a Core instance field to the App so it can be passed as an argument to a Core API function, thus resulting in non-disjoint arguments to the Core API function call
+- `alias_arguments_bug.patch`: leaks a pointer to a Core instance field to the App, so it can be passed as an argument to a Core API function, thus resulting in non-disjoint arguments to the Core API function call
 - `write_core_state_bug.patch`: leaks a pointer to a core instance field to the App which is then modified in the App, violating the Core instance invariant
 - `read_core_state_bug.patch`: leaks a pointer to a Core instance field to the App which is then read in the App, violating the Core instance invariant
 - `concurrency_leak_core.patch`: leaks a parameter to a Core API function to a new thread spawned in the Core
