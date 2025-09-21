@@ -47,7 +47,7 @@ RUN curl -q -s -S -L --create-dirs -o maude.zip $MAUDE_URL && \
     chmod a+x /.local/bin/maude
 
 # install tamarin-prover
-ENV TAMARIN_VERSION="1.8.0"
+ENV TAMARIN_VERSION="1.10.0"
 RUN curl -q -s -S -L --create-dirs -o tamarin.tar.gz https://github.com/tamarin-prover/tamarin-prover/releases/download/$TAMARIN_VERSION/tamarin-prover-$TAMARIN_VERSION-linux64-ubuntu.tar.gz && \
     tar -x -C /.local/bin/ -f tamarin.tar.gz && \
     rm tamarin.tar.gz && \

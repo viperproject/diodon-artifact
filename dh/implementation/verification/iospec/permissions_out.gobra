@@ -14,7 +14,7 @@ import . "dh-gobra/verification/fresh"
 pred e_OutFact(ghost tami_p Place, ghost tami_rid Term, ghost new_x Term)
 
 ghost
-decreases
 requires e_OutFact(tami_p, tami_rid, new_x)
+decreases
 pure func get_e_OutFact_placeDst(tami_p Place, tami_rid Term, new_x Term) (placeDst Place)
 
