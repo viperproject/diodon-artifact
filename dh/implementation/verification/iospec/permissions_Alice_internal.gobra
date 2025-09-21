@@ -14,14 +14,14 @@ import . "dh-gobra/verification/fresh"
 pred e_Alice_send(ghost tami_p Place, ghost ridA Term, ghost A Term, ghost B Term, ghost skA Term, ghost skB Term, ghost x Term, ghost tami_lp mset[Fact], ghost tami_ap mset[Claim], ghost tami_rp mset[Fact])
 
 ghost
-decreases
 requires e_Alice_send(tami_p, ridA, A, B, skA, skB, x, tami_lp, tami_ap, tami_rp)
+decreases
 pure func get_e_Alice_send_placeDst(tami_p Place, ridA Term, A Term, B Term, skA Term, skB Term, x Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (placeDst Place)
 
 ghost
-decreases
 requires token(tami_p) && e_Alice_send(tami_p, ridA, A, B, skA, skB, x, tami_lp, tami_ap, tami_rp)
 ensures token(tami_pp) && tami_pp == old(get_e_Alice_send_placeDst(tami_p, ridA, A, B, skA, skB, x, tami_lp, tami_ap, tami_rp))
+decreases
 func internBIO_e_Alice_send(tami_p Place, ridA Term, A Term, B Term, skA Term, skB Term, x Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (tami_pp Place)
 
 
@@ -29,14 +29,14 @@ func internBIO_e_Alice_send(tami_p Place, ridA Term, A Term, B Term, skA Term, s
 pred e_Alice_recvAndSend(ghost tami_p Place, ghost ridA Term, ghost A Term, ghost B Term, ghost skA Term, ghost skB Term, ghost x Term, ghost Y Term, ghost tami_lp mset[Fact], ghost tami_ap mset[Claim], ghost tami_rp mset[Fact])
 
 ghost
-decreases
 requires e_Alice_recvAndSend(tami_p, ridA, A, B, skA, skB, x, Y, tami_lp, tami_ap, tami_rp)
+decreases
 pure func get_e_Alice_recvAndSend_placeDst(tami_p Place, ridA Term, A Term, B Term, skA Term, skB Term, x Term, Y Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (placeDst Place)
 
 ghost
-decreases
 requires token(tami_p) && e_Alice_recvAndSend(tami_p, ridA, A, B, skA, skB, x, Y, tami_lp, tami_ap, tami_rp)
 ensures token(tami_pp) && tami_pp == old(get_e_Alice_recvAndSend_placeDst(tami_p, ridA, A, B, skA, skB, x, Y, tami_lp, tami_ap, tami_rp))
+decreases
 func internBIO_e_Alice_recvAndSend(tami_p Place, ridA Term, A Term, B Term, skA Term, skB Term, x Term, Y Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (tami_pp Place)
 
 
@@ -44,14 +44,14 @@ func internBIO_e_Alice_recvAndSend(tami_p Place, ridA Term, A Term, B Term, skA 
 pred e_Alice_sendMsg(ghost tami_p Place, ghost ridA Term, ghost A Term, ghost B Term, ghost skA Term, ghost skB Term, ghost x Term, ghost Y Term, ghost msgIn Term, ghost tami_lp mset[Fact], ghost tami_ap mset[Claim], ghost tami_rp mset[Fact])
 
 ghost
-decreases
 requires e_Alice_sendMsg(tami_p, ridA, A, B, skA, skB, x, Y, msgIn, tami_lp, tami_ap, tami_rp)
+decreases
 pure func get_e_Alice_sendMsg_placeDst(tami_p Place, ridA Term, A Term, B Term, skA Term, skB Term, x Term, Y Term, msgIn Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (placeDst Place)
 
 ghost
-decreases
 requires token(tami_p) && e_Alice_sendMsg(tami_p, ridA, A, B, skA, skB, x, Y, msgIn, tami_lp, tami_ap, tami_rp)
 ensures token(tami_pp) && tami_pp == old(get_e_Alice_sendMsg_placeDst(tami_p, ridA, A, B, skA, skB, x, Y, msgIn, tami_lp, tami_ap, tami_rp))
+decreases
 func internBIO_e_Alice_sendMsg(tami_p Place, ridA Term, A Term, B Term, skA Term, skB Term, x Term, Y Term, msgIn Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (tami_pp Place)
 
 
@@ -59,13 +59,13 @@ func internBIO_e_Alice_sendMsg(tami_p Place, ridA Term, A Term, B Term, skA Term
 pred e_Alice_recvMsg(ghost tami_p Place, ghost ridA Term, ghost A Term, ghost B Term, ghost skA Term, ghost skB Term, ghost x Term, ghost Y Term, ghost msgOut Term, ghost tami_lp mset[Fact], ghost tami_ap mset[Claim], ghost tami_rp mset[Fact])
 
 ghost
-decreases
 requires e_Alice_recvMsg(tami_p, ridA, A, B, skA, skB, x, Y, msgOut, tami_lp, tami_ap, tami_rp)
+decreases
 pure func get_e_Alice_recvMsg_placeDst(tami_p Place, ridA Term, A Term, B Term, skA Term, skB Term, x Term, Y Term, msgOut Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (placeDst Place)
 
 ghost
-decreases
 requires token(tami_p) && e_Alice_recvMsg(tami_p, ridA, A, B, skA, skB, x, Y, msgOut, tami_lp, tami_ap, tami_rp)
 ensures token(tami_pp) && tami_pp == old(get_e_Alice_recvMsg_placeDst(tami_p, ridA, A, B, skA, skB, x, Y, msgOut, tami_lp, tami_ap, tami_rp))
+decreases
 func internBIO_e_Alice_recvMsg(tami_p Place, ridA Term, A Term, B Term, skA Term, skB Term, x Term, Y Term, msgOut Term, tami_lp mset[Fact], tami_ap mset[Claim], tami_rp mset[Fact]) (tami_pp Place)
 
