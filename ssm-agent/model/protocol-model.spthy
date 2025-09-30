@@ -137,7 +137,7 @@ rule Agent_ReceiveMessages [color=#177AE8]:
       AgentRecvLoop(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, ClientLtKeyId, Y),
       AgentRecvTransMsg(payload, kdf2(Y^~x))
     ]->
-    [ St_Agent_10(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), Out(payload) ]
+    [ St_Agent_10(~RunId, $AgentId, $KMSId, $ClientId, $ReaderId, $AgentLtKeyId, logPk, ~x, SigX, ClientLtKeyId, Y, SigY, SigSessionKey), Out(<'Message', payload>) ]
 
 rule Agent_SendMessages [color=#177AE8]:
     let
