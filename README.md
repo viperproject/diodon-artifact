@@ -12,7 +12,9 @@ This is the artifact for the paper "The Secrets Must Not Flow: Scaling Security 
 
 
 ## Initialization
-The `ar-go-tools` and `ssm-agent` directories are git submodules, which must be initialized before proceeding if you cloned this repository.
+The `ar-go-tools` and `ssm-agent` directories are git submodules, which must be initialized before proceeding if you cloned this repository using Git.
+If you obtained the artifact from a tarball (e.g., via Zenodo), then you can skip this step.
+
 ``` shell
 git submodule update --init --recursive -- ar-go-tools ssm-agent
 ```
