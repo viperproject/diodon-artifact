@@ -144,3 +144,74 @@ We also have patches in the `dh/implementation` directory which introduce bugs t
 - `read_core_state_bug.patch`: leaks a pointer to a Core instance field which is then read in the App, violating the Core instance invariant
 - `passthru_escape_in_corealloc_func_bug.patch`: leaks memory allocated in the Core allocation function to the App via a callback, violating the pass-through requirement that all memory allocated in the Core allocation function must only be accessible to the App via the function's return value
 - `passthru_escape_in_coreapi_func_bug.patch`: leak permissions to access a slice allocated in the Core via a global variable which is then accessed in the App, resulting in accessing memory allocated in the Core which does not pass through the Core API function's return value
+
+## Argot extensions for Diodon
+
+We implemented Diodon by extending the Go static analysis tool [Argot](https://github.com/awslabs/ar-go-tools).
+
+To see the documentation and public API for any of our analyses, use the `go doc` command with the analysis' package name.
+``` shell
+cd ar-go-tools
+go doc github.com/awslabs/ar-go-tools/analysis/passthru
+```
+
+The existing Argot analyses are documented more thoroughly in the `ar-go-tools/doc` directory.
+
+### Argot configuration
+
+We configured Argot to run the above analyses on both the DH case study and the forked SSM Agent case study.
+The configuration files are located in `dh/argot-proofs/argot-config-dh.yaml` and `ssm-agent/argot-proofs/argot-config-agent.yaml`, respectively.
+The escape analysis is configured via `dh/argot-proofs/escape-config.json` and `ssm-agent/argot-proofs/escape-config.json`, respectively.
+
+### I/O independence
+
+#### Taint analysis
+
+The taint analysis we use in Diodon is the standard taint analysis (with an integrated escape analysis) in Argot.
+We did not make any major changes to the taint or integrated escape analysis for Diodon.
+See the [taint analysis documentation](ar-go-tools/doc/01_taint.md) for more details.
+
+### Core assumptions
+
+####  Escape analysis
+
+Argot's escape analysis was originally designed to be integrated with the taint analysis.
+We kept this taint analysis integration but also added a stand-alone `argot escape` command which runs the escape analysis by itself.
+We needed to extend the escape analysis to improve context sensitivity.
+The escape analysis implementation is located in the `ar-go-tools/analysis/escape` directory.
+
+Diodon uses the escape analysis to check:
+- Condition C4: Core instances are used only in the thread they are created in.
+- Condition C6: Parameters to Core APIs are local.
+
+#### Pointer analysis
+
+Argot uses the [first-party Go pointer analysis](https://pkg.go.dev/golang.org/x/tools/go/pointer) which is vendored directly in the codebase in the directory `ar-go-tools/internal/pointer` to expose some pointer analysis internals.
+The taint and escape analyses depend on the may-alias information computed by this pointer analysis.
+We extended the pointer analysis to cache alias analysis results to improve performance.
+We use this pointer analysis to implement the below custom analyses for Diodon.
+
+#### Pass-through analysis
+
+We implemented the pass-through analysis from scratch by using the pointer analysis' alias information and the SSA program representation.
+The pass-through (called `passthru` for short) analysis implementation is located in the `ar-go-tools/analysis/passthru` directory.
+
+Diodon uses the pass-through analysis to check:
+- Condition C1: Core instances are created in a function ensuring the Core invariant in its postcondition.
+- Condition C8: Reads and writes in the Application occur to memory allocated in the Application or transferred from the Core.
+
+#### Immutability analysis
+
+We implemented an "immutability" analysis from scratch which records all reads, writes, and allocations of a given SSA value using the results from the pointer analysis.
+Note that we do not consider this to be a separate analysis in the paper and call it a "pointer analysis".
+The immutability analysis implementation is located in the `ar-go-tools/analysis/immutability` directory.
+
+Diodon uses the immutability analysis to check condition C2: The Application does not write to Core instances' internal state, even through an alias.
+
+#### Alias analysis
+
+We implemented an alias analysis from scratch which computes all of the SSA values that may alias a given SSA value using the results from the pointer analysis.
+Note that we do not consider this to be a separate analysis in the paper and call it a "pointer analysis".
+The alias analysis implementation is located in the `ar-go-tools/analysis/alias` directory.
+
+Diodon uses the alias analysis to check condition C7: parameters to the same Core API call do not alias.
