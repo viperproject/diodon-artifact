@@ -1,5 +1,16 @@
 # Go Diffie-Hellman Implementation
 
+## Implementation Overview
+`main.go` represents the App that performs all I/O.
+The Core is implemented in `initiator/initiator.go`.
+More specifically, the `Initiator` struct stores all state related to a protocol session.
+In addition, this file provides methods with the `Initiator` struct being the receiver to produce outgoing and consume incoming messages.
+We prove (using Gobra) that producing and consuming these messages correspond to steps in the protocol model.
+This allows us to treat outgoing messages as being untainted from a taint analysis point of view, such that the corresponding I/O operation in the App satisfies I/O independence.
+For this purpose, `library/io.go` provides a function `PerformVirtualOutputOperation` that enforces (via its specification) that a caller gives up an I/O permission for sending a message.
+Thus, we configure the taint analysis (in `../argot-proofs/argot-config-dh.yaml`) to treat this function as a sanitizer, i.e., that this returns untainted data.
+
+
 ## Building & Running the Initiator Role
 Build:
 ```
