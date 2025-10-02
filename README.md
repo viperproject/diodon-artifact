@@ -29,14 +29,14 @@ git submodule update --init --recursive -- ar-go-tools ssm-agent
 Whenever we refer to the SSM Agent, we mean the fork of the SSM Agent codebase that implements the protocol for establishing encrypted interactive shell sessions.
 
 - `ssm-agent/model` contains the Tamarin model of the protocol used by the SSM Agent to establish interactive shell sessions
-- `ssm-agent/implementation` contains the entire SSM Agent codebase.
+- `ssm-agent/implementation` contains the entire SSM Agent codebase and the corresponding [README](https://github.com/ArquintL/amazon-ssm-agent/tree/update-diodon?tab=readme-ov-file#secure-sessions-overview) provides an overview.
     - `ssm-agent/implementation/agent/session/datachannel` contains the Go package representing the CORE.
 - `ssm-agent/argot-proofs` contains the scripts used to verify the SSM Agent with Argot.
 
 
 ### Diffie-Hellman (DH) Implementation
 - `dh/model` contains the Tamarin model of the protocol used by the DH implementation to perform a DH key exchange
-- `dh/implementation` contains the entire DH codebase.
+- `dh/implementation` contains the entire DH codebase and the corresponding [README](dh/implementation/README.md) provides an overview over the codebase.
     - `dh/implementation/library` and `dh/implementation/initiator` contain the Go packages representing the CORE.
 - `dh/argot-proofs` contains the scripts used to verify the DH implementation with Argot.
 
