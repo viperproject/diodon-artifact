@@ -10,6 +10,10 @@ This allows us to treat outgoing messages as being untainted from a taint analys
 For this purpose, `library/io.go` provides a function `PerformVirtualOutputOperation` that enforces (via its specification) that a caller gives up an I/O permission for sending a message.
 Thus, we configure the taint analysis (in `../argot-proofs/argot-config-dh.yaml`) to treat this function as a sanitizer, i.e., that this returns untainted data.
 
+Protocol steps in the Core are easy to locate as each step requires justification by the I/O specification. I.e., `unfold io.P_Alice(...)` (`unfold iospec.P_Agent(...)` in the SSM Agent case study) applies the I/O specification to obtain the I/O permission for the subsequent operation such as sending or receiving a message or performing an internal operation. These internal operations directly correspond to a transition in the Tamarin model.
+
+`dh/implementation/initiator/initiator.go` provides detailed comments explaining the application of the I/O specification for the `ProduceHsMsg1` method in the DH case study.
+
 
 ## Building & Running the Initiator Role
 Build:
