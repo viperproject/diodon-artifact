@@ -173,10 +173,14 @@ func (i *Initiator) ProduceHsMsg1() (msg []byte, success bool) {
 	//@ t0, ridT, s0 := i.token, i.rid, i.absState
 
 	// create x
+	// ----------
+	// Generate DH secret key by invoking the random number generator.
+	// In the model, this adds a fresh fact to the abstract state.
 	//@ unfold io.P_Alice(t0, ridT, s0)
 	//@ unfold io.phiRF_Alice_5(t0, ridT, s0)
 	//@ assert acc(io.e_FrFact(t0, ridT))
 	//@ i.xT = io.get_e_FrFact_r1(t0, ridT)
+	// ----------
 	//@ ghost var t1 pl.Place
 	var err error
 	i.x, err /*@, t1 @*/ = i.l.CreateNonce( /*@ t0, ridT @*/ )
@@ -200,6 +204,12 @@ func (i *Initiator) ProduceHsMsg1() (msg []byte, success bool) {
 		return
 	}
 
+	// ----------
+	// Perform Alice's first internal operation to justify the first protocol message.
+	// This corresponds to applying the first transition (`dh/model/protocol-model.spthy` L56-61)
+	// in Alice's protocol model, which adds an out fact to the abstract state (note the close
+	// correspondence between the multisets occurring in the implementation (L208f, L210, L211f)
+	// and the transition in the abstract model).
 	//@ unfold io.P_Alice(t1, ridT, s1)
 	//@ unfold io.phiR_Alice_0(t1, ridT, s1)
 	//@ idAT := tm.integer32(i.idA)
@@ -214,6 +224,7 @@ func (i *Initiator) ProduceHsMsg1() (msg []byte, success bool) {
 	//@ assert io.e_Alice_send(t1, ridT, idAT, idBT, i.skAT, i.skBT, i.xT, l, a, r)
 	//@ t2 := io.internBIO_e_Alice_send(t1, ridT, idAT, idBT, i.skAT, i.skBT, i.xT, l, a, r)
 	//@ s2 := ft.U(l, r, s1)
+	// ----------
 
 	msg1 := &Msg1{X: i.X}
 	//@ fold acc(msg1.Mem(), 1/8)
@@ -228,12 +239,23 @@ func (i *Initiator) ProduceHsMsg1() (msg []byte, success bool) {
 		return
 	}
 
+	// ----------
+	// Exchange out fact in the abstract state for a permission to send the
+	// corresponding message. Instead of directly sending this message to the
+	// network, we invoke `PerformVirtualOutputOperation`` that sanitizes this
+	// message by consuming the permission for sending this message (because we
+	// are allowed to send it). I.e., this message can afterwards be returned
+	// to the App that then sends it. Sending this message in the App does not
+	// violate I/O independence despite depending on protocol secrets (the
+	// message contains the DH half key g^x where x is a protocol secret)
+	// because the Core sanitized the message.
 	//@ unfold io.P_Alice(t2, ridT, s2)
 	//@ unfold io.phiRG_Alice_4(t2, ridT, s2)
 	//@ assert io.e_OutFact(t2, ridT, XT)
 	//@ ghost var t3 pl.Place
 	msg /*@, t3 @*/ = PerformVirtualOutputOperation(msg /*@, t2, ridT, XT @*/)
 	//@ s3 := s2 setminus mset[ft.Fact]{ ft.OutFact_Alice(ridT, XT) }
+	// ----------
 	//@ fold ProducedHsMsg1Pred(ridT, i.idA, i.idB, i.skAT, i.skBT, i.xT, s3)
 	i.initiatorState = ProducedHsMsg1
 	//@ i.token = t3
