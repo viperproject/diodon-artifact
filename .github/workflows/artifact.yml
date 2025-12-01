@@ -21,7 +21,7 @@ jobs:
           echo "IMAGE_ID=ghcr.io/$REPO_OWNER/${{ env.IMAGE_NAME }}" >> $GITHUB_ENV
 
       - name: Checkout repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           submodules: "recursive"
 
